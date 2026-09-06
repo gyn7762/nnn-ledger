@@ -2,11 +2,1033 @@
 <html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
-<title>日日帳</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>日日帳</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  :root{
+    --paper:#eef0e6;
+    --paper-raised:#f8f9f2;
+    --paper-sunk:#e4e7db;
+    --ink:#212b3a;
+    --ink-soft:#5b6478;
+    --ink-faint:#8a92a0;
+    --rule:#d3d7c8;
+    --stamp:#b23328;
+    --stamp-ink:#ffffff;
+    --stamp-tint:#f4dfda;
+    --income:#2f6f5e;
+    --income-tint:#dbe9e2;
+    --expense:#a05a1c;
+    --expense-tint:#f0e2cd;
+    --shadow:rgba(33,43,58,0.10);
+    --focus:#5b6bb8;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#171a15;
+      --paper-raised:#20241d;
+      --paper-sunk:#12140f;
+      --ink:#e8e8dd;
+      --ink-soft:#a9ada0;
+      --ink-faint:#767a6d;
+      --rule:#343b2c;
+      --stamp:#e2685a;
+      --stamp-ink:#171a15;
+      --stamp-tint:#3a2621;
+      --income:#7bc0a6;
+      --income-tint:#1f3129;
+      --expense:#d99a52;
+      --expense-tint:#332619;
+      --shadow:rgba(0,0,0,0.45);
+      --focus:#8f9de8;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#171a15;
+    --paper-raised:#20241d;
+    --paper-sunk:#12140f;
+    --ink:#e8e8dd;
+    --ink-soft:#a9ada0;
+    --ink-faint:#767a6d;
+    --rule:#343b2c;
+    --stamp:#e2685a;
+    --stamp-ink:#171a15;
+    --stamp-tint:#3a2621;
+    --income:#7bc0a6;
+    --income-tint:#1f3129;
+    --expense:#d99a52;
+    --expense-tint:#332619;
+    --shadow:rgba(0,0,0,0.45);
+    --focus:#8f9de8;
+    color-scheme: dark;
+  }
+
+  *{box-sizing:border-box;}
+  [hidden]{ display:none !important; }
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Noto Sans TC', system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.brand-title{
+    font-family:'Noto Serif TC', serif;
+    text-wrap:balance;
+    margin:0;
+  }
+  .num{ font-family:'JetBrains Mono', ui-monospace, monospace; font-variant-numeric:tabular-nums; }
+  button{ font-family:inherit; }
+  :focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
+
+  /* ---------- app shell ---------- */
+  .app{ display:flex; min-height:100vh; }
+
+  .sidenav{
+    width:216px;
+    flex:0 0 auto;
+    background:var(--paper-raised);
+    border-right:1px solid var(--rule);
+    display:flex;
+    flex-direction:column;
+    padding:20px 14px;
+    gap:18px;
+    transition:width .18s ease, padding .18s ease;
+  }
+  .sidenav.collapsed{ width:68px; padding:20px 10px; }
+  .brand{ display:flex; align-items:center; gap:10px; padding:0 6px; min-height:36px; }
+  .brand-mark{
+    width:34px; height:34px; border-radius:8px;
+    background:var(--stamp); color:var(--stamp-ink);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Noto Serif TC', serif; font-weight:700; font-size:16px;
+    flex:0 0 auto;
+    box-shadow:0 1px 0 rgba(0,0,0,0.08) inset;
+  }
+  .brand-title{ font-size:19px; font-weight:700; white-space:nowrap; overflow:hidden; }
+  .brand-sub{ font-size:11px; color:var(--ink-faint); white-space:nowrap; overflow:hidden; margin-top:1px; }
+  .sidenav.collapsed .brand-title,
+  .sidenav.collapsed .brand-sub,
+  .sidenav.collapsed .navlabel{ display:none; }
+
+  .navlist{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:3px; }
+  .navitem{
+    display:flex; align-items:center; gap:12px;
+    padding:9px 10px; border-radius:9px;
+    color:var(--ink-soft); cursor:pointer;
+    border:1px solid transparent;
+    font-size:14.5px; font-weight:500;
+    background:none; width:100%; text-align:left;
+  }
+  .navitem:hover{ background:var(--paper-sunk); color:var(--ink); }
+  .navitem.active{ background:var(--stamp-tint); color:var(--stamp); border-color:var(--stamp-tint); }
+  .navitem svg{ flex:0 0 auto; width:19px; height:19px; }
+  .sidenav.collapsed .navitem{ justify-content:center; padding:10px; }
+
+  .sidenav-foot{ margin-top:auto; display:flex; flex-direction:column; gap:8px; }
+  .collapse-btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:8px; border-radius:8px; border:1px solid var(--rule);
+    background:var(--paper); color:var(--ink-faint); cursor:pointer; font-size:12.5px;
+  }
+  .collapse-btn:hover{ color:var(--ink-soft); }
+  .collapse-btn svg{ width:15px; height:15px; transition:transform .18s ease; }
+  .sidenav.collapsed .collapse-btn svg{ transform:rotate(180deg); }
+
+  .main{ flex:1 1 auto; min-width:0; display:flex; flex-direction:column; }
+  .topbar{
+    display:none;
+    align-items:center; justify-content:space-between;
+    padding:14px 18px; border-bottom:1px solid var(--rule);
+    background:var(--paper-raised); position:sticky; top:0; z-index:5;
+  }
+  .topbar-title{ font-size:17px; font-weight:700; }
+  .content{ flex:1; padding:26px 30px 90px; max-width:920px; width:100%; }
+
+  .bottomnav{
+    display:none;
+    position:fixed; left:0; right:0; bottom:0; z-index:10;
+    background:var(--paper-raised); border-top:1px solid var(--rule);
+    padding:6px 6px calc(6px + env(safe-area-inset-bottom));
+    justify-content:space-around;
+  }
+  .bottomnav .navitem{
+    flex-direction:column; gap:2px; font-size:10.5px; padding:6px 4px;
+    border-radius:10px; text-align:center;
+  }
+  .bottomnav .navitem svg{ width:21px; height:21px; }
+
+  @media (max-width: 780px){
+    .sidenav{ display:none; }
+    .topbar{ display:flex; }
+    .bottomnav{ display:flex; }
+    .content{ padding:18px 16px 84px; }
+  }
+
+  /* ---------- shared bits ---------- */
+  .page[hidden]{ display:none; }
+  .page-head{ margin-bottom:20px; }
+  .page-head p{ margin:4px 0 0; color:var(--ink-soft); font-size:13.5px; }
+
+  .card{
+    background:var(--paper-raised);
+    border:1px solid var(--rule);
+    border-radius:14px;
+    padding:18px;
+    box-shadow:0 1px 2px var(--shadow);
+  }
+
+  .stat-row{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:20px; }
+  .stat-tile{
+    background:var(--paper-raised); border:1px solid var(--rule); border-radius:14px;
+    padding:14px 16px; position:relative; overflow:hidden;
+  }
+  .stat-tile::before{
+    content:""; position:absolute; top:0; left:0; width:4px; height:100%;
+    background:var(--tile-accent, var(--ink-faint));
+  }
+  .stat-label{ font-size:12px; color:var(--ink-soft); font-weight:500; }
+  .stat-value{ font-size:22px; font-weight:700; margin-top:4px; }
+  .stat-tile.income{ --tile-accent:var(--income); }
+  .stat-tile.income .stat-value{ color:var(--income); }
+  .stat-tile.expense{ --tile-accent:var(--expense); }
+  .stat-tile.expense .stat-value{ color:var(--expense); }
+  .stat-tile.balance{ --tile-accent:var(--stamp); }
+  @media (max-width:560px){ .stat-row{ grid-template-columns:1fr 1fr; } .stat-tile.balance{ grid-column:1 / -1; } }
+
+  .section-title{ font-size:14px; font-weight:700; color:var(--ink-soft); margin:0 0 10px; letter-spacing:.02em; }
+
+  .home-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:680px){ .home-grid{ grid-template-columns:1fr; } }
+
+  .empty{ color:var(--ink-faint); font-size:13.5px; padding:10px 2px; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:7px;
+    border-radius:9px; border:1px solid var(--rule); background:var(--paper);
+    color:var(--ink); font-size:13.5px; font-weight:500; padding:9px 16px;
+    cursor:pointer;
+  }
+  .btn:hover{ background:var(--paper-sunk); }
+  .btn-primary{ background:var(--stamp); border-color:var(--stamp); color:var(--stamp-ink); }
+  .btn-primary:hover{ filter:brightness(1.06); }
+  .btn-ghost{ background:transparent; border-color:transparent; padding:6px 8px; color:var(--ink-faint); }
+  .btn-ghost:hover{ background:var(--paper-sunk); color:var(--ink); }
+  .btn-icon{ padding:7px; }
+  .btn-icon svg{ width:16px; height:16px; display:block; }
+  .btn[disabled]{ opacity:.5; cursor:not-allowed; }
+
+  .link-btn{ background:none; border:none; color:var(--stamp); font-weight:600; font-size:13px; cursor:pointer; padding:0; }
+
+  input, textarea, select{
+    font-family:inherit; font-size:14px; color:var(--ink);
+    background:var(--paper); border:1px solid var(--rule); border-radius:8px;
+    padding:9px 11px; width:100%;
+  }
+  textarea{ resize:vertical; }
+  label{ font-size:12px; font-weight:600; color:var(--ink-soft); display:block; margin-bottom:5px; }
+  .field{ margin-bottom:0; }
+
+  .seg{ display:flex; border:1px solid var(--rule); border-radius:9px; overflow:hidden; }
+  .seg button{
+    flex:1; border:none; background:var(--paper); color:var(--ink-soft); padding:9px 10px;
+    font-size:13.5px; font-weight:600; cursor:pointer; border-right:1px solid var(--rule);
+  }
+  .seg button:last-child{ border-right:none; }
+  .seg button.on.income{ background:var(--income-tint); color:var(--income); }
+  .seg button.on.expense{ background:var(--expense-tint); color:var(--expense); }
+
+  /* ---------- ledger page ---------- */
+  .month-switch{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .month-switch .label{ font-family:'Noto Serif TC',serif; font-weight:700; font-size:16.5px; min-width:110px; text-align:center; }
+
+  .ledger-form{ display:grid; grid-template-columns:auto 1fr 1fr; gap:12px 14px; margin-bottom:22px; }
+  .ledger-form .seg{ grid-column:1 / -1; max-width:220px; }
+  .ledger-form .row-note{ grid-column:1 / -1; }
+  .ledger-form .row-submit{ grid-column:1 / -1; display:flex; justify-content:flex-end; }
+  @media (max-width:560px){ .ledger-form{ grid-template-columns:1fr 1fr; } }
+
+  .ledger-list{ display:flex; flex-direction:column; }
+  .ledger-row{
+    display:flex; align-items:center; gap:12px;
+    padding:11px 4px; border-bottom:1px solid var(--rule);
+  }
+  .ledger-row:last-child{ border-bottom:none; }
+  .ledger-date{ font-size:12px; color:var(--ink-faint); width:64px; flex:0 0 auto; }
+  .ledger-tag{
+    font-size:11.5px; font-weight:600; padding:3px 9px; border-radius:99px; flex:0 0 auto;
+  }
+  .ledger-tag.income{ background:var(--income-tint); color:var(--income); }
+  .ledger-tag.expense{ background:var(--expense-tint); color:var(--expense); }
+  .ledger-note{ flex:1; min-width:0; font-size:13.5px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ledger-amount{ font-weight:700; flex:0 0 auto; }
+  .ledger-amount.income{ color:var(--income); }
+  .ledger-amount.expense{ color:var(--expense); }
+
+  /* ---------- memo page ---------- */
+  .memo-add{ display:flex; gap:10px; margin-bottom:18px; }
+  .memo-add input{ flex:1; min-width:0; }
+  .memo-add button{ flex:0 0 auto; white-space:nowrap; }
+  .memo-list{ display:flex; flex-direction:column; gap:2px; }
+  .memo-row{ display:flex; align-items:flex-start; gap:11px; padding:10px 4px; border-bottom:1px solid var(--rule); }
+  .memo-row:last-child{ border-bottom:none; }
+  .memo-check{
+    width:19px; height:19px; border-radius:6px; border:1.5px solid var(--rule);
+    flex:0 0 auto; margin-top:1px; cursor:pointer; background:var(--paper);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .memo-check.done{ background:var(--stamp); border-color:var(--stamp); color:var(--stamp-ink); }
+  .memo-check svg{ width:12px; height:12px; }
+  .memo-text{ flex:1; font-size:14px; line-height:1.5; word-break:break-word; }
+  .memo-row.done .memo-text{ color:var(--ink-faint); text-decoration:line-through; }
+  .memo-meta{ font-size:11px; color:var(--ink-faint); margin-top:2px; }
+  .memo-toggle-done{ margin:14px 0 6px; }
+
+  /* ---------- diary page ---------- */
+  .diary-layout{ display:grid; grid-template-columns:1fr 240px; gap:20px; align-items:start; }
+  @media (max-width:780px){ .diary-layout{ grid-template-columns:1fr; } }
+  .date-switch{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .date-switch .label{ font-family:'Noto Serif TC',serif; font-weight:700; font-size:16.5px; min-width:150px; text-align:center; }
+  .diary-textarea{ min-height:320px; line-height:1.75; font-size:14.5px; }
+  .diary-save-row{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
+  .diary-status{ font-size:12px; color:var(--ink-faint); }
+  .recent-list{ display:flex; flex-direction:column; gap:8px; }
+  .recent-item{
+    display:block; width:100%; text-align:left; background:var(--paper); border:1px solid var(--rule);
+    border-radius:10px; padding:9px 11px; cursor:pointer;
+  }
+  .recent-item:hover{ background:var(--paper-sunk); }
+  .recent-item.current{ border-color:var(--stamp); background:var(--stamp-tint); }
+  .recent-item .rdate{ font-size:11.5px; font-weight:700; color:var(--ink-soft); }
+  .recent-item .rsnippet{ font-size:12.5px; color:var(--ink-faint); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  .banner{
+    display:flex; align-items:center; gap:10px; font-size:13px;
+    background:var(--stamp-tint); color:var(--stamp); border:1px solid var(--stamp-tint);
+    border-radius:10px; padding:10px 14px; margin-bottom:18px;
+  }
+  .banner svg{ width:17px; height:17px; flex:0 0 auto; }
+
+  /* ---------- auth ---------- */
+  .auth-screen{
+    position:fixed; inset:0; z-index:100;
+    background:var(--paper);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .auth-card{
+    background:var(--paper-raised); border:1px solid var(--rule); border-radius:16px;
+    padding:36px 32px; max-width:340px; width:100%; text-align:center;
+    box-shadow:0 4px 18px var(--shadow);
+  }
+  .auth-mark{
+    width:52px; height:52px; border-radius:12px; margin:0 auto 18px;
+    background:var(--stamp); color:var(--stamp-ink);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Noto Serif TC',serif; font-weight:700; font-size:22px;
+  }
+  .auth-card h1{ font-size:20px; margin-bottom:6px; }
+  .auth-card p{ color:var(--ink-soft); font-size:13.5px; line-height:1.6; margin:0 0 22px; }
+  .google-btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:10px;
+    width:100%; padding:11px 16px; border-radius:9px; border:1px solid var(--rule);
+    background:var(--paper); color:var(--ink); font-size:14px; font-weight:600; cursor:pointer;
+  }
+  .google-btn:hover{ background:var(--paper-sunk); }
+  .google-btn svg{ width:18px; height:18px; }
+  .auth-note{ margin-top:16px; font-size:11.5px; color:var(--ink-faint); }
+  .auth-denied .auth-mark{ background:var(--expense); }
+  .auth-spinner{ font-size:13px; color:var(--ink-faint); }
+
+  .signout-btn{
+    display:flex; align-items:center; gap:8px; width:100%;
+    padding:8px 10px; border-radius:8px; border:1px solid var(--rule);
+    background:var(--paper); color:var(--ink-faint); font-size:12.5px; cursor:pointer;
+  }
+  .signout-btn:hover{ color:var(--ink-soft); background:var(--paper-sunk); }
+  .signout-btn svg{ width:14px; height:14px; flex:0 0 auto; }
+  .sidenav.collapsed .signout-btn span{ display:none; }
+  .sidenav.collapsed .signout-btn{ justify-content:center; }
+</style>
 </head>
-<body style="font-family:sans-serif;padding:60px;text-align:center;color:#333;">
-<h1>日日帳</h1>
-<p>建置中，稍後回來看看。</p>
+<body>
+
+<div class="auth-screen" id="authScreen" hidden>
+  <div class="auth-card" id="authCard">
+    <div class="auth-mark">帳</div>
+    <div id="authCardBody">
+      <p class="auth-spinner">連線中…</p>
+    </div>
+  </div>
+</div>
+
+<div class="app" id="appRoot" hidden>
+  <nav class="sidenav" id="sidenav">
+    <div class="brand">
+      <div class="brand-mark">帳</div>
+      <div>
+        <div class="brand-title">日日帳</div>
+        <div class="brand-sub">記帳・備忘・日記</div>
+      </div>
+    </div>
+    <ul class="navlist" id="sidenavList"></ul>
+    <div class="sidenav-foot">
+      <button class="signout-btn" id="signOutBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        <span id="signOutLabel">登出</span>
+      </button>
+      <button class="collapse-btn" id="collapseBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+        <span class="navlabel">收合選單</span>
+      </button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">首頁</div>
+      <div class="brand-mark" style="width:28px;height:28px;font-size:13px;">帳</div>
+    </div>
+
+    <div class="content">
+
+      <section class="page" data-page="home" id="page-home">
+        <div class="page-head">
+          <h1 id="homeGreeting">早安</h1>
+          <p id="homeDateLine"></p>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-tile income">
+            <div class="stat-label">本月收入</div>
+            <div class="stat-value num" id="homeIncome">$0</div>
+          </div>
+          <div class="stat-tile expense">
+            <div class="stat-label">本月支出</div>
+            <div class="stat-value num" id="homeExpense">$0</div>
+          </div>
+          <div class="stat-tile balance">
+            <div class="stat-label">本月結餘</div>
+            <div class="stat-value num" id="homeBalance">$0</div>
+          </div>
+        </div>
+
+        <div class="home-grid">
+          <div class="card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+              <div class="section-title" style="margin:0;">待辦備忘</div>
+              <button class="link-btn" data-nav="memo">前往備忘 →</button>
+            </div>
+            <div id="homeMemoList"></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title">今日日記</div>
+            <div id="homeDiaryStatus"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="page" data-page="ledger" id="page-ledger" hidden>
+        <div class="page-head">
+          <h1>記帳</h1>
+          <p>記錄每一筆收入與支出</p>
+        </div>
+
+        <div class="month-switch">
+          <button class="btn btn-icon" id="ledgerPrev" type="button" aria-label="上一月">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+          </button>
+          <div class="label num" id="ledgerMonthLabel"></div>
+          <button class="btn btn-icon" id="ledgerNext" type="button" aria-label="下一月">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+          </button>
+          <button class="btn" id="ledgerToday" type="button" style="margin-left:auto;">回到本月</button>
+        </div>
+
+        <div class="stat-row">
+          <div class="stat-tile income">
+            <div class="stat-label">收入</div>
+            <div class="stat-value num" id="ledgerIncome">$0</div>
+          </div>
+          <div class="stat-tile expense">
+            <div class="stat-label">支出</div>
+            <div class="stat-value num" id="ledgerExpense">$0</div>
+          </div>
+          <div class="stat-tile balance">
+            <div class="stat-label">結餘</div>
+            <div class="stat-value num" id="ledgerBalance">$0</div>
+          </div>
+        </div>
+
+        <form class="card ledger-form" id="ledgerForm">
+          <div class="seg" id="ledgerTypeSeg">
+            <button type="button" class="on expense" data-type="expense">支出</button>
+            <button type="button" class="income" data-type="income">收入</button>
+          </div>
+          <div class="field">
+            <label for="ledgerAmount">金額</label>
+            <input type="number" id="ledgerAmount" inputmode="decimal" min="0" step="1" placeholder="0" required>
+          </div>
+          <div class="field">
+            <label for="ledgerDate">日期</label>
+            <input type="date" id="ledgerDate" required>
+          </div>
+          <div class="field">
+            <label for="ledgerCategory">分類</label>
+            <select id="ledgerCategory"></select>
+          </div>
+          <div class="field row-note">
+            <label for="ledgerNote">備註（選填）</label>
+            <input type="text" id="ledgerNote" placeholder="例如：午餐、加班費…" maxlength="80">
+          </div>
+          <div class="row-submit">
+            <button type="submit" class="btn btn-primary">新增紀錄</button>
+          </div>
+        </form>
+
+        <div class="card">
+          <div class="section-title">本月明細</div>
+          <div class="ledger-list" id="ledgerList"></div>
+        </div>
+      </section>
+
+      <section class="page" data-page="memo" id="page-memo" hidden>
+        <div class="page-head">
+          <h1>備忘</h1>
+          <p>隨手記下要做的事</p>
+        </div>
+
+        <form class="memo-add" id="memoForm">
+          <input type="text" id="memoInput" placeholder="想到什麼就寫下來…" maxlength="200" required>
+          <button type="submit" class="btn btn-primary">新增</button>
+        </form>
+
+        <div class="card">
+          <div class="section-title">未完成</div>
+          <div class="memo-list" id="memoListOpen"></div>
+
+          <button class="link-btn memo-toggle-done" id="memoDoneToggle" type="button">顯示已完成 ▾</button>
+          <div class="memo-list" id="memoListDone" hidden></div>
+        </div>
+      </section>
+
+      <section class="page" data-page="diary" id="page-diary" hidden>
+        <div class="page-head">
+          <h1>日記</h1>
+          <p>寫下今天發生的事</p>
+        </div>
+
+        <div class="diary-layout">
+          <div>
+            <div class="date-switch">
+              <button class="btn btn-icon" id="diaryPrev" type="button" aria-label="前一天">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+              </button>
+              <div class="label" id="diaryDateLabel"></div>
+              <button class="btn btn-icon" id="diaryNext" type="button" aria-label="後一天">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
+              <button class="btn" id="diaryToday" type="button" style="margin-left:auto;">回到今天</button>
+            </div>
+
+            <div class="card">
+              <textarea class="diary-textarea" id="diaryContent" placeholder="今天發生了什麼事？有什麼想法？"></textarea>
+              <div class="diary-save-row">
+                <span class="diary-status" id="diaryStatus"></span>
+                <button class="btn btn-primary" id="diarySave" type="button">儲存</button>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="section-title">最近的日記</div>
+            <div class="recent-list" id="diaryRecent"></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <nav class="bottomnav" id="bottomnav"></nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- config ---------------- */
+  var SUPABASE_URL = "https://kstwbdwgpfszlbmhtvxg.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_DfawWU2NVrX1-oYBmfb4WA_5QvGUTbZ";
+  var ALLOWED_EMAIL = "jazz9001@gmail.com";
+
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  /* ---------------- icons ---------------- */
+  var ICONS = {
+    home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5L12 4l9 7.5"/><path d="M5.5 10v9a1 1 0 0 0 1 1H9a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h2.5a1 1 0 0 0 1-1v-9"/></svg>',
+    ledger: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><circle cx="15.5" cy="14.2" r="1.6"/></svg>',
+    memo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 8.5h8M8 12.5h8M8 16.5h5"/></svg>',
+    diary: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h11a2 2 0 0 1 2 2V19a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2V4.5z"/><path d="M5 19a2 2 0 0 1 2-2h11"/></svg>',
+    check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>',
+    trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-12"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2 20h20L12 3.5z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>'
+  };
+  var GOOGLE_ICON = '<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.4c-2 1.5-4.6 2.4-7.5 2.4-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.5 5.4C41.4 36 44 30.6 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>';
+
+  var PAGES = [
+    { key:"home",   label:"首頁", icon:ICONS.home },
+    { key:"ledger", label:"記帳", icon:ICONS.ledger },
+    { key:"memo",   label:"備忘", icon:ICONS.memo },
+    { key:"diary",  label:"日記", icon:ICONS.diary }
+  ];
+
+  var EXPENSE_CATS = ["餐飲","交通","購物","娛樂","居家","醫療","教育","其他"];
+  var INCOME_CATS  = ["薪資","獎金","兼職","投資","其他"];
+
+  /* ---------------- date helpers ---------------- */
+  function pad(n){ return n < 10 ? "0" + n : "" + n; }
+  function fmtDate(d){ return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+  function todayStr(){ return fmtDate(new Date()); }
+  function monthKeyOf(dateStr){ return dateStr.slice(0,7); }
+  function addDays(dateStr, n){
+    var p = dateStr.split("-").map(Number);
+    var d = new Date(p[0], p[1]-1, p[2]);
+    d.setDate(d.getDate()+n);
+    return fmtDate(d);
+  }
+  function addMonths(monthKey, n){
+    var p = monthKey.split("-").map(Number);
+    var d = new Date(p[0], p[1]-1+n, 1);
+    return d.getFullYear() + "-" + pad(d.getMonth()+1);
+  }
+  function monthLabel(monthKey){
+    var p = monthKey.split("-");
+    return p[0] + "年" + parseInt(p[1],10) + "月";
+  }
+  function dateLabel(dateStr){
+    var p = dateStr.split("-").map(Number);
+    var d = new Date(p[0], p[1]-1, p[2]);
+    var wd = ["日","一","二","三","四","五","六"][d.getDay()];
+    return p[0] + "/" + p[1] + "/" + p[2] + "（週" + wd + "）";
+  }
+  function fmtMoney(n){
+    n = Math.round(n || 0);
+    var neg = n < 0; n = Math.abs(n);
+    var s = n.toLocaleString("zh-Hant-TW");
+    return (neg ? "-" : "") + "$" + s;
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c];
+    });
+  }
+
+  /* ---------------- state ---------------- */
+  var state = {
+    page: "home",
+    ledgerMonth: monthKeyOf(todayStr()),
+    diaryDate: todayStr(),
+    diaryDirty: false
+  };
+  var appBooted = false;
+  var realtimeChannel = null;
+
+  /* ================= auth ================= */
+  function showAuthScreen(kind, email){
+    document.getElementById("authScreen").hidden = false;
+    document.getElementById("appRoot").hidden = true;
+    var card = document.getElementById("authCard");
+    var body = document.getElementById("authCardBody");
+    card.classList.toggle("auth-denied", kind === "denied");
+    if (kind === "login"){
+      body.innerHTML =
+        '<h1>日日帳</h1>' +
+        '<p>記帳・備忘・日記，只有你能打開的私人手帳。</p>' +
+        '<button class="google-btn" id="googleLoginBtn" type="button">' + GOOGLE_ICON + '<span>使用 Google 帳號登入</span></button>' +
+        '<div class="auth-note">僅限授權帳號使用</div>';
+      document.getElementById("googleLoginBtn").addEventListener("click", function(){
+        sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + window.location.pathname } });
+      });
+    } else if (kind === "denied"){
+      body.innerHTML =
+        '<h1>此帳號未授權</h1>' +
+        '<p>' + escapeHtml(email || "") + ' 沒有使用這個工具的權限，請改用授權的 Google 帳號登入。</p>' +
+        '<button class="google-btn" id="switchAccountBtn" type="button">切換帳號</button>';
+      document.getElementById("switchAccountBtn").addEventListener("click", function(){ sb.auth.signOut(); });
+    } else {
+      body.innerHTML = '<p class="auth-spinner">連線中…</p>';
+    }
+  }
+
+  function handleSession(session){
+    if (!session){
+      showAuthScreen("login");
+      return;
+    }
+    var email = session.user && session.user.email;
+    if (email !== ALLOWED_EMAIL){
+      showAuthScreen("denied", email);
+      return;
+    }
+    document.getElementById("authScreen").hidden = true;
+    document.getElementById("appRoot").hidden = false;
+    if (!appBooted){
+      appBooted = true;
+      bootApp();
+    }
+  }
+
+  function initAuth(){
+    showAuthScreen("loading");
+    sb.auth.getSession().then(function(res){ handleSession(res.data.session); });
+    sb.auth.onAuthStateChange(function(_event, session){ handleSession(session); });
+  }
+
+  /* ================= nav / shell ================= */
+  function buildNav(container){
+    container.innerHTML = "";
+    PAGES.forEach(function(p){
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "navitem";
+      btn.dataset.nav = p.key;
+      btn.innerHTML = p.icon + '<span class="navlabel">' + p.label + "</span>";
+      btn.addEventListener("click", function(){ showPage(p.key); });
+      container.appendChild(btn);
+    });
+  }
+
+  function showPage(key){
+    state.page = key;
+    document.querySelectorAll(".page").forEach(function(el){ el.hidden = el.dataset.page !== key; });
+    document.querySelectorAll(".navitem[data-nav]").forEach(function(el){ el.classList.toggle("active", el.dataset.nav === key); });
+    var meta = PAGES.filter(function(p){ return p.key===key; })[0];
+    document.getElementById("topbarTitle").textContent = meta ? meta.label : "";
+    window.scrollTo(0,0);
+  }
+
+  document.addEventListener("click", function(e){
+    var el = e.target.closest("[data-nav]");
+    if (el && el.tagName === "BUTTON" && !el.classList.contains("navitem")) showPage(el.dataset.nav);
+  });
+
+  /* ================= ledger ================= */
+  function renderLedgerForm(){
+    var sel = document.getElementById("ledgerCategory");
+    var type = document.querySelector("#ledgerTypeSeg button.on").dataset.type;
+    var cats = type === "income" ? INCOME_CATS : EXPENSE_CATS;
+    sel.innerHTML = cats.map(function(c){ return '<option value="'+c+'">'+c+"</option>"; }).join("");
+  }
+
+  function computeSums(records){
+    var income = 0, expense = 0;
+    records.forEach(function(r){
+      if (r.type === "income") income += Number(r.amount)||0;
+      else expense += Number(r.amount)||0;
+    });
+    return { income:income, expense:expense, balance: income-expense };
+  }
+
+  function renderLedgerRows(records){
+    var list = document.getElementById("ledgerList");
+    if (!records.length){
+      list.innerHTML = '<div class="empty">這個月還沒有任何紀錄。</div>';
+      return;
+    }
+    list.innerHTML = records.map(function(r){
+      var d = r.entry_date.slice(5).replace("-","/");
+      var sign = r.type === "income" ? "+" : "-";
+      return '<div class="ledger-row">' +
+        '<div class="ledger-date num">'+d+'</div>' +
+        '<div class="ledger-tag '+r.type+'">'+escapeHtml(r.category)+'</div>' +
+        '<div class="ledger-note">'+(r.note ? escapeHtml(r.note) : "")+'</div>' +
+        '<div class="ledger-amount num '+r.type+'">'+sign+fmtMoney(r.amount)+'</div>' +
+        '<button class="btn btn-ghost btn-icon" data-del-record="'+r.id+'" aria-label="刪除">'+ICONS.trash+'</button>' +
+      '</div>';
+    }).join("");
+    list.querySelectorAll("[data-del-record]").forEach(function(btn){
+      btn.addEventListener("click", function(){ deleteRecord(btn.dataset.delRecord); });
+    });
+  }
+
+  async function fetchLedgerMonth(monthKey){
+    var start = monthKey + "-01";
+    var nextStart = addMonths(monthKey, 1) + "-01";
+    var res = await sb.from("ledger_entries").select("*")
+      .gte("entry_date", start).lt("entry_date", nextStart)
+      .order("entry_date", { ascending:false }).order("created_at", { ascending:false });
+    if (res.error){ console.error(res.error); return []; }
+    return res.data;
+  }
+
+  async function refreshLedgerPage(){
+    var records = await fetchLedgerMonth(state.ledgerMonth);
+    var sums = computeSums(records);
+    document.getElementById("ledgerIncome").textContent = fmtMoney(sums.income);
+    document.getElementById("ledgerExpense").textContent = fmtMoney(sums.expense);
+    document.getElementById("ledgerBalance").textContent = fmtMoney(sums.balance);
+    renderLedgerRows(records);
+  }
+
+  function switchLedgerMonth(monthKey){
+    state.ledgerMonth = monthKey;
+    document.getElementById("ledgerMonthLabel").textContent = monthLabel(monthKey);
+    refreshLedgerPage();
+  }
+
+  async function refreshHomeStats(){
+    var thisMonth = monthKeyOf(todayStr());
+    var records = await fetchLedgerMonth(thisMonth);
+    var sums = computeSums(records);
+    document.getElementById("homeIncome").textContent = fmtMoney(sums.income);
+    document.getElementById("homeExpense").textContent = fmtMoney(sums.expense);
+    document.getElementById("homeBalance").textContent = fmtMoney(sums.balance);
+  }
+
+  async function addRecord(record){
+    var res = await sb.from("ledger_entries").insert({
+      entry_date: record.date, type: record.type, amount: record.amount,
+      category: record.category, note: record.note || null
+    });
+    if (res.error){ alert("新增失敗：" + res.error.message); return; }
+    refreshLedgerPage();
+    refreshHomeStats();
+  }
+
+  async function deleteRecord(id){
+    var res = await sb.from("ledger_entries").delete().eq("id", id);
+    if (res.error){ alert("刪除失敗：" + res.error.message); return; }
+    refreshLedgerPage();
+    refreshHomeStats();
+  }
+
+  /* ================= memo ================= */
+  function memoRowHtml(m){
+    return '<div class="memo-row '+(m.done?"done":"")+'">' +
+      '<button class="memo-check '+(m.done?"done":"")+'" data-memo-toggle="'+m.id+'" data-memo-done="'+(m.done?1:0)+'" aria-label="切換完成狀態">'+(m.done?ICONS.check:"")+'</button>' +
+      '<div style="flex:1;min-width:0;"><div class="memo-text">'+escapeHtml(m.text)+'</div></div>' +
+      '<button class="btn btn-ghost btn-icon" data-memo-del="'+m.id+'" aria-label="刪除">'+ICONS.trash+'</button>' +
+    '</div>';
+  }
+
+  function renderHomeMemoPreview(open){
+    var el = document.getElementById("homeMemoList");
+    if (!open.length){ el.innerHTML = '<div class="empty">目前沒有待辦的備忘。</div>'; return; }
+    var top = open.slice(0,5);
+    el.innerHTML = top.map(function(m){
+      return '<div class="memo-row"><div class="memo-check" style="pointer-events:none;"></div><div class="memo-text">'+escapeHtml(m.text)+'</div></div>';
+    }).join("") + (open.length>5 ? '<div class="empty">還有 '+(open.length-5)+' 項…</div>' : "");
+  }
+
+  async function refreshMemos(){
+    var res = await sb.from("memos").select("*").order("created_at", { ascending:false }).limit(300);
+    if (res.error){ console.error(res.error); return; }
+    var all = res.data;
+    var open = all.filter(function(m){ return !m.done; });
+    var done = all.filter(function(m){ return m.done; });
+
+    var openEl = document.getElementById("memoListOpen");
+    openEl.innerHTML = open.length ? open.map(memoRowHtml).join("") : '<div class="empty">目前沒有待辦的備忘，太棒了。</div>';
+    var doneEl = document.getElementById("memoListDone");
+    doneEl.innerHTML = done.length ? done.map(memoRowHtml).join("") : '<div class="empty">還沒有已完成的項目。</div>';
+
+    [openEl, doneEl].forEach(function(el){
+      el.querySelectorAll("[data-memo-toggle]").forEach(function(btn){
+        btn.addEventListener("click", function(){ toggleMemo(btn.dataset.memoToggle, btn.dataset.memoDone === "1"); });
+      });
+      el.querySelectorAll("[data-memo-del]").forEach(function(btn){
+        btn.addEventListener("click", function(){ deleteMemo(btn.dataset.memoDel); });
+      });
+    });
+
+    renderHomeMemoPreview(open);
+  }
+
+  async function addMemo(text){
+    var res = await sb.from("memos").insert({ text: text, done:false });
+    if (res.error){ alert("新增失敗：" + res.error.message); return; }
+    refreshMemos();
+  }
+  async function toggleMemo(id, currentlyDone){
+    var res = await sb.from("memos").update({ done: !currentlyDone, done_at: !currentlyDone ? new Date().toISOString() : null }).eq("id", id);
+    if (res.error){ alert("更新失敗：" + res.error.message); return; }
+    refreshMemos();
+  }
+  async function deleteMemo(id){
+    var res = await sb.from("memos").delete().eq("id", id);
+    if (res.error){ alert("刪除失敗：" + res.error.message); return; }
+    refreshMemos();
+  }
+
+  /* ================= diary ================= */
+  function renderDiaryRecentList(docs){
+    var el = document.getElementById("diaryRecent");
+    if (!docs.length){ el.innerHTML = '<div class="empty">還沒有日記。</div>'; return; }
+    el.innerHTML = docs.map(function(d){
+      var snippet = (d.content||"").replace(/\s+/g," ").slice(0,24);
+      return '<button class="recent-item '+(d.entry_date===state.diaryDate?"current":"")+'" data-diary-jump="'+d.entry_date+'">' +
+        '<div class="rdate">'+dateLabel(d.entry_date)+'</div>' +
+        '<div class="rsnippet">'+(snippet ? escapeHtml(snippet) : "（空白）")+'</div>' +
+      '</button>';
+    }).join("");
+    el.querySelectorAll("[data-diary-jump]").forEach(function(btn){
+      btn.addEventListener("click", function(){ switchDiaryDate(btn.dataset.diaryJump); });
+    });
+  }
+
+  async function refreshDiaryRecent(){
+    var res = await sb.from("diary_entries").select("*").order("entry_date", { ascending:false }).limit(10);
+    if (res.error){ console.error(res.error); return; }
+    renderDiaryRecentList(res.data);
+  }
+
+  async function refreshDiaryEditor(){
+    var res = await sb.from("diary_entries").select("*").eq("entry_date", state.diaryDate).maybeSingle();
+    if (res.error){ console.error(res.error); return; }
+    document.getElementById("diaryContent").value = res.data ? res.data.content : "";
+    state.diaryDirty = false;
+    document.getElementById("diaryStatus").textContent = "";
+  }
+
+  async function refreshHomeDiaryStatus(){
+    var res = await sb.from("diary_entries").select("*").eq("entry_date", todayStr()).maybeSingle();
+    var el = document.getElementById("homeDiaryStatus");
+    var content = res.data && res.data.content;
+    if (content){
+      el.innerHTML = '<div class="empty" style="padding:0 0 8px;color:var(--ink-soft);">今天已經寫了 '+content.length+' 個字。</div><button class="link-btn" data-nav="diary">查看或繼續寫 →</button>';
+    } else {
+      el.innerHTML = '<div class="empty" style="padding:0 0 8px;">今天還沒有寫日記。</div><button class="link-btn" data-nav="diary">開始寫今天的日記 →</button>';
+    }
+  }
+
+  function switchDiaryDate(dateStr){
+    if (state.diaryDirty && !confirm("目前的日記還沒有儲存，確定要離開嗎？")) return;
+    state.diaryDate = dateStr;
+    document.getElementById("diaryDateLabel").textContent = dateLabel(dateStr);
+    refreshDiaryEditor();
+    document.querySelectorAll("#diaryRecent .recent-item").forEach(function(el){
+      el.classList.toggle("current", el.dataset.diaryJump === state.diaryDate);
+    });
+  }
+
+  async function saveDiary(){
+    var content = document.getElementById("diaryContent").value;
+    var res = await sb.from("diary_entries").upsert({ entry_date: state.diaryDate, content: content, updated_at: new Date().toISOString() }, { onConflict: "entry_date" });
+    if (res.error){ alert("儲存失敗：" + res.error.message); return; }
+    state.diaryDirty = false;
+    var now = new Date();
+    document.getElementById("diaryStatus").textContent = "已儲存・" + pad(now.getHours()) + ":" + pad(now.getMinutes());
+    refreshDiaryRecent();
+    if (state.diaryDate === todayStr()) refreshHomeDiaryStatus();
+  }
+
+  /* ================= home ================= */
+  function renderHomeGreeting(){
+    var h = new Date().getHours();
+    var g = h < 5 ? "夜深了" : h < 11 ? "早安" : h < 18 ? "午安" : "晚安";
+    document.getElementById("homeGreeting").textContent = g + "，寶萌";
+    document.getElementById("homeDateLine").textContent = dateLabel(todayStr());
+  }
+
+  /* ================= realtime ================= */
+  function setupRealtime(){
+    if (realtimeChannel) return;
+    realtimeChannel = sb.channel("app-changes")
+      .on("postgres_changes", { event:"*", schema:"public", table:"ledger_entries" }, function(){ refreshLedgerPage(); refreshHomeStats(); })
+      .on("postgres_changes", { event:"*", schema:"public", table:"memos" }, function(){ refreshMemos(); })
+      .on("postgres_changes", { event:"*", schema:"public", table:"diary_entries" }, function(){ refreshDiaryEditor(); refreshDiaryRecent(); refreshHomeDiaryStatus(); })
+      .subscribe();
+  }
+
+  /* ================= boot ================= */
+  function bootApp(){
+    buildNav(document.getElementById("sidenavList"));
+    buildNav(document.getElementById("bottomnav"));
+    showPage("home");
+    renderHomeGreeting();
+
+    document.getElementById("ledgerDate").value = todayStr();
+    document.getElementById("ledgerMonthLabel").textContent = monthLabel(state.ledgerMonth);
+    document.getElementById("diaryDateLabel").textContent = dateLabel(state.diaryDate);
+    renderLedgerForm();
+
+    var collapsed = false;
+    try { collapsed = localStorage.getItem("nnn-ledger-sidebar-collapsed") === "1"; } catch(e){}
+    if (collapsed) document.getElementById("sidenav").classList.add("collapsed");
+    document.getElementById("collapseBtn").addEventListener("click", function(){
+      var el = document.getElementById("sidenav");
+      el.classList.toggle("collapsed");
+      try { localStorage.setItem("nnn-ledger-sidebar-collapsed", el.classList.contains("collapsed") ? "1" : "0"); } catch(e){}
+    });
+
+    document.getElementById("signOutBtn").addEventListener("click", function(){ sb.auth.signOut(); });
+
+    document.getElementById("ledgerTypeSeg").addEventListener("click", function(e){
+      var btn = e.target.closest("button[data-type]");
+      if (!btn) return;
+      document.querySelectorAll("#ledgerTypeSeg button").forEach(function(b){ b.classList.toggle("on", b===btn); });
+      renderLedgerForm();
+    });
+
+    document.getElementById("ledgerForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var type = document.querySelector("#ledgerTypeSeg button.on").dataset.type;
+      var amount = parseFloat(document.getElementById("ledgerAmount").value);
+      var date = document.getElementById("ledgerDate").value || todayStr();
+      var category = document.getElementById("ledgerCategory").value;
+      var note = document.getElementById("ledgerNote").value.trim();
+      if (!amount || amount <= 0) return;
+      addRecord({ type:type, amount:amount, date:date, category:category, note:note });
+      document.getElementById("ledgerAmount").value = "";
+      document.getElementById("ledgerNote").value = "";
+    });
+
+    document.getElementById("ledgerPrev").addEventListener("click", function(){ switchLedgerMonth(addMonths(state.ledgerMonth,-1)); });
+    document.getElementById("ledgerNext").addEventListener("click", function(){ switchLedgerMonth(addMonths(state.ledgerMonth,1)); });
+    document.getElementById("ledgerToday").addEventListener("click", function(){ switchLedgerMonth(monthKeyOf(todayStr())); });
+
+    document.getElementById("memoForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var input = document.getElementById("memoInput");
+      var text = input.value.trim();
+      if (!text) return;
+      addMemo(text);
+      input.value = "";
+    });
+
+    document.getElementById("memoDoneToggle").addEventListener("click", function(){
+      var el = document.getElementById("memoListDone");
+      el.hidden = !el.hidden;
+      this.textContent = el.hidden ? "顯示已完成 ▾" : "隱藏已完成 ▴";
+    });
+
+    document.getElementById("diaryPrev").addEventListener("click", function(){ switchDiaryDate(addDays(state.diaryDate,-1)); });
+    document.getElementById("diaryNext").addEventListener("click", function(){ switchDiaryDate(addDays(state.diaryDate,1)); });
+    document.getElementById("diaryToday").addEventListener("click", function(){ switchDiaryDate(todayStr()); });
+    document.getElementById("diarySave").addEventListener("click", saveDiary);
+    document.getElementById("diaryContent").addEventListener("input", function(){
+      state.diaryDirty = true;
+      document.getElementById("diaryStatus").textContent = "尚未儲存";
+    });
+
+    refreshHomeStats();
+    refreshMemos();
+    refreshHomeDiaryStatus();
+    refreshLedgerPage();
+    refreshDiaryEditor();
+    refreshDiaryRecent();
+    setupRealtime();
+  }
+
+  initAuth();
+})();
+</script>
 </body>
 </html>
