@@ -469,6 +469,15 @@
           <p id="homeDateLine"></p>
         </div>
 
+        <div class="card memory-point-card">
+          <div class="section-title" style="margin:0 0 10px;">快速記一筆</div>
+          <form class="memory-point-add" id="homeMemoryPointForm">
+            <input type="text" id="homeMemoryPointInput" placeholder="見什麼人？去什麼地方？完成什麼事？" maxlength="140" required>
+            <button type="submit" class="btn btn-primary">加入</button>
+          </form>
+          <div class="memory-point-list" id="homeMemoryPointList"></div>
+        </div>
+
         <div class="stat-row">
           <div class="stat-tile income">
             <div class="stat-label">本月收入</div>
@@ -1198,52 +1207,106 @@
     return mood;
   }
 
-  function renderMemoryPointList(){
-    var el = document.getElementById("memoryPointList");
-    var points = (state.diaryDoc && state.diaryDoc.memory_points) || [];
-    if (!points.length){ el.innerHTML = '<div class="empty" style="padding:6px 2px;">還沒有記憶點，想到什麼就記一筆吧。</div>'; return; }
-    el.innerHTML = points.map(function(p){
+  function memoryPointListHtml(points){
+    if (!points.length) return '<div class="empty" style="padding:6px 2px;">還沒有記憶點，想到什麼就記一筆吧。</div>';
+    return points.map(function(p){
       return '<div class="memory-point-row">' +
         '<span class="memory-point-time">'+escapeHtml(p.time||"")+'</span>' +
         '<span class="memory-point-text">'+escapeHtml(p.text)+'</span>' +
         '<button class="btn btn-ghost btn-icon" type="button" data-mp-del="'+p.id+'" aria-label="刪除">'+TRASH_ICON+'</button>' +
       '</div>';
     }).join("");
+  }
+
+  function renderMemoryPointListInto(elId, points, onDelete){
+    var el = document.getElementById(elId);
+    el.innerHTML = memoryPointListHtml(points);
     el.querySelectorAll("[data-mp-del]").forEach(function(btn){
-      btn.addEventListener("click", function(){ deleteMemoryPoint(btn.dataset.mpDel); });
+      btn.addEventListener("click", function(){ onDelete(btn.dataset.mpDel); });
     });
   }
 
-  async function addMemoryPoint(text){
+  function renderMemoryPointList(){
+    var points = (state.diaryDoc && state.diaryDoc.memory_points) || [];
+    renderMemoryPointListInto("memoryPointList", points, deleteMemoryPoint);
+  }
+
+  function renderHomeMemoryPointList(points){
+    renderMemoryPointListInto("homeMemoryPointList", points || [], deleteHomeMemoryPoint);
+  }
+
+  // Fetches the current row for dateStr fresh (rather than trusting cached state),
+  // appends/removes a memory point, recomputes tags, and upserts. Returns the
+  // resulting doc on success so callers (diary page or home quick-capture) can
+  // update whatever local state/UI they own, or null on failure (already alerted).
+  async function addMemoryPointToDate(dateStr, text){
+    var cur = await sb.from("diary_entries").select("*").eq("entry_date", dateStr).maybeSingle();
+    if (cur.error){ alert("新增失敗：" + cur.error.message); return null; }
+    var doc = cur.data;
     var now = new Date();
     var point = {
       id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now()+"-"+Math.random().toString(16).slice(2)),
       time: pad(now.getHours())+":"+pad(now.getMinutes()),
       text: text
     };
-    var points = ((state.diaryDoc && state.diaryDoc.memory_points) || []).concat([point]);
-    var tags = computeDayTags(
-      state.diaryDoc && state.diaryDoc.morning_text, state.diaryDoc && state.diaryDoc.afternoon_text,
-      state.diaryDoc && state.diaryDoc.evening_text, points
-    );
-    var res = await sb.from("diary_entries").upsert({ entry_date: state.diaryDate, memory_points: points, tags: tags, updated_at: now.toISOString() }, { onConflict:"entry_date" });
-    if (res.error){ alert("新增失敗：" + res.error.message); return; }
-    state.diaryDoc = Object.assign({ entry_date: state.diaryDate }, state.diaryDoc, { memory_points: points, tags: tags });
+    var points = ((doc && doc.memory_points) || []).concat([point]);
+    var tags = computeDayTags(doc && doc.morning_text, doc && doc.afternoon_text, doc && doc.evening_text, points);
+    var res = await sb.from("diary_entries").upsert({ entry_date: dateStr, memory_points: points, tags: tags, updated_at: now.toISOString() }, { onConflict:"entry_date" });
+    if (res.error){ alert("新增失敗：" + res.error.message); return null; }
+    return Object.assign({ entry_date: dateStr }, doc, { memory_points: points, tags: tags });
+  }
+
+  async function deleteMemoryPointFromDate(dateStr, id){
+    var cur = await sb.from("diary_entries").select("*").eq("entry_date", dateStr).maybeSingle();
+    if (cur.error){ alert("刪除失敗：" + cur.error.message); return null; }
+    var doc = cur.data;
+    var points = ((doc && doc.memory_points) || []).filter(function(p){ return p.id !== id; });
+    var tags = computeDayTags(doc && doc.morning_text, doc && doc.afternoon_text, doc && doc.evening_text, points);
+    var res = await sb.from("diary_entries").upsert({ entry_date: dateStr, memory_points: points, tags: tags, updated_at: new Date().toISOString() }, { onConflict:"entry_date" });
+    if (res.error){ alert("刪除失敗：" + res.error.message); return null; }
+    return Object.assign({}, doc, { memory_points: points, tags: tags });
+  }
+
+  async function addMemoryPoint(text){
+    var doc = await addMemoryPointToDate(state.diaryDate, text);
+    if (!doc) return;
+    state.diaryDoc = doc;
     renderMemoryPointList();
     refreshDiaryTags();
+    refreshDiaryCalendar();
   }
 
   async function deleteMemoryPoint(id){
-    var points = ((state.diaryDoc && state.diaryDoc.memory_points) || []).filter(function(p){ return p.id !== id; });
-    var tags = computeDayTags(
-      state.diaryDoc && state.diaryDoc.morning_text, state.diaryDoc && state.diaryDoc.afternoon_text,
-      state.diaryDoc && state.diaryDoc.evening_text, points
-    );
-    var res = await sb.from("diary_entries").upsert({ entry_date: state.diaryDate, memory_points: points, tags: tags, updated_at: new Date().toISOString() }, { onConflict:"entry_date" });
-    if (res.error){ alert("刪除失敗：" + res.error.message); return; }
-    state.diaryDoc = Object.assign({}, state.diaryDoc, { memory_points: points, tags: tags });
+    var doc = await deleteMemoryPointFromDate(state.diaryDate, id);
+    if (!doc) return;
+    state.diaryDoc = doc;
     renderMemoryPointList();
     refreshDiaryTags();
+    refreshDiaryCalendar();
+  }
+
+  async function refreshHomeMemoryPoints(){
+    var res = await sb.from("diary_entries").select("memory_points").eq("entry_date", todayStr()).maybeSingle();
+    if (res.error){ console.error(res.error); return; }
+    renderHomeMemoryPointList(res.data ? res.data.memory_points : []);
+  }
+
+  async function addHomeMemoryPoint(text){
+    var doc = await addMemoryPointToDate(todayStr(), text);
+    if (!doc) return;
+    renderHomeMemoryPointList(doc.memory_points);
+    if (state.diaryDate === todayStr()){ state.diaryDoc = doc; renderMemoryPointList(); }
+    refreshDiaryTags();
+    refreshDiaryCalendar();
+  }
+
+  async function deleteHomeMemoryPoint(id){
+    var doc = await deleteMemoryPointFromDate(todayStr(), id);
+    if (!doc) return;
+    renderHomeMemoryPointList(doc.memory_points);
+    if (state.diaryDate === todayStr()){ state.diaryDoc = doc; renderMemoryPointList(); }
+    refreshDiaryTags();
+    refreshDiaryCalendar();
   }
 
   function renderDiaryRecentList(docs){
@@ -1428,7 +1491,7 @@
     realtimeChannel = sb.channel("app-changes")
       .on("postgres_changes", { event:"*", schema:"public", table:"ledger_entries" }, function(){ refreshLedgerPage(); refreshHomeStats(); })
       .on("postgres_changes", { event:"*", schema:"public", table:"memos" }, function(){ refreshMemos(); })
-      .on("postgres_changes", { event:"*", schema:"public", table:"diary_entries" }, function(){ refreshDiaryEditor(); refreshDiaryRecent(); refreshDiaryTags(); refreshDiaryCalendar(); refreshHomeDiaryStatus(); })
+      .on("postgres_changes", { event:"*", schema:"public", table:"diary_entries" }, function(){ refreshDiaryEditor(); refreshDiaryRecent(); refreshDiaryTags(); refreshDiaryCalendar(); refreshHomeDiaryStatus(); refreshHomeMemoryPoints(); })
       .subscribe();
   }
 
@@ -1544,9 +1607,19 @@
       input.value = "";
     });
 
+    document.getElementById("homeMemoryPointForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var input = document.getElementById("homeMemoryPointInput");
+      var text = input.value.trim();
+      if (!text) return;
+      addHomeMemoryPoint(text);
+      input.value = "";
+    });
+
     refreshHomeStats();
     refreshMemos();
     refreshHomeDiaryStatus();
+    refreshHomeMemoryPoints();
     refreshLedgerPage();
     refreshDiaryEditor();
     refreshDiaryRecent();
