@@ -306,6 +306,17 @@
   .recent-item.current{ border-color:var(--stamp); background:var(--stamp-tint); }
   .recent-item .rdate{ font-size:11.5px; font-weight:700; color:var(--ink-soft); }
   .recent-item .rsnippet{ font-size:12.5px; color:var(--ink-faint); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .recent-item .rtags{ display:flex; flex-wrap:wrap; gap:4px; margin-top:5px; }
+  .recent-item .rtag{ font-size:11px; color:var(--stamp); background:var(--stamp-tint); padding:1px 7px; border-radius:999px; }
+
+  /* ---------- tag chips ---------- */
+  .tag-chip-list{ display:flex; flex-wrap:wrap; gap:6px; margin:0 0 16px; }
+  .tag-chip{
+    border:1px solid var(--rule); background:var(--paper); color:var(--ink-soft); font-size:12.5px;
+    padding:4px 11px; border-radius:999px; cursor:pointer; font-family:inherit;
+  }
+  .tag-chip:hover{ background:var(--paper-sunk); }
+  .tag-chip.active{ background:var(--stamp-tint); color:var(--stamp); border-color:var(--stamp); font-weight:700; }
 
   /* ---------- memory points ---------- */
   .memory-point-card{ margin-bottom:18px; }
@@ -606,6 +617,8 @@
           </div>
 
           <div>
+            <div class="section-title">標籤</div>
+            <div class="tag-chip-list" id="diaryTagList" hidden></div>
             <div class="section-title">最近的日記</div>
             <div class="recent-list" id="diaryRecent"></div>
           </div>
@@ -696,7 +709,8 @@
     ledgerMonth: monthKeyOf(todayStr()),
     diaryDate: todayStr(),
     diaryDirty: false,
-    diaryDoc: null
+    diaryDoc: null,
+    diaryActiveTag: null
   };
   var appBooted = false;
   var realtimeChannel = null;
@@ -951,6 +965,24 @@
     return [d.morning_text, d.afternoon_text, d.evening_text].filter(Boolean).join(" ");
   }
 
+  function extractTags(text){
+    if (!text) return [];
+    var re = /#([^\s#,.!?，。！？、；;：:]+)/g;
+    var tags = [], m;
+    while ((m = re.exec(text))){
+      if (m[1] && tags.indexOf(m[1]) === -1) tags.push(m[1]);
+    }
+    return tags;
+  }
+
+  function computeDayTags(morning, afternoon, evening, memoryPoints){
+    var all = [].concat(extractTags(morning), extractTags(afternoon), extractTags(evening));
+    (memoryPoints || []).forEach(function(p){ all = all.concat(extractTags(p.text)); });
+    var uniq = [];
+    all.forEach(function(t){ if (uniq.indexOf(t) === -1) uniq.push(t); });
+    return uniq;
+  }
+
   function markDiaryDirty(){
     state.diaryDirty = true;
     document.getElementById("diaryStatus").textContent = "尚未儲存";
@@ -1091,28 +1123,40 @@
       text: text
     };
     var points = ((state.diaryDoc && state.diaryDoc.memory_points) || []).concat([point]);
-    var res = await sb.from("diary_entries").upsert({ entry_date: state.diaryDate, memory_points: points, updated_at: now.toISOString() }, { onConflict:"entry_date" });
+    var tags = computeDayTags(
+      state.diaryDoc && state.diaryDoc.morning_text, state.diaryDoc && state.diaryDoc.afternoon_text,
+      state.diaryDoc && state.diaryDoc.evening_text, points
+    );
+    var res = await sb.from("diary_entries").upsert({ entry_date: state.diaryDate, memory_points: points, tags: tags, updated_at: now.toISOString() }, { onConflict:"entry_date" });
     if (res.error){ alert("新增失敗：" + res.error.message); return; }
-    state.diaryDoc = Object.assign({ entry_date: state.diaryDate }, state.diaryDoc, { memory_points: points });
+    state.diaryDoc = Object.assign({ entry_date: state.diaryDate }, state.diaryDoc, { memory_points: points, tags: tags });
     renderMemoryPointList();
+    refreshDiaryTags();
   }
 
   async function deleteMemoryPoint(id){
     var points = ((state.diaryDoc && state.diaryDoc.memory_points) || []).filter(function(p){ return p.id !== id; });
-    var res = await sb.from("diary_entries").upsert({ entry_date: state.diaryDate, memory_points: points, updated_at: new Date().toISOString() }, { onConflict:"entry_date" });
+    var tags = computeDayTags(
+      state.diaryDoc && state.diaryDoc.morning_text, state.diaryDoc && state.diaryDoc.afternoon_text,
+      state.diaryDoc && state.diaryDoc.evening_text, points
+    );
+    var res = await sb.from("diary_entries").upsert({ entry_date: state.diaryDate, memory_points: points, tags: tags, updated_at: new Date().toISOString() }, { onConflict:"entry_date" });
     if (res.error){ alert("刪除失敗：" + res.error.message); return; }
-    state.diaryDoc = Object.assign({}, state.diaryDoc, { memory_points: points });
+    state.diaryDoc = Object.assign({}, state.diaryDoc, { memory_points: points, tags: tags });
     renderMemoryPointList();
+    refreshDiaryTags();
   }
 
   function renderDiaryRecentList(docs){
     var el = document.getElementById("diaryRecent");
-    if (!docs.length){ el.innerHTML = '<div class="empty">還沒有日記。</div>'; return; }
+    if (!docs.length){ el.innerHTML = '<div class="empty">'+(state.diaryActiveTag ? "沒有帶這個標籤的日記。" : "還沒有日記。")+'</div>'; return; }
     el.innerHTML = docs.map(function(d){
       var snippet = diaryDayText(d).replace(/\s+/g," ").slice(0,24);
+      var tags = d.tags || [];
       return '<button class="recent-item '+(d.entry_date===state.diaryDate?"current":"")+'" data-diary-jump="'+d.entry_date+'">' +
         '<div class="rdate">'+dateLabel(d.entry_date)+'</div>' +
         '<div class="rsnippet">'+(snippet ? escapeHtml(snippet) : "（空白）")+'</div>' +
+        (tags.length ? '<div class="rtags">'+tags.map(function(t){ return '<span class="rtag">#'+escapeHtml(t)+'</span>'; }).join("")+'</div>' : "") +
       '</button>';
     }).join("");
     el.querySelectorAll("[data-diary-jump]").forEach(function(btn){
@@ -1121,9 +1165,40 @@
   }
 
   async function refreshDiaryRecent(){
-    var res = await sb.from("diary_entries").select("*").order("entry_date", { ascending:false }).limit(10);
+    var q = sb.from("diary_entries").select("*").order("entry_date", { ascending:false });
+    q = state.diaryActiveTag ? q.contains("tags", [state.diaryActiveTag]) : q.limit(10);
+    var res = await q;
     if (res.error){ console.error(res.error); return; }
     renderDiaryRecentList(res.data);
+  }
+
+  function renderDiaryTagList(tags){
+    var el = document.getElementById("diaryTagList");
+    if (!tags.length){ el.hidden = true; el.innerHTML = ""; return; }
+    el.hidden = false;
+    el.innerHTML = tags.map(function(t){
+      return '<button class="tag-chip '+(state.diaryActiveTag===t?"active":"")+'" type="button" data-tag="'+escapeHtml(t)+'">#'+escapeHtml(t)+'</button>';
+    }).join("");
+    el.querySelectorAll("[data-tag]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        state.diaryActiveTag = state.diaryActiveTag === btn.dataset.tag ? null : btn.dataset.tag;
+        renderDiaryTagList(tags);
+        refreshDiaryRecent();
+      });
+    });
+  }
+
+  async function refreshDiaryTags(){
+    var res = await sb.from("diary_entries").select("tags");
+    if (res.error){ console.error(res.error); return; }
+    var all = [];
+    (res.data || []).forEach(function(d){ (d.tags||[]).forEach(function(t){ if (all.indexOf(t)===-1) all.push(t); }); });
+    all.sort(function(a,b){ return a.localeCompare(b, "zh-Hant"); });
+    if (state.diaryActiveTag && all.indexOf(state.diaryActiveTag) === -1){
+      state.diaryActiveTag = null;
+      refreshDiaryRecent();
+    }
+    renderDiaryTagList(all);
   }
 
   async function refreshDiaryEditor(){
@@ -1161,20 +1236,27 @@
   }
 
   async function saveDiary(){
+    var morning = document.getElementById("diaryMorning").value;
+    var afternoon = document.getElementById("diaryAfternoon").value;
+    var evening = document.getElementById("diaryEvening").value;
+    var memoryPoints = (state.diaryDoc && state.diaryDoc.memory_points) || [];
     var payload = {
       entry_date: state.diaryDate,
-      morning_text: document.getElementById("diaryMorning").value,
-      afternoon_text: document.getElementById("diaryAfternoon").value,
-      evening_text: document.getElementById("diaryEvening").value,
+      morning_text: morning,
+      afternoon_text: afternoon,
+      evening_text: evening,
       mood_check: readMoodFormFromDom(),
+      tags: computeDayTags(morning, afternoon, evening, memoryPoints),
       updated_at: new Date().toISOString()
     };
     var res = await sb.from("diary_entries").upsert(payload, { onConflict: "entry_date" });
     if (res.error){ alert("儲存失敗：" + res.error.message); return; }
+    state.diaryDoc = Object.assign({}, state.diaryDoc, payload);
     state.diaryDirty = false;
     var now = new Date();
     document.getElementById("diaryStatus").textContent = "已儲存・" + pad(now.getHours()) + ":" + pad(now.getMinutes());
     refreshDiaryRecent();
+    refreshDiaryTags();
     if (state.diaryDate === todayStr()) refreshHomeDiaryStatus();
   }
 
@@ -1192,7 +1274,7 @@
     realtimeChannel = sb.channel("app-changes")
       .on("postgres_changes", { event:"*", schema:"public", table:"ledger_entries" }, function(){ refreshLedgerPage(); refreshHomeStats(); })
       .on("postgres_changes", { event:"*", schema:"public", table:"memos" }, function(){ refreshMemos(); })
-      .on("postgres_changes", { event:"*", schema:"public", table:"diary_entries" }, function(){ refreshDiaryEditor(); refreshDiaryRecent(); refreshHomeDiaryStatus(); })
+      .on("postgres_changes", { event:"*", schema:"public", table:"diary_entries" }, function(){ refreshDiaryEditor(); refreshDiaryRecent(); refreshDiaryTags(); refreshHomeDiaryStatus(); })
       .subscribe();
   }
 
@@ -1289,6 +1371,7 @@
     refreshLedgerPage();
     refreshDiaryEditor();
     refreshDiaryRecent();
+    refreshDiaryTags();
     setupRealtime();
   }
 
