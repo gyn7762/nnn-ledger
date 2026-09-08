@@ -239,6 +239,7 @@
     font-size:13.5px; font-weight:600; cursor:pointer; border-right:1px solid var(--rule);
   }
   .seg button:last-child{ border-right:none; }
+  .seg button.on{ background:var(--stamp-tint); color:var(--stamp); }
   .seg button.on.income{ background:var(--income-tint); color:var(--income); }
   .seg button.on.expense{ background:var(--expense-tint); color:var(--expense); }
 
@@ -293,7 +294,7 @@
   @media (max-width:780px){ .diary-layout{ grid-template-columns:1fr; } }
   .date-switch{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
   .date-switch .label{ font-family:'Noto Serif TC',serif; font-weight:700; font-size:16.5px; min-width:150px; text-align:center; }
-  .diary-textarea{ min-height:320px; line-height:1.75; font-size:14.5px; }
+  .diary-textarea{ min-height:130px; line-height:1.7; font-size:14.5px; }
   .diary-save-row{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
   .diary-status{ font-size:12px; color:var(--ink-faint); }
   .recent-list{ display:flex; flex-direction:column; gap:8px; }
@@ -305,6 +306,37 @@
   .recent-item.current{ border-color:var(--stamp); background:var(--stamp-tint); }
   .recent-item .rdate{ font-size:11.5px; font-weight:700; color:var(--ink-soft); }
   .recent-item .rsnippet{ font-size:12.5px; color:var(--ink-faint); margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ---------- memory points ---------- */
+  .memory-point-card{ margin-bottom:18px; }
+  .memory-point-add{ display:flex; gap:10px; }
+  .memory-point-add input{ flex:1; min-width:0; }
+  .memory-point-add button{ flex:0 0 auto; white-space:nowrap; }
+  .memory-point-list{ display:flex; flex-direction:column; gap:2px; margin-top:10px; }
+  .memory-point-row{ display:flex; align-items:center; gap:10px; padding:8px 4px; border-bottom:1px solid var(--rule); }
+  .memory-point-row:last-child{ border-bottom:none; }
+  .memory-point-time{ font-size:11px; color:var(--ink-faint); font-family:'JetBrains Mono',monospace; flex:0 0 auto; width:38px; }
+  .memory-point-text{ flex:1; font-size:13.5px; color:var(--ink); word-break:break-word; }
+
+  /* ---------- mood check ---------- */
+  .mood-card{ margin-top:18px; }
+  .mood-toggle{
+    width:100%; display:flex; align-items:center; justify-content:space-between;
+    background:none; border:none; padding:1px 0; cursor:pointer;
+    font-family:'Noto Serif TC',serif; font-weight:700; font-size:15.5px; color:var(--ink);
+  }
+  .mood-toggle .mood-toggle-arrow{ font-size:12px; color:var(--ink-faint); transition:transform .15s ease; }
+  .mood-toggle.open .mood-toggle-arrow{ transform:rotate(180deg); }
+  .mood-body{ margin-top:16px; display:flex; flex-direction:column; gap:14px; }
+  .mood-feel-grid{ display:grid; grid-template-columns:1fr; gap:7px; margin-bottom:2px; }
+  @media (min-width:640px){ .mood-feel-grid{ grid-template-columns:1fr 1fr; column-gap:22px; } }
+  .mood-feel-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .mood-feel-label{ font-size:13.5px; color:var(--ink-soft); flex:0 0 auto; min-width:76px; }
+  .mood-feel-row .seg{ max-width:190px; }
+  .mood-row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:560px){ .mood-row2{ grid-template-columns:1fr; } }
+  .mood-divider{ height:1px; background:var(--rule); margin:2px 0; }
+  .mood-body input[type="range"]{ padding:0; }
 
   .banner{
     display:flex; align-items:center; gap:10px; font-size:13px;
@@ -523,6 +555,15 @@
           <p>寫下今天發生的事</p>
         </div>
 
+        <div class="card memory-point-card">
+          <div class="section-title" style="margin:0 0 10px;">加入記憶點</div>
+          <form class="memory-point-add" id="memoryPointForm">
+            <input type="text" id="memoryPointInput" placeholder="隨手記一個瞬間，晚點再整理…" maxlength="140" required>
+            <button type="submit" class="btn btn-primary">加入</button>
+          </form>
+          <div class="memory-point-list" id="memoryPointList"></div>
+        </div>
+
         <div class="diary-layout">
           <div>
             <div class="date-switch">
@@ -537,11 +578,30 @@
             </div>
 
             <div class="card">
-              <textarea class="diary-textarea" id="diaryContent" placeholder="今天發生了什麼事？有什麼想法？"></textarea>
+              <div class="field" style="margin-bottom:14px;">
+                <label for="diaryMorning">早上</label>
+                <textarea class="diary-textarea" id="diaryMorning" placeholder="早上發生了什麼事？"></textarea>
+              </div>
+              <div class="field" style="margin-bottom:14px;">
+                <label for="diaryAfternoon">下午</label>
+                <textarea class="diary-textarea" id="diaryAfternoon" placeholder="下午發生了什麼事？"></textarea>
+              </div>
+              <div class="field">
+                <label for="diaryEvening">晚上</label>
+                <textarea class="diary-textarea" id="diaryEvening" placeholder="晚上發生了什麼事？"></textarea>
+              </div>
               <div class="diary-save-row">
                 <span class="diary-status" id="diaryStatus"></span>
                 <button class="btn btn-primary" id="diarySave" type="button">儲存</button>
               </div>
+            </div>
+
+            <div class="card mood-card">
+              <button class="mood-toggle" id="moodToggle" type="button">
+                <span>🌊 今日心情紀錄</span>
+                <span class="mood-toggle-arrow">▾</span>
+              </button>
+              <div class="mood-body" id="moodBody" hidden></div>
             </div>
           </div>
 
@@ -635,7 +695,8 @@
     page: "home",
     ledgerMonth: monthKeyOf(todayStr()),
     diaryDate: todayStr(),
-    diaryDirty: false
+    diaryDirty: false,
+    diaryDoc: null
   };
   var appBooted = false;
   var realtimeChannel = null;
@@ -868,11 +929,187 @@
   }
 
   /* ================= diary ================= */
+  var TRASH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m2 0-1 13a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 7"/></svg>';
+
+  var FEEL_ITEMS = [
+    ["badMood","很糟"], ["agree","認同"], ["conflicted","矛盾反覆"], ["dissatisfied","不滿"],
+    ["irritable","煩躁"], ["overthinking","鑽牛角尖"], ["dejected","消沉"], ["anxious","焦躁"],
+    ["settled","安分"], ["arrogant","自命不凡"], ["empty","空虛"]
+  ];
+  var FEEL_OPTIONS = ["是","否","有一點"];
+
+  function emptyMoodCheck(){
+    return {
+      feel:{}, issueType:null, futureView:null, wantElsewhere:null, rewardedSelf:null, easeLevel:0,
+      ruinedMood:"", whereWhy:"", hatedPhrase:"", cravingToday:"", pleasantThing:"",
+      unpleasantThing:"", rewardWhy:"", enjoyedThing:"", tomorrowWish:""
+    };
+  }
+
+  function diaryDayText(d){
+    if (!d) return "";
+    return [d.morning_text, d.afternoon_text, d.evening_text].filter(Boolean).join(" ");
+  }
+
+  function markDiaryDirty(){
+    state.diaryDirty = true;
+    document.getElementById("diaryStatus").textContent = "尚未儲存";
+  }
+
+  function renderMoodForm(){
+    var feelRows = FEEL_ITEMS.map(function(item){
+      var opts = FEEL_OPTIONS.map(function(opt){
+        return '<button type="button" data-value="'+opt+'">'+opt+'</button>';
+      }).join("");
+      return '<div class="mood-feel-row" data-mood-feel="'+item[0]+'">' +
+        '<span class="mood-feel-label">'+item[1]+'</span>' +
+        '<div class="seg mood-seg3">'+opts+'</div>' +
+      '</div>';
+    }).join("");
+
+    document.getElementById("moodBody").innerHTML =
+      '<div class="section-title" style="margin:0;">我覺得自己……</div>' +
+      '<div class="mood-feel-grid" id="moodFeelGrid">'+feelRows+'</div>' +
+
+      '<div class="field"><label for="moodRuinedMood">這件事搞壞了我今天的心情</label>' +
+      '<input type="text" id="moodRuinedMood" data-mood-text="ruinedMood" maxlength="160" placeholder="（選填）"></div>' +
+
+      '<div class="mood-row2">' +
+        '<div class="field"><label>我認為這是一個</label><div class="seg mood-seg" data-mood-key="issueType">' +
+          '<button type="button" data-value="問題">問題</button><button type="button" data-value="挑戰">挑戰</button></div></div>' +
+        '<div class="field"><label>我現在覺得未來是</label><div class="seg mood-seg" data-mood-key="futureView">' +
+          '<button type="button" data-value="黑暗的">黑暗的</button><button type="button" data-value="光明的">光明的</button></div></div>' +
+      '</div>' +
+
+      '<div class="field"><label>現在寧可待在別的地方嗎？</label><div class="seg mood-seg" data-mood-key="wantElsewhere">' +
+        '<button type="button" data-value="是">是</button><button type="button" data-value="否">否</button></div></div>' +
+      '<div class="field" id="moodWhereWhyField" hidden><label for="moodWhereWhy">如果是，想待在哪裡？為什麼？</label>' +
+      '<input type="text" id="moodWhereWhy" data-mood-text="whereWhy" maxlength="160"></div>' +
+
+      '<div class="field"><label for="moodHatedPhrase">最討厭的說詞是</label>' +
+      '<input type="text" id="moodHatedPhrase" data-mood-text="hatedPhrase" maxlength="120"></div>' +
+      '<div class="field"><label for="moodCravingToday">今天最渴望的事</label>' +
+      '<input type="text" id="moodCravingToday" data-mood-text="cravingToday" maxlength="160"></div>' +
+
+      '<div class="mood-divider"></div>' +
+
+      '<div class="field"><label for="moodPleasantThing">這件事相當愉快</label>' +
+      '<input type="text" id="moodPleasantThing" data-mood-text="pleasantThing" maxlength="160"></div>' +
+      '<div class="field"><label for="moodUnpleasantThing">這件事沒那麼愉快</label>' +
+      '<input type="text" id="moodUnpleasantThing" data-mood-text="unpleasantThing" maxlength="160"></div>' +
+
+      '<div class="field"><label>你犒賞自己了嗎？</label><div class="seg mood-seg" data-mood-key="rewardedSelf">' +
+        '<button type="button" data-value="有">有</button><button type="button" data-value="沒有">沒有</button></div></div>' +
+      '<div class="field"><label for="moodRewardWhy">為什麼／為什麼不呢？</label>' +
+      '<input type="text" id="moodRewardWhy" data-mood-text="rewardWhy" maxlength="160"></div>' +
+
+      '<div class="field"><label for="moodEaseLevel">內心輕鬆的程度：<span id="moodEaseLevelVal">0</span>%</label>' +
+      '<input type="range" id="moodEaseLevel" min="0" max="100" step="5" value="0"></div>' +
+
+      '<div class="field"><label for="moodEnjoyedThing">我很享受的是</label>' +
+      '<input type="text" id="moodEnjoyedThing" data-mood-text="enjoyedThing" maxlength="160"></div>' +
+      '<div class="field"><label for="moodTomorrowWish">明天的志願</label>' +
+      '<input type="text" id="moodTomorrowWish" data-mood-text="tomorrowWish" maxlength="160"></div>';
+  }
+
+  function setupMoodForm(){
+    var body = document.getElementById("moodBody");
+    body.addEventListener("click", function(e){
+      var segBtn = e.target.closest(".mood-seg button, .mood-seg3 button");
+      if (!segBtn) return;
+      var segEl = segBtn.parentElement;
+      segEl.querySelectorAll("button").forEach(function(b){ b.classList.toggle("on", b===segBtn); });
+      if (segEl.dataset.moodKey === "wantElsewhere"){
+        document.getElementById("moodWhereWhyField").hidden = segBtn.dataset.value !== "是";
+      }
+      markDiaryDirty();
+    });
+    body.addEventListener("input", function(e){
+      if (e.target.id === "moodEaseLevel") document.getElementById("moodEaseLevelVal").textContent = e.target.value;
+      markDiaryDirty();
+    });
+  }
+
+  function fillMoodForm(mood){
+    mood = mood || emptyMoodCheck();
+    var feel = mood.feel || {};
+    document.querySelectorAll("#moodFeelGrid .mood-feel-row").forEach(function(row){
+      var val = feel[row.dataset.moodFeel] || null;
+      row.querySelectorAll("button").forEach(function(b){ b.classList.toggle("on", b.dataset.value === val); });
+    });
+    document.querySelectorAll("#moodBody .mood-seg[data-mood-key]").forEach(function(segEl){
+      var key = segEl.dataset.moodKey, val = mood[key] || null;
+      segEl.querySelectorAll("button").forEach(function(b){ b.classList.toggle("on", b.dataset.value === val); });
+      if (key === "wantElsewhere") document.getElementById("moodWhereWhyField").hidden = val !== "是";
+    });
+    document.querySelectorAll("#moodBody [data-mood-text]").forEach(function(inp){
+      inp.value = mood[inp.dataset.moodText] || "";
+    });
+    var ease = typeof mood.easeLevel === "number" ? mood.easeLevel : 0;
+    document.getElementById("moodEaseLevel").value = ease;
+    document.getElementById("moodEaseLevelVal").textContent = ease;
+  }
+
+  function readMoodFormFromDom(){
+    var mood = emptyMoodCheck();
+    document.querySelectorAll("#moodFeelGrid .mood-feel-row").forEach(function(row){
+      var onBtn = row.querySelector("button.on");
+      if (onBtn) mood.feel[row.dataset.moodFeel] = onBtn.dataset.value;
+    });
+    document.querySelectorAll("#moodBody .mood-seg[data-mood-key]").forEach(function(segEl){
+      var onBtn = segEl.querySelector("button.on");
+      mood[segEl.dataset.moodKey] = onBtn ? onBtn.dataset.value : null;
+    });
+    document.querySelectorAll("#moodBody [data-mood-text]").forEach(function(inp){
+      mood[inp.dataset.moodText] = inp.value.trim();
+    });
+    mood.easeLevel = parseInt(document.getElementById("moodEaseLevel").value, 10) || 0;
+    return mood;
+  }
+
+  function renderMemoryPointList(){
+    var el = document.getElementById("memoryPointList");
+    var points = (state.diaryDoc && state.diaryDoc.memory_points) || [];
+    if (!points.length){ el.innerHTML = '<div class="empty" style="padding:6px 2px;">還沒有記憶點，想到什麼就記一筆吧。</div>'; return; }
+    el.innerHTML = points.map(function(p){
+      return '<div class="memory-point-row">' +
+        '<span class="memory-point-time">'+escapeHtml(p.time||"")+'</span>' +
+        '<span class="memory-point-text">'+escapeHtml(p.text)+'</span>' +
+        '<button class="btn btn-ghost btn-icon" type="button" data-mp-del="'+p.id+'" aria-label="刪除">'+TRASH_ICON+'</button>' +
+      '</div>';
+    }).join("");
+    el.querySelectorAll("[data-mp-del]").forEach(function(btn){
+      btn.addEventListener("click", function(){ deleteMemoryPoint(btn.dataset.mpDel); });
+    });
+  }
+
+  async function addMemoryPoint(text){
+    var now = new Date();
+    var point = {
+      id: (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now()+"-"+Math.random().toString(16).slice(2)),
+      time: pad(now.getHours())+":"+pad(now.getMinutes()),
+      text: text
+    };
+    var points = ((state.diaryDoc && state.diaryDoc.memory_points) || []).concat([point]);
+    var res = await sb.from("diary_entries").upsert({ entry_date: state.diaryDate, memory_points: points, updated_at: now.toISOString() }, { onConflict:"entry_date" });
+    if (res.error){ alert("新增失敗：" + res.error.message); return; }
+    state.diaryDoc = Object.assign({ entry_date: state.diaryDate }, state.diaryDoc, { memory_points: points });
+    renderMemoryPointList();
+  }
+
+  async function deleteMemoryPoint(id){
+    var points = ((state.diaryDoc && state.diaryDoc.memory_points) || []).filter(function(p){ return p.id !== id; });
+    var res = await sb.from("diary_entries").upsert({ entry_date: state.diaryDate, memory_points: points, updated_at: new Date().toISOString() }, { onConflict:"entry_date" });
+    if (res.error){ alert("刪除失敗：" + res.error.message); return; }
+    state.diaryDoc = Object.assign({}, state.diaryDoc, { memory_points: points });
+    renderMemoryPointList();
+  }
+
   function renderDiaryRecentList(docs){
     var el = document.getElementById("diaryRecent");
     if (!docs.length){ el.innerHTML = '<div class="empty">還沒有日記。</div>'; return; }
     el.innerHTML = docs.map(function(d){
-      var snippet = (d.content||"").replace(/\s+/g," ").slice(0,24);
+      var snippet = diaryDayText(d).replace(/\s+/g," ").slice(0,24);
       return '<button class="recent-item '+(d.entry_date===state.diaryDate?"current":"")+'" data-diary-jump="'+d.entry_date+'">' +
         '<div class="rdate">'+dateLabel(d.entry_date)+'</div>' +
         '<div class="rsnippet">'+(snippet ? escapeHtml(snippet) : "（空白）")+'</div>' +
@@ -892,7 +1129,12 @@
   async function refreshDiaryEditor(){
     var res = await sb.from("diary_entries").select("*").eq("entry_date", state.diaryDate).maybeSingle();
     if (res.error){ console.error(res.error); return; }
-    document.getElementById("diaryContent").value = res.data ? res.data.content : "";
+    state.diaryDoc = res.data || null;
+    document.getElementById("diaryMorning").value = res.data ? res.data.morning_text : "";
+    document.getElementById("diaryAfternoon").value = res.data ? res.data.afternoon_text : "";
+    document.getElementById("diaryEvening").value = res.data ? res.data.evening_text : "";
+    fillMoodForm(res.data ? res.data.mood_check : null);
+    renderMemoryPointList();
     state.diaryDirty = false;
     document.getElementById("diaryStatus").textContent = "";
   }
@@ -900,9 +1142,9 @@
   async function refreshHomeDiaryStatus(){
     var res = await sb.from("diary_entries").select("*").eq("entry_date", todayStr()).maybeSingle();
     var el = document.getElementById("homeDiaryStatus");
-    var content = res.data && res.data.content;
-    if (content){
-      el.innerHTML = '<div class="empty" style="padding:0 0 8px;color:var(--ink-soft);">今天已經寫了 '+content.length+' 個字。</div><button class="link-btn" data-nav="diary">查看或繼續寫 →</button>';
+    var text = diaryDayText(res.data);
+    if (text){
+      el.innerHTML = '<div class="empty" style="padding:0 0 8px;color:var(--ink-soft);">今天已經寫了 '+text.length+' 個字。</div><button class="link-btn" data-nav="diary">查看或繼續寫 →</button>';
     } else {
       el.innerHTML = '<div class="empty" style="padding:0 0 8px;">今天還沒有寫日記。</div><button class="link-btn" data-nav="diary">開始寫今天的日記 →</button>';
     }
@@ -919,8 +1161,15 @@
   }
 
   async function saveDiary(){
-    var content = document.getElementById("diaryContent").value;
-    var res = await sb.from("diary_entries").upsert({ entry_date: state.diaryDate, content: content, updated_at: new Date().toISOString() }, { onConflict: "entry_date" });
+    var payload = {
+      entry_date: state.diaryDate,
+      morning_text: document.getElementById("diaryMorning").value,
+      afternoon_text: document.getElementById("diaryAfternoon").value,
+      evening_text: document.getElementById("diaryEvening").value,
+      mood_check: readMoodFormFromDom(),
+      updated_at: new Date().toISOString()
+    };
+    var res = await sb.from("diary_entries").upsert(payload, { onConflict: "entry_date" });
     if (res.error){ alert("儲存失敗：" + res.error.message); return; }
     state.diaryDirty = false;
     var now = new Date();
@@ -1013,9 +1262,25 @@
     document.getElementById("diaryNext").addEventListener("click", function(){ switchDiaryDate(addDays(state.diaryDate,1)); });
     document.getElementById("diaryToday").addEventListener("click", function(){ switchDiaryDate(todayStr()); });
     document.getElementById("diarySave").addEventListener("click", saveDiary);
-    document.getElementById("diaryContent").addEventListener("input", function(){
-      state.diaryDirty = true;
-      document.getElementById("diaryStatus").textContent = "尚未儲存";
+    document.getElementById("diaryMorning").addEventListener("input", markDiaryDirty);
+    document.getElementById("diaryAfternoon").addEventListener("input", markDiaryDirty);
+    document.getElementById("diaryEvening").addEventListener("input", markDiaryDirty);
+
+    renderMoodForm();
+    setupMoodForm();
+    document.getElementById("moodToggle").addEventListener("click", function(){
+      var body = document.getElementById("moodBody");
+      body.hidden = !body.hidden;
+      this.classList.toggle("open", !body.hidden);
+    });
+
+    document.getElementById("memoryPointForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var input = document.getElementById("memoryPointInput");
+      var text = input.value.trim();
+      if (!text) return;
+      addMemoryPoint(text);
+      input.value = "";
     });
 
     refreshHomeStats();
