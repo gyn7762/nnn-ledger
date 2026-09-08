@@ -295,8 +295,32 @@
   .date-switch{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
   .date-switch .label{ font-family:'Noto Serif TC',serif; font-weight:700; font-size:16.5px; min-width:150px; text-align:center; }
   .diary-textarea{ min-height:130px; line-height:1.7; font-size:14.5px; }
-  .diary-save-row{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
+  .diary-save-row{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; gap:10px; }
+  .diary-save-actions{ display:flex; gap:8px; }
   .diary-status{ font-size:12px; color:var(--ink-faint); }
+  .diary-view-block{ margin-bottom:16px; }
+  .diary-view-block:last-of-type{ margin-bottom:0; }
+  .diary-view-label{ font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:5px; }
+  .diary-view-text{ font-size:14.5px; line-height:1.7; color:var(--ink); white-space:pre-wrap; word-break:break-word; }
+  .diary-view-text.is-empty{ color:var(--ink-faint); font-style:italic; }
+
+  /* ---------- calendar ---------- */
+  .calendar-card{ margin-bottom:18px; }
+  .calendar-nav{ display:flex; align-items:center; gap:8px; }
+  .calendar-nav .label{ flex:1; text-align:center; font-family:'Noto Serif TC',serif; font-weight:700; font-size:14.5px; }
+  .calendar-weekdays{ display:grid; grid-template-columns:repeat(7,1fr); text-align:center; margin-top:2px; }
+  .calendar-weekdays span{ font-size:11px; color:var(--ink-faint); padding:2px 0; }
+  .calendar-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px 0; }
+  .calendar-day{
+    position:relative; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;
+    border:none; background:none; border-radius:50%; font-size:12.5px; color:var(--ink);
+    cursor:pointer; font-family:inherit;
+  }
+  .calendar-day:hover{ background:var(--paper-sunk); }
+  .calendar-day.other-month{ visibility:hidden; pointer-events:none; }
+  .calendar-day.has-entry{ box-shadow:inset 0 0 0 2px var(--stamp); color:var(--stamp); font-weight:700; }
+  .calendar-day.today:not(.current){ box-shadow:inset 0 0 0 1px var(--ink-faint); }
+  .calendar-day.current{ background:var(--stamp); color:var(--stamp-ink); font-weight:700; box-shadow:none; }
   .recent-list{ display:flex; flex-direction:column; gap:8px; }
   .recent-item{
     display:block; width:100%; text-align:left; background:var(--paper); border:1px solid var(--rule);
@@ -566,6 +590,32 @@
           <p>寫下今天發生的事</p>
         </div>
 
+        <div class="card calendar-card">
+          <button class="mood-toggle" id="diaryCalToggle" type="button">
+            <span>📅 日曆</span>
+            <span class="mood-toggle-arrow">▾</span>
+          </button>
+          <div class="mood-body" id="diaryCalBody" hidden>
+            <div class="field">
+              <label for="diaryDateSearch">跳到日期</label>
+              <input type="date" id="diaryDateSearch">
+            </div>
+            <div class="calendar-nav">
+              <button class="btn btn-icon" id="calPrev" type="button" aria-label="上個月">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+              </button>
+              <div class="label" id="calMonthLabel"></div>
+              <button class="btn btn-icon" id="calNext" type="button" aria-label="下個月">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+              </button>
+            </div>
+            <div class="calendar-weekdays">
+              <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+          </div>
+        </div>
+
         <div class="card memory-point-card">
           <div class="section-title" style="margin:0 0 10px;">加入記憶點</div>
           <form class="memory-point-add" id="memoryPointForm">
@@ -589,21 +639,44 @@
             </div>
 
             <div class="card">
-              <div class="field" style="margin-bottom:14px;">
-                <label for="diaryMorning">早上</label>
-                <textarea class="diary-textarea" id="diaryMorning" placeholder="早上發生了什麼事？"></textarea>
+              <div id="diaryView" hidden>
+                <div class="diary-view-block">
+                  <div class="diary-view-label">早上</div>
+                  <div class="diary-view-text" id="diaryViewMorning"></div>
+                </div>
+                <div class="diary-view-block">
+                  <div class="diary-view-label">下午</div>
+                  <div class="diary-view-text" id="diaryViewAfternoon"></div>
+                </div>
+                <div class="diary-view-block">
+                  <div class="diary-view-label">晚上</div>
+                  <div class="diary-view-text" id="diaryViewEvening"></div>
+                </div>
+                <div class="diary-save-row">
+                  <span class="diary-status" id="diaryViewStatus"></span>
+                  <button class="btn" id="diaryEditBtn" type="button">✎ 編輯</button>
+                </div>
               </div>
-              <div class="field" style="margin-bottom:14px;">
-                <label for="diaryAfternoon">下午</label>
-                <textarea class="diary-textarea" id="diaryAfternoon" placeholder="下午發生了什麼事？"></textarea>
-              </div>
-              <div class="field">
-                <label for="diaryEvening">晚上</label>
-                <textarea class="diary-textarea" id="diaryEvening" placeholder="晚上發生了什麼事？"></textarea>
-              </div>
-              <div class="diary-save-row">
-                <span class="diary-status" id="diaryStatus"></span>
-                <button class="btn btn-primary" id="diarySave" type="button">儲存</button>
+              <div id="diaryEdit" hidden>
+                <div class="field" style="margin-bottom:14px;">
+                  <label for="diaryMorning">早上</label>
+                  <textarea class="diary-textarea" id="diaryMorning" placeholder="早上發生了什麼事？"></textarea>
+                </div>
+                <div class="field" style="margin-bottom:14px;">
+                  <label for="diaryAfternoon">下午</label>
+                  <textarea class="diary-textarea" id="diaryAfternoon" placeholder="下午發生了什麼事？"></textarea>
+                </div>
+                <div class="field">
+                  <label for="diaryEvening">晚上</label>
+                  <textarea class="diary-textarea" id="diaryEvening" placeholder="晚上發生了什麼事？"></textarea>
+                </div>
+                <div class="diary-save-row">
+                  <span class="diary-status" id="diaryStatus"></span>
+                  <div class="diary-save-actions">
+                    <button class="btn btn-ghost" id="diaryCancelEdit" type="button">取消</button>
+                    <button class="btn btn-primary" id="diarySave" type="button">儲存</button>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -710,7 +783,10 @@
     diaryDate: todayStr(),
     diaryDirty: false,
     diaryDoc: null,
-    diaryActiveTag: null
+    diaryActiveTag: null,
+    diaryEditing: false,
+    calendarMonth: monthKeyOf(todayStr()),
+    calendarMarked: []
   };
   var appBooted = false;
   var realtimeChannel = null;
@@ -988,6 +1064,29 @@
     document.getElementById("diaryStatus").textContent = "尚未儲存";
   }
 
+  function diaryViewSegHtml(text){
+    text = text || "";
+    return text ? escapeHtml(text) : '<span class="is-empty">（空白）</span>';
+  }
+
+  function renderDiaryView(doc){
+    document.getElementById("diaryViewMorning").innerHTML = diaryViewSegHtml(doc && doc.morning_text);
+    document.getElementById("diaryViewAfternoon").innerHTML = diaryViewSegHtml(doc && doc.afternoon_text);
+    document.getElementById("diaryViewEvening").innerHTML = diaryViewSegHtml(doc && doc.evening_text);
+  }
+
+  function showEditMode(){
+    state.diaryEditing = true;
+    document.getElementById("diaryView").hidden = true;
+    document.getElementById("diaryEdit").hidden = false;
+  }
+
+  function showViewMode(){
+    state.diaryEditing = false;
+    document.getElementById("diaryEdit").hidden = true;
+    document.getElementById("diaryView").hidden = false;
+  }
+
   function renderMoodForm(){
     var feelRows = FEEL_ITEMS.map(function(item){
       var opts = FEEL_OPTIONS.map(function(opt){
@@ -1210,8 +1309,11 @@
     document.getElementById("diaryEvening").value = res.data ? res.data.evening_text : "";
     fillMoodForm(res.data ? res.data.mood_check : null);
     renderMemoryPointList();
+    renderDiaryView(res.data);
     state.diaryDirty = false;
     document.getElementById("diaryStatus").textContent = "";
+    document.getElementById("diaryViewStatus").textContent = "";
+    if (diaryDayText(res.data)) showViewMode(); else showEditMode();
   }
 
   async function refreshHomeDiaryStatus(){
@@ -1229,10 +1331,58 @@
     if (state.diaryDirty && !confirm("目前的日記還沒有儲存，確定要離開嗎？")) return;
     state.diaryDate = dateStr;
     document.getElementById("diaryDateLabel").textContent = dateLabel(dateStr);
+    document.getElementById("diaryDateSearch").value = dateStr;
     refreshDiaryEditor();
     document.querySelectorAll("#diaryRecent .recent-item").forEach(function(el){
       el.classList.toggle("current", el.dataset.diaryJump === state.diaryDate);
     });
+    if (monthKeyOf(dateStr) !== state.calendarMonth){
+      state.calendarMonth = monthKeyOf(dateStr);
+      refreshDiaryCalendar();
+    } else {
+      renderDiaryCalendar(state.calendarMarked);
+    }
+  }
+
+  /* ---------------- diary calendar ---------------- */
+  function renderDiaryCalendar(markedDates){
+    state.calendarMarked = markedDates;
+    document.getElementById("calMonthLabel").textContent = monthLabel(state.calendarMonth);
+    var p = state.calendarMonth.split("-").map(Number);
+    var firstDow = new Date(p[0], p[1]-1, 1).getDay();
+    var daysInMonth = new Date(p[0], p[1], 0).getDate();
+    var today = todayStr();
+    var cells = [];
+    for (var i=0; i<firstDow; i++){ cells.push('<button class="calendar-day other-month" type="button" tabindex="-1"></button>'); }
+    for (var day=1; day<=daysInMonth; day++){
+      var dateStr = state.calendarMonth + "-" + pad(day);
+      var cls = ["calendar-day"];
+      if (dateStr === today) cls.push("today");
+      if (dateStr === state.diaryDate) cls.push("current");
+      if (markedDates.indexOf(dateStr) !== -1) cls.push("has-entry");
+      cells.push('<button class="'+cls.join(" ")+'" type="button" data-cal-date="'+dateStr+'">'+day+'</button>');
+    }
+    document.getElementById("calendarGrid").innerHTML = cells.join("");
+    document.querySelectorAll("#calendarGrid [data-cal-date]").forEach(function(btn){
+      btn.addEventListener("click", function(){ switchDiaryDate(btn.dataset.calDate); });
+    });
+  }
+
+  async function refreshDiaryCalendar(){
+    var start = state.calendarMonth + "-01";
+    var nextStart = addMonths(state.calendarMonth, 1) + "-01";
+    var res = await sb.from("diary_entries").select("entry_date")
+      .gte("entry_date", start).lt("entry_date", nextStart);
+    if (res.error){ console.error(res.error); return; }
+    var marked = (res.data || [])
+      .filter(function(d){ return d.entry_date; })
+      .map(function(d){ return d.entry_date; });
+    renderDiaryCalendar(marked);
+  }
+
+  function switchCalendarMonth(monthKey){
+    state.calendarMonth = monthKey;
+    refreshDiaryCalendar();
   }
 
   async function saveDiary(){
@@ -1254,9 +1404,13 @@
     state.diaryDoc = Object.assign({}, state.diaryDoc, payload);
     state.diaryDirty = false;
     var now = new Date();
-    document.getElementById("diaryStatus").textContent = "已儲存・" + pad(now.getHours()) + ":" + pad(now.getMinutes());
+    document.getElementById("diaryStatus").textContent = "";
+    renderDiaryView(state.diaryDoc);
+    showViewMode();
+    document.getElementById("diaryViewStatus").textContent = "已儲存・" + pad(now.getHours()) + ":" + pad(now.getMinutes());
     refreshDiaryRecent();
     refreshDiaryTags();
+    refreshDiaryCalendar();
     if (state.diaryDate === todayStr()) refreshHomeDiaryStatus();
   }
 
@@ -1274,7 +1428,7 @@
     realtimeChannel = sb.channel("app-changes")
       .on("postgres_changes", { event:"*", schema:"public", table:"ledger_entries" }, function(){ refreshLedgerPage(); refreshHomeStats(); })
       .on("postgres_changes", { event:"*", schema:"public", table:"memos" }, function(){ refreshMemos(); })
-      .on("postgres_changes", { event:"*", schema:"public", table:"diary_entries" }, function(){ refreshDiaryEditor(); refreshDiaryRecent(); refreshDiaryTags(); refreshHomeDiaryStatus(); })
+      .on("postgres_changes", { event:"*", schema:"public", table:"diary_entries" }, function(){ refreshDiaryEditor(); refreshDiaryRecent(); refreshDiaryTags(); refreshDiaryCalendar(); refreshHomeDiaryStatus(); })
       .subscribe();
   }
 
@@ -1288,6 +1442,7 @@
     document.getElementById("ledgerDate").value = todayStr();
     document.getElementById("ledgerMonthLabel").textContent = monthLabel(state.ledgerMonth);
     document.getElementById("diaryDateLabel").textContent = dateLabel(state.diaryDate);
+    document.getElementById("diaryDateSearch").value = state.diaryDate;
     renderLedgerForm();
 
     var collapsed = false;
@@ -1348,6 +1503,30 @@
     document.getElementById("diaryAfternoon").addEventListener("input", markDiaryDirty);
     document.getElementById("diaryEvening").addEventListener("input", markDiaryDirty);
 
+    document.getElementById("diaryEditBtn").addEventListener("click", showEditMode);
+    document.getElementById("diaryCancelEdit").addEventListener("click", function(){
+      var doc = state.diaryDoc;
+      document.getElementById("diaryMorning").value = doc ? doc.morning_text : "";
+      document.getElementById("diaryAfternoon").value = doc ? doc.afternoon_text : "";
+      document.getElementById("diaryEvening").value = doc ? doc.evening_text : "";
+      fillMoodForm(doc ? doc.mood_check : null);
+      state.diaryDirty = false;
+      document.getElementById("diaryStatus").textContent = "";
+      if (diaryDayText(doc)){ renderDiaryView(doc); showViewMode(); }
+    });
+
+    document.getElementById("diaryCalToggle").addEventListener("click", function(){
+      var body = document.getElementById("diaryCalBody");
+      body.hidden = !body.hidden;
+      this.classList.toggle("open", !body.hidden);
+    });
+    document.getElementById("calPrev").addEventListener("click", function(){ switchCalendarMonth(addMonths(state.calendarMonth,-1)); });
+    document.getElementById("calNext").addEventListener("click", function(){ switchCalendarMonth(addMonths(state.calendarMonth,1)); });
+    document.getElementById("diaryDateSearch").addEventListener("change", function(){
+      if (!this.value) return;
+      switchDiaryDate(this.value);
+    });
+
     renderMoodForm();
     setupMoodForm();
     document.getElementById("moodToggle").addEventListener("click", function(){
@@ -1372,6 +1551,7 @@
     refreshDiaryEditor();
     refreshDiaryRecent();
     refreshDiaryTags();
+    refreshDiaryCalendar();
     setupRealtime();
   }
 
