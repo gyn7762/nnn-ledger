@@ -282,12 +282,53 @@
     flex:0 0 auto; margin-top:1px; cursor:pointer; background:var(--paper);
     display:flex; align-items:center; justify-content:center;
   }
-  .memo-check.done{ background:var(--stamp); border-color:var(--stamp); color:var(--stamp-ink); }
+  .memo-check.done, .memo-check.selected{ background:var(--stamp); border-color:var(--stamp); color:var(--stamp-ink); }
   .memo-check svg{ width:12px; height:12px; }
-  .memo-text{ flex:1; font-size:14px; line-height:1.5; word-break:break-word; }
+  .memo-text{ font-size:14px; line-height:1.5; word-break:break-word; }
   .memo-row.done .memo-text{ color:var(--ink-faint); text-decoration:line-through; }
   .memo-meta{ font-size:11px; color:var(--ink-faint); margin-top:2px; }
   .memo-toggle-done{ margin:14px 0 6px; }
+
+  .memo-text-wrap{ flex:1; min-width:0; display:flex; align-items:center; gap:6px; cursor:pointer; }
+  .memo-text-wrap:hover .memo-text{ text-decoration:underline; }
+  .memo-detail-dot{ width:6px; height:6px; border-radius:50%; background:var(--stamp); flex:0 0 auto; }
+
+  .memo-reorder{ display:flex; gap:1px; flex:0 0 auto; }
+  .memo-reorder button svg{ width:14px; height:14px; }
+
+  .memo-toolbar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin-bottom:14px; flex-wrap:wrap;
+  }
+  .memo-toolbar-count{ font-size:13px; font-weight:700; color:var(--ink-soft); flex:0 0 auto; }
+  .memo-toolbar-actions{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .memo-toolbar-actions select{ width:auto; padding:8px 10px; font-size:13px; }
+
+  .memo-quadrant-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:14px 0; }
+  @media (max-width:680px){ .memo-quadrant-grid{ grid-template-columns:1fr; } }
+  .memo-quadrant-title{ display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:700; margin:0 0 10px; }
+  .memo-quadrant-badge{
+    display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px;
+    border-radius:50%; background:var(--stamp-tint); color:var(--stamp); font-size:11px; font-weight:700; flex:0 0 auto;
+  }
+
+  .memo-detail-overlay{
+    position:fixed; inset:0; z-index:90; background:rgba(0,0,0,.4);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .memo-detail-card{
+    background:var(--paper-raised); border:1px solid var(--rule); border-radius:16px;
+    padding:22px; max-width:480px; width:100%; box-shadow:0 4px 18px var(--shadow);
+    max-height:86vh; display:flex; flex-direction:column;
+  }
+  .memo-detail-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .memo-detail-head input{
+    flex:1; font-size:16px; font-weight:700; border:none; border-bottom:1px solid transparent;
+    background:transparent; padding:4px 2px;
+  }
+  .memo-detail-head input:focus{ outline:none; border-bottom:1px solid var(--rule); }
+  .memo-detail-textarea{ min-height:180px; flex:1; }
+  .memo-detail-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:10px; flex-wrap:wrap; }
 
   /* ---------- diary page ---------- */
   .diary-layout{ display:grid; grid-template-columns:1fr 240px; gap:20px; align-items:start; }
@@ -429,6 +470,26 @@
     <div class="auth-mark">帳</div>
     <div id="authCardBody">
       <p class="auth-spinner">連線中…</p>
+    </div>
+  </div>
+</div>
+
+<div class="memo-detail-overlay" id="memoDetailOverlay" hidden>
+  <div class="memo-detail-card">
+    <div class="memo-detail-head">
+      <input type="text" id="memoDetailTitle" maxlength="200" placeholder="標題">
+      <button class="btn btn-icon btn-ghost" id="memoDetailClose" type="button" aria-label="關閉"></button>
+    </div>
+    <div class="field">
+      <label for="memoDetailBody">詳細內容</label>
+      <textarea id="memoDetailBody" class="memo-detail-textarea" placeholder="寫下更詳細的內容…"></textarea>
+    </div>
+    <div class="memo-detail-foot">
+      <span class="diary-status" id="memoDetailStatus"></span>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-ghost" id="memoDetailCancel" type="button">取消</button>
+        <button class="btn btn-primary" id="memoDetailSave" type="button">儲存</button>
+      </div>
     </div>
   </div>
 </div>
@@ -576,7 +637,7 @@
       <section class="page" data-page="memo" id="page-memo" hidden>
         <div class="page-head">
           <h1>備忘</h1>
-          <p>隨手記下要做的事</p>
+          <p>先丟進草稿區，想清楚了再排進四象限</p>
         </div>
 
         <form class="memo-add" id="memoForm">
@@ -584,10 +645,48 @@
           <button type="submit" class="btn btn-primary">新增</button>
         </form>
 
-        <div class="card">
-          <div class="section-title">未完成</div>
-          <div class="memo-list" id="memoListOpen"></div>
+        <div class="card memo-toolbar" id="memoToolbar" hidden>
+          <span class="memo-toolbar-count" id="memoSelectedCount"></span>
+          <div class="memo-toolbar-actions">
+            <select id="memoMoveSelect" aria-label="移動到">
+              <option value="">移動到…</option>
+              <option value="draft">草稿區</option>
+              <option value="q1">象限一・重要且緊急</option>
+              <option value="q2">象限二・重要不緊急</option>
+              <option value="q3">象限三・緊急不重要</option>
+              <option value="q4">象限四・不重要不緊急</option>
+            </select>
+            <button class="btn btn-primary" id="memoBatchComplete" type="button">完成</button>
+            <button class="btn btn-ghost" id="memoBatchDelete" type="button">刪除</button>
+            <button class="link-btn" id="memoBatchClear" type="button">取消選取</button>
+          </div>
+        </div>
 
+        <div class="card" style="margin-bottom:14px;">
+          <div class="section-title">🗂️ 草稿區</div>
+          <div class="memo-list" id="memoListDraft"></div>
+        </div>
+
+        <div class="memo-quadrant-grid">
+          <div class="card memo-quadrant">
+            <div class="memo-quadrant-title"><span class="memo-quadrant-badge">1</span>重要且緊急</div>
+            <div class="memo-list" id="memoListQ1"></div>
+          </div>
+          <div class="card memo-quadrant">
+            <div class="memo-quadrant-title"><span class="memo-quadrant-badge">2</span>重要不緊急</div>
+            <div class="memo-list" id="memoListQ2"></div>
+          </div>
+          <div class="card memo-quadrant">
+            <div class="memo-quadrant-title"><span class="memo-quadrant-badge">3</span>緊急不重要</div>
+            <div class="memo-list" id="memoListQ3"></div>
+          </div>
+          <div class="card memo-quadrant">
+            <div class="memo-quadrant-title"><span class="memo-quadrant-badge">4</span>不重要不緊急</div>
+            <div class="memo-list" id="memoListQ4"></div>
+          </div>
+        </div>
+
+        <div class="card">
           <button class="link-btn memo-toggle-done" id="memoDoneToggle" type="button">顯示已完成 ▾</button>
           <div class="memo-list" id="memoListDone" hidden></div>
         </div>
@@ -733,7 +832,10 @@
     diary: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4.5h11a2 2 0 0 1 2 2V19a1 1 0 0 1-1 1H7a2 2 0 0 1-2-2V4.5z"/><path d="M5 19a2 2 0 0 1 2-2h11"/></svg>',
     check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>',
     trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2l1-12"/></svg>',
-    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2 20h20L12 3.5z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>'
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2 20h20L12 3.5z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>',
+    up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>',
+    down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
   };
   var GOOGLE_ICON = '<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.4c-2 1.5-4.6 2.4-7.5 2.4-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.5 5.4C41.4 36 44 30.6 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>';
 
@@ -795,7 +897,10 @@
     diaryActiveTag: null,
     diaryEditing: false,
     calendarMonth: monthKeyOf(todayStr()),
-    calendarMarked: []
+    calendarMarked: [],
+    memoAll: [],
+    memoSelected: {},
+    memoDetailId: null
   };
   var appBooted = false;
   var realtimeChannel = null;
@@ -970,12 +1075,68 @@
   }
 
   /* ================= memo ================= */
-  function memoRowHtml(m){
-    return '<div class="memo-row '+(m.done?"done":"")+'">' +
-      '<button class="memo-check '+(m.done?"done":"")+'" data-memo-toggle="'+m.id+'" data-memo-done="'+(m.done?1:0)+'" aria-label="切換完成狀態">'+(m.done?ICONS.check:"")+'</button>' +
-      '<div style="flex:1;min-width:0;"><div class="memo-text">'+escapeHtml(m.text)+'</div></div>' +
-      '<button class="btn btn-ghost btn-icon" data-memo-del="'+m.id+'" aria-label="刪除">'+ICONS.trash+'</button>' +
+  function nextSortOrderInZone(zone){
+    var max = -1;
+    (state.memoAll || []).forEach(function(m){ if (m.zone === zone && m.sort_order > max) max = m.sort_order; });
+    return max + 1;
+  }
+
+  function memoRowHtml(m, mode){
+    var hasDetail = m.detail && m.detail.trim().length > 0;
+    var titleHtml = '<div class="memo-text-wrap" data-memo-open="'+m.id+'"><span class="memo-text">'+escapeHtml(m.text)+'</span>'+(hasDetail?'<span class="memo-detail-dot" aria-label="有詳細內容"></span>':'')+'</div>';
+
+    if (mode === "done"){
+      return '<div class="memo-row done">' +
+        '<button class="memo-check done" data-memo-toggle="'+m.id+'" data-memo-done="1" aria-label="還原為未完成">'+ICONS.check+'</button>' +
+        titleHtml +
+        '<button class="btn btn-ghost btn-icon" type="button" data-memo-del="'+m.id+'" aria-label="刪除">'+ICONS.trash+'</button>' +
+      '</div>';
+    }
+
+    var selected = !!state.memoSelected[m.id];
+    var reorderHtml = mode === "quadrant"
+      ? '<div class="memo-reorder">' +
+          '<button class="btn btn-ghost btn-icon" type="button" data-memo-up="'+m.id+'" aria-label="上移">'+ICONS.up+'</button>' +
+          '<button class="btn btn-ghost btn-icon" type="button" data-memo-down="'+m.id+'" aria-label="下移">'+ICONS.down+'</button>' +
+        '</div>'
+      : '';
+    return '<div class="memo-row">' +
+      '<button class="memo-check '+(selected?"selected":"")+'" data-memo-select="'+m.id+'" aria-label="選取">'+(selected?ICONS.check:"")+'</button>' +
+      titleHtml +
+      reorderHtml +
     '</div>';
+  }
+
+  function renderMemoSection(elId, items, mode, emptyText){
+    var el = document.getElementById(elId);
+    if (!el) return;
+    el.innerHTML = items.length ? items.map(function(m){ return memoRowHtml(m, mode); }).join("") : '<div class="empty">'+emptyText+'</div>';
+    el.querySelectorAll("[data-memo-select]").forEach(function(btn){
+      btn.addEventListener("click", function(){ toggleMemoSelect(btn.dataset.memoSelect); });
+    });
+    el.querySelectorAll("[data-memo-toggle]").forEach(function(btn){
+      btn.addEventListener("click", function(){ toggleMemo(btn.dataset.memoToggle, btn.dataset.memoDone === "1"); });
+    });
+    el.querySelectorAll("[data-memo-del]").forEach(function(btn){
+      btn.addEventListener("click", function(){ deleteMemo(btn.dataset.memoDel); });
+    });
+    el.querySelectorAll("[data-memo-up]").forEach(function(btn){
+      btn.addEventListener("click", function(){ moveMemoOrder(btn.dataset.memoUp, -1); });
+    });
+    el.querySelectorAll("[data-memo-down]").forEach(function(btn){
+      btn.addEventListener("click", function(){ moveMemoOrder(btn.dataset.memoDown, 1); });
+    });
+    el.querySelectorAll("[data-memo-open]").forEach(function(node){
+      node.addEventListener("click", function(){ openMemoDetail(node.dataset.memoOpen); });
+    });
+  }
+
+  function renderMemoToolbar(){
+    var bar = document.getElementById("memoToolbar");
+    var n = Object.keys(state.memoSelected).length;
+    if (!n){ bar.hidden = true; return; }
+    bar.hidden = false;
+    document.getElementById("memoSelectedCount").textContent = "已選 " + n + " 則";
   }
 
   function renderHomeMemoPreview(open){
@@ -983,36 +1144,46 @@
     if (!open.length){ el.innerHTML = '<div class="empty">目前沒有待辦的備忘。</div>'; return; }
     var top = open.slice(0,5);
     el.innerHTML = top.map(function(m){
-      return '<div class="memo-row"><div class="memo-check" style="pointer-events:none;"></div><div class="memo-text">'+escapeHtml(m.text)+'</div></div>';
+      return '<div class="memo-row"><div class="memo-check" style="pointer-events:none;"></div><div class="memo-text" style="flex:1;min-width:0;">'+escapeHtml(m.text)+'</div></div>';
     }).join("") + (open.length>5 ? '<div class="empty">還有 '+(open.length-5)+' 項…</div>' : "");
   }
 
-  async function refreshMemos(){
-    var res = await sb.from("memos").select("*").order("created_at", { ascending:false }).limit(300);
-    if (res.error){ console.error(res.error); return; }
-    var all = res.data;
+  function renderMemoListsFrom(all){
+    state.memoAll = all;
     var open = all.filter(function(m){ return !m.done; });
     var done = all.filter(function(m){ return m.done; });
 
-    var openEl = document.getElementById("memoListOpen");
-    openEl.innerHTML = open.length ? open.map(memoRowHtml).join("") : '<div class="empty">目前沒有待辦的備忘，太棒了。</div>';
-    var doneEl = document.getElementById("memoListDone");
-    doneEl.innerHTML = done.length ? done.map(memoRowHtml).join("") : '<div class="empty">還沒有已完成的項目。</div>';
+    var openIds = {};
+    open.forEach(function(m){ openIds[m.id] = true; });
+    Object.keys(state.memoSelected).forEach(function(id){ if (!openIds[id]) delete state.memoSelected[id]; });
 
-    [openEl, doneEl].forEach(function(el){
-      el.querySelectorAll("[data-memo-toggle]").forEach(function(btn){
-        btn.addEventListener("click", function(){ toggleMemo(btn.dataset.memoToggle, btn.dataset.memoDone === "1"); });
-      });
-      el.querySelectorAll("[data-memo-del]").forEach(function(btn){
-        btn.addEventListener("click", function(){ deleteMemo(btn.dataset.memoDel); });
-      });
-    });
+    renderMemoSection("memoListDraft", open.filter(function(m){ return m.zone === "draft"; }), "draft", "還沒有新的備忘，用上面的欄位新增一則。");
+    renderMemoSection("memoListQ1", open.filter(function(m){ return m.zone === "q1"; }), "quadrant", "空的");
+    renderMemoSection("memoListQ2", open.filter(function(m){ return m.zone === "q2"; }), "quadrant", "空的");
+    renderMemoSection("memoListQ3", open.filter(function(m){ return m.zone === "q3"; }), "quadrant", "空的");
+    renderMemoSection("memoListQ4", open.filter(function(m){ return m.zone === "q4"; }), "quadrant", "空的");
+    renderMemoSection("memoListDone", done, "done", "還沒有已完成的項目。");
 
+    renderMemoToolbar();
     renderHomeMemoPreview(open);
   }
 
+  async function refreshMemos(){
+    var res = await sb.from("memos").select("*").order("sort_order", { ascending:true }).order("created_at", { ascending:true }).limit(500);
+    if (res.error){ console.error(res.error); return; }
+    renderMemoListsFrom(res.data || []);
+    syncMemoDetailOverlay();
+  }
+
+  function toggleMemoSelect(id){
+    if (state.memoSelected[id]) delete state.memoSelected[id];
+    else state.memoSelected[id] = true;
+    renderMemoListsFrom(state.memoAll || []);
+  }
+
   async function addMemo(text){
-    var res = await sb.from("memos").insert({ text: text, done:false });
+    var order = nextSortOrderInZone("draft");
+    var res = await sb.from("memos").insert({ text: text, done:false, zone:"draft", sort_order: order, detail:"" });
     if (res.error){ alert("新增失敗：" + res.error.message); return; }
     refreshMemos();
   }
@@ -1025,6 +1196,89 @@
     var res = await sb.from("memos").delete().eq("id", id);
     if (res.error){ alert("刪除失敗：" + res.error.message); return; }
     refreshMemos();
+  }
+
+  async function moveMemoOrder(id, direction){
+    var all = state.memoAll || [];
+    var m = all.find(function(x){ return x.id === id; });
+    if (!m) return;
+    var siblings = all.filter(function(x){ return x.zone === m.zone && !x.done; })
+      .sort(function(a,b){ return (a.sort_order - b.sort_order) || (new Date(a.created_at) - new Date(b.created_at)); });
+    var idx = siblings.findIndex(function(x){ return x.id === id; });
+    var swapIdx = idx + direction;
+    if (idx === -1 || swapIdx < 0 || swapIdx >= siblings.length) return;
+    var other = siblings[swapIdx];
+    var results = await Promise.all([
+      sb.from("memos").update({ sort_order: other.sort_order }).eq("id", m.id),
+      sb.from("memos").update({ sort_order: m.sort_order }).eq("id", other.id)
+    ]);
+    var err = results.find(function(r){ return r.error; });
+    if (err){ alert("排序失敗：" + err.error.message); return; }
+    refreshMemos();
+  }
+
+  async function batchMoveMemos(zone){
+    var ids = Object.keys(state.memoSelected);
+    if (!ids.length) return;
+    var order = nextSortOrderInZone(zone);
+    var results = await Promise.all(ids.map(function(id, i){
+      return sb.from("memos").update({ zone: zone, sort_order: order + i }).eq("id", id);
+    }));
+    var err = results.find(function(r){ return r.error; });
+    if (err){ alert("移動失敗：" + err.error.message); }
+    state.memoSelected = {};
+    refreshMemos();
+  }
+
+  async function batchCompleteMemos(){
+    var ids = Object.keys(state.memoSelected);
+    if (!ids.length) return;
+    var now = new Date().toISOString();
+    var results = await Promise.all(ids.map(function(id){
+      return sb.from("memos").update({ done:true, done_at: now }).eq("id", id);
+    }));
+    var err = results.find(function(r){ return r.error; });
+    if (err){ alert("更新失敗：" + err.error.message); }
+    state.memoSelected = {};
+    refreshMemos();
+  }
+
+  async function batchDeleteMemos(){
+    var ids = Object.keys(state.memoSelected);
+    if (!ids.length) return;
+    var res = await sb.from("memos").delete().in("id", ids);
+    if (res.error){ alert("刪除失敗：" + res.error.message); }
+    state.memoSelected = {};
+    refreshMemos();
+  }
+
+  function openMemoDetail(id){
+    var m = (state.memoAll || []).find(function(x){ return x.id === id; });
+    if (!m) return;
+    state.memoDetailId = id;
+    document.getElementById("memoDetailTitle").value = m.text || "";
+    document.getElementById("memoDetailBody").value = m.detail || "";
+    document.getElementById("memoDetailStatus").textContent = "";
+    document.getElementById("memoDetailOverlay").hidden = false;
+  }
+  function closeMemoDetail(){
+    state.memoDetailId = null;
+    document.getElementById("memoDetailOverlay").hidden = true;
+  }
+  async function saveMemoDetail(){
+    if (!state.memoDetailId) return;
+    var title = document.getElementById("memoDetailTitle").value.trim();
+    if (!title){ alert("標題不能空白"); return; }
+    var detail = document.getElementById("memoDetailBody").value;
+    var res = await sb.from("memos").update({ text:title, detail:detail }).eq("id", state.memoDetailId);
+    if (res.error){ document.getElementById("memoDetailStatus").textContent = "儲存失敗"; return; }
+    document.getElementById("memoDetailStatus").textContent = "已儲存 ✓";
+    refreshMemos();
+  }
+  function syncMemoDetailOverlay(){
+    if (!state.memoDetailId) return;
+    var exists = (state.memoAll || []).some(function(x){ return x.id === state.memoDetailId; });
+    if (!exists) closeMemoDetail();
   }
 
   /* ================= diary ================= */
@@ -1557,6 +1811,24 @@
       el.hidden = !el.hidden;
       this.textContent = el.hidden ? "顯示已完成 ▾" : "隱藏已完成 ▴";
     });
+
+    document.getElementById("memoMoveSelect").addEventListener("change", function(){
+      var zone = this.value;
+      if (!zone) return;
+      batchMoveMemos(zone);
+      this.value = "";
+    });
+    document.getElementById("memoBatchComplete").addEventListener("click", batchCompleteMemos);
+    document.getElementById("memoBatchDelete").addEventListener("click", batchDeleteMemos);
+    document.getElementById("memoBatchClear").addEventListener("click", function(){
+      state.memoSelected = {};
+      renderMemoListsFrom(state.memoAll || []);
+    });
+
+    document.getElementById("memoDetailClose").innerHTML = ICONS.close;
+    document.getElementById("memoDetailClose").addEventListener("click", closeMemoDetail);
+    document.getElementById("memoDetailCancel").addEventListener("click", closeMemoDetail);
+    document.getElementById("memoDetailSave").addEventListener("click", saveMemoDetail);
 
     document.getElementById("diaryPrev").addEventListener("click", function(){ switchDiaryDate(addDays(state.diaryDate,-1)); });
     document.getElementById("diaryNext").addEventListener("click", function(){ switchDiaryDate(addDays(state.diaryDate,1)); });
