@@ -261,8 +261,6 @@
   }
   .ledger-row:last-child{ border-bottom:none; }
   .ledger-date{ font-size:calc(var(--font-scale) * 12px); color:var(--ink-faint); width:64px; flex:0 0 auto; }
-  .ledger-account{ font-size:calc(var(--font-scale) * 11px); color:var(--ink-faint); flex:0 0 auto; max-width:64px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  @media (max-width:480px){ .ledger-account{ display:none; } }
   .ledger-tag{
     font-size:calc(var(--font-scale) * 11.5px); font-weight:600; padding:3px 9px; border-radius:99px; flex:0 0 auto;
   }
@@ -396,8 +394,6 @@
   .memory-point-row:last-child{ border-bottom:none; }
   .memory-point-time{ font-size:calc(var(--font-scale) * 11px); color:var(--ink-faint); font-family:'JetBrains Mono',monospace; flex:0 0 auto; width:38px; }
   .memory-point-text{ flex:1; font-size:calc(var(--font-scale) * 13.5px); color:var(--ink); word-break:break-word; }
-  .memory-point-move{ flex:0 0 auto; max-width:84px; font-size:calc(var(--font-scale) * 12px); padding:4px 6px; border-radius:8px; border:1px solid var(--rule); background:var(--paper); color:var(--ink); }
-  .memory-point-move:disabled{ opacity:.45; cursor:not-allowed; }
 
   /* ---------- mood check ---------- */
   .mood-card{ margin-top:18px; }
@@ -418,36 +414,6 @@
   @media (max-width:560px){ .mood-row2{ grid-template-columns:1fr; } }
   .mood-divider{ height:1px; background:var(--rule); margin:2px 0; }
   .mood-body input[type="range"]{ padding:0; }
-
-  /* ---------- ledger: filters / breakdown / manage ---------- */
-  .ledger-collapse-card .mood-body{ display:grid; grid-template-columns:1fr 1fr; gap:22px; }
-  @media (max-width:680px){ .ledger-collapse-card .mood-body{ grid-template-columns:1fr; } }
-  .ledger-list-head{ display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:4px; }
-  .ledger-filter-row{ display:flex; gap:8px; flex-wrap:wrap; }
-  .ledger-filter-row select{ width:auto; padding:7px 9px; font-size:calc(var(--font-scale) * 12.5px); }
-  .ledger-breakdown-list{ display:flex; flex-direction:column; gap:2px; }
-  .ledger-breakdown-row{
-    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
-    background:none; border:none; border-bottom:1px solid var(--rule); padding:7px 2px; cursor:pointer; font-family:inherit;
-  }
-  .ledger-breakdown-row:last-child{ border-bottom:none; }
-  .ledger-breakdown-row:hover{ background:var(--paper-sunk); }
-  .ledger-breakdown-row.active{ background:var(--stamp-tint); }
-  .ledger-breakdown-row .lb-name{ flex:1; font-size:calc(var(--font-scale) * 13px); color:var(--ink); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .ledger-breakdown-row .lb-income{ font-size:calc(var(--font-scale) * 12px); color:var(--income); flex:0 0 auto; }
-  .ledger-breakdown-row .lb-expense{ font-size:calc(var(--font-scale) * 12px); color:var(--expense); flex:0 0 auto; }
-  .ledger-manage-add{ display:flex; gap:8px; margin-bottom:10px; }
-  .ledger-manage-add input{ flex:1; min-width:0; }
-  .ledger-manage-add button{ flex:0 0 auto; white-space:nowrap; }
-  .ledger-manage-list{ display:flex; flex-direction:column; gap:2px; }
-  .ledger-manage-row{ display:flex; align-items:center; gap:8px; padding:6px 2px; border-bottom:1px solid var(--rule); }
-  .ledger-manage-row:last-child{ border-bottom:none; }
-  .ledger-manage-name{
-    flex:1; min-width:0; font-size:calc(var(--font-scale) * 13.5px); color:var(--ink);
-    border:none; border-bottom:1px solid transparent; background:transparent; padding:4px 2px;
-  }
-  .ledger-manage-name:focus{ outline:none; border-bottom:1px solid var(--rule); }
-  #categoryManageTypeSeg{ margin-bottom:10px; }
 
   .banner{
     display:flex; align-items:center; gap:10px; font-size:calc(var(--font-scale) * 13px);
@@ -524,45 +490,6 @@
       <div style="display:flex; gap:10px;">
         <button class="btn btn-ghost" id="memoDetailCancel" type="button">取消</button>
         <button class="btn btn-primary" id="memoDetailSave" type="button">儲存</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="memo-detail-overlay" id="ledgerDetailOverlay" hidden>
-  <div class="memo-detail-card" style="max-height:none;">
-    <div class="memo-detail-head">
-      <div class="seg" id="ledgerDetailTypeSeg" style="flex:1;">
-        <button type="button" class="on expense" data-type="expense">支出</button>
-        <button type="button" class="income" data-type="income">收入</button>
-      </div>
-      <button class="btn btn-icon btn-ghost" id="ledgerDetailClose" type="button" aria-label="關閉"></button>
-    </div>
-    <div class="field">
-      <label for="ledgerDetailAmount">金額</label>
-      <input type="text" id="ledgerDetailAmount" inputmode="numeric" pattern="[0-9]*" placeholder="0">
-    </div>
-    <div class="field">
-      <label for="ledgerDetailDate">日期</label>
-      <input type="date" id="ledgerDetailDate">
-    </div>
-    <div class="field">
-      <label for="ledgerDetailAccount">帳戶</label>
-      <select id="ledgerDetailAccount"></select>
-    </div>
-    <div class="field">
-      <label for="ledgerDetailCategory">分類</label>
-      <select id="ledgerDetailCategory"></select>
-    </div>
-    <div class="field">
-      <label for="ledgerDetailNote">備註</label>
-      <input type="text" id="ledgerDetailNote" maxlength="80">
-    </div>
-    <div class="memo-detail-foot">
-      <span class="diary-status" id="ledgerDetailStatus"></span>
-      <div style="display:flex; gap:10px;">
-        <button class="btn btn-ghost" id="ledgerDetailCancel" type="button">取消</button>
-        <button class="btn btn-primary" id="ledgerDetailSave" type="button">儲存</button>
       </div>
     </div>
   </div>
@@ -683,15 +610,11 @@
           </div>
           <div class="field">
             <label for="ledgerAmount">金額</label>
-            <input type="text" id="ledgerAmount" inputmode="numeric" pattern="[0-9]*" placeholder="0" required>
+            <input type="number" id="ledgerAmount" inputmode="decimal" min="0" step="1" placeholder="0" required>
           </div>
           <div class="field">
             <label for="ledgerDate">日期</label>
             <input type="date" id="ledgerDate" required>
-          </div>
-          <div class="field">
-            <label for="ledgerAccount">帳戶</label>
-            <select id="ledgerAccount"></select>
           </div>
           <div class="field">
             <label for="ledgerCategory">分類</label>
@@ -706,60 +629,8 @@
           </div>
         </form>
 
-        <div class="card ledger-collapse-card">
-          <button class="mood-toggle" id="ledgerBreakdownToggle" type="button">
-            <span>帳戶與分類總覽（本月）</span>
-            <span class="mood-toggle-arrow">▾</span>
-          </button>
-          <div class="mood-body" id="ledgerBreakdownBody" hidden>
-            <div>
-              <div class="section-title" style="margin:0 0 8px;">帳戶</div>
-              <div class="ledger-breakdown-list" id="ledgerAccountBreakdown"></div>
-            </div>
-            <div>
-              <div class="section-title" style="margin:0 0 8px;">分類</div>
-              <div class="ledger-breakdown-list" id="ledgerCategoryBreakdown"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card ledger-collapse-card">
-          <button class="mood-toggle" id="ledgerManageToggle" type="button">
-            <span>管理帳戶與分類</span>
-            <span class="mood-toggle-arrow">▾</span>
-          </button>
-          <div class="mood-body" id="ledgerManageBody" hidden>
-            <div>
-              <div class="section-title" style="margin:0 0 8px;">帳戶</div>
-              <form class="ledger-manage-add" id="accountAddForm">
-                <input type="text" id="accountAddInput" placeholder="新增帳戶名稱" maxlength="20" required>
-                <button type="submit" class="btn btn-primary">新增</button>
-              </form>
-              <div class="ledger-manage-list" id="accountManageList"></div>
-            </div>
-            <div>
-              <div class="section-title" style="margin:0 0 8px;">分類</div>
-              <div class="seg" id="categoryManageTypeSeg">
-                <button type="button" class="on expense" data-type="expense">支出分類</button>
-                <button type="button" class="income" data-type="income">收入分類</button>
-              </div>
-              <form class="ledger-manage-add" id="categoryAddForm">
-                <input type="text" id="categoryAddInput" placeholder="新增分類名稱" maxlength="20" required>
-                <button type="submit" class="btn btn-primary">新增</button>
-              </form>
-              <div class="ledger-manage-list" id="categoryManageList"></div>
-            </div>
-          </div>
-        </div>
-
         <div class="card">
-          <div class="ledger-list-head">
-            <div class="section-title" style="margin:0;">本月明細</div>
-            <div class="ledger-filter-row">
-              <select id="ledgerFilterAccount"><option value="">全部帳戶</option></select>
-              <select id="ledgerFilterCategory"><option value="">全部分類</option></select>
-            </div>
-          </div>
+          <div class="section-title">本月明細</div>
           <div class="ledger-list" id="ledgerList"></div>
         </div>
       </section>
@@ -854,6 +725,15 @@
           </div>
         </div>
 
+        <div class="card memory-point-card">
+          <div class="section-title" style="margin:0 0 10px;">加入記憶點</div>
+          <form class="memory-point-add" id="memoryPointForm">
+            <input type="text" id="memoryPointInput" placeholder="隨手記一個瞬間，晚點再整理…" maxlength="140" required>
+            <button type="submit" class="btn btn-primary">加入</button>
+          </form>
+          <div class="memory-point-list" id="memoryPointList"></div>
+        </div>
+
         <div class="diary-layout">
           <div>
             <div class="date-switch">
@@ -909,15 +789,6 @@
               </div>
             </div>
 
-            <div class="card memory-point-card">
-              <div class="section-title" style="margin:0 0 10px;">加入記憶點</div>
-              <form class="memory-point-add" id="memoryPointForm">
-                <input type="text" id="memoryPointInput" placeholder="隨手記一個瞬間，晚點再整理…" maxlength="140" required>
-                <button type="submit" class="btn btn-primary">加入</button>
-              </form>
-              <div class="memory-point-list" id="memoryPointList"></div>
-            </div>
-
             <div class="card mood-card">
               <button class="mood-toggle" id="moodToggle" type="button">
                 <span>🌊 今日心情紀錄</span>
@@ -965,8 +836,7 @@
     warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5 2 20h20L12 3.5z"/><path d="M12 10v4.5M12 17.2v.1"/></svg>',
     up: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg>',
     down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
-    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
-    edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'
+    close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>'
   };
   var GOOGLE_ICON = '<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.4c-2 1.5-4.6 2.4-7.5 2.4-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.5 5.4C41.4 36 44 30.6 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>';
 
@@ -977,10 +847,8 @@
     { key:"diary",  label:"日記", icon:ICONS.diary }
   ];
 
-  // Accounts and categories are now custom, user-editable rows fetched from
-  // Supabase (see state.accounts / state.categories below) rather than these
-  // hardcoded lists. They're kept only as the one-time seed values applied by
-  // the "add_ledger_accounts_and_categories" migration.
+  var EXPENSE_CATS = ["餐飲","交通","購物","娛樂","居家","醫療","教育","其他"];
+  var INCOME_CATS  = ["薪資","獎金","兼職","投資","其他"];
 
   /* ---------------- date helpers ---------------- */
   function pad(n){ return n < 10 ? "0" + n : "" + n; }
@@ -1011,7 +879,8 @@
   function fmtMoney(n){
     n = Math.round(n || 0);
     var neg = n < 0; n = Math.abs(n);
-    return (neg ? "-" : "") + "$" + n;
+    var s = n.toLocaleString("zh-Hant-TW");
+    return (neg ? "-" : "") + "$" + s;
   }
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, function(c){
@@ -1019,24 +888,10 @@
     });
   }
 
-  // Ledger amounts are whole dollars only — strip anything but digits as the
-  // user types, so a decimal point can never be entered in the first place.
-  function sanitizeIntegerInput(el){
-    var digits = el.value.replace(/[^0-9]/g, "");
-    if (digits !== el.value) el.value = digits;
-  }
-
   /* ---------------- state ---------------- */
   var state = {
     page: "home",
     ledgerMonth: monthKeyOf(todayStr()),
-    accounts: [],
-    categories: [],
-    ledgerFilterAccount: "",
-    ledgerFilterCategory: "",
-    ledgerRecords: [],
-    ledgerEditId: null,
-    categoryManageType: "expense",
     diaryDate: todayStr(),
     diaryDirty: false,
     diaryDoc: null,
@@ -1131,70 +986,11 @@
   });
 
   /* ================= ledger ================= */
-  // account_id / category_id are the live links (renaming an account or
-  // category updates every entry that points to it); "account" / "category"
-  // are denormalized text snapshots taken at write time, so an entry made
-  // under a since-deleted account/category still shows its old label instead
-  // of going blank. Display always prefers the live name and falls back to
-  // the snapshot only when the linked row is gone.
-  function accountsById(){
-    var map = {};
-    state.accounts.forEach(function(a){ map[a.id] = a; });
-    return map;
-  }
-  function categoriesById(){
-    var map = {};
-    state.categories.forEach(function(c){ map[c.id] = c; });
-    return map;
-  }
-  function accountDisplayName(r){
-    var a = accountsById()[r.account_id];
-    return (a && a.name) || r.account || "未指定帳戶";
-  }
-  function categoryDisplayName(r){
-    var c = categoriesById()[r.category_id];
-    return (c && c.name) || r.category || "未分類";
-  }
-
-  async function fetchAccounts(){
-    var res = await sb.from("accounts").select("*").order("sort_order", { ascending:true });
-    if (res.error){ console.error(res.error); return; }
-    state.accounts = res.data;
-  }
-  async function fetchCategories(){
-    var res = await sb.from("categories").select("*").order("sort_order", { ascending:true });
-    if (res.error){ console.error(res.error); return; }
-    state.categories = res.data;
-  }
-  async function refreshAccountsAndCategories(){
-    await Promise.all([fetchAccounts(), fetchCategories()]);
-    renderLedgerForm();
-    renderLedgerFilters();
-    renderAccountManageList();
-    renderCategoryManageList();
-  }
-
   function renderLedgerForm(){
+    var sel = document.getElementById("ledgerCategory");
     var type = document.querySelector("#ledgerTypeSeg button.on").dataset.type;
-    var catSel = document.getElementById("ledgerCategory");
-    var cats = state.categories.filter(function(c){ return c.type === type; });
-    catSel.innerHTML = cats.map(function(c){ return '<option value="'+c.id+'">'+escapeHtml(c.name)+"</option>"; }).join("");
-    var accSel = document.getElementById("ledgerAccount");
-    accSel.innerHTML = state.accounts.map(function(a){ return '<option value="'+a.id+'">'+escapeHtml(a.name)+"</option>"; }).join("");
-  }
-
-  function renderLedgerFilters(){
-    var accSel = document.getElementById("ledgerFilterAccount");
-    accSel.innerHTML = '<option value="">全部帳戶</option>' + state.accounts.map(function(a){
-      return '<option value="'+a.id+'">'+escapeHtml(a.name)+"</option>";
-    }).join("");
-    accSel.value = state.ledgerFilterAccount;
-
-    var catSel = document.getElementById("ledgerFilterCategory");
-    catSel.innerHTML = '<option value="">全部分類</option>' + state.categories.map(function(c){
-      return '<option value="'+c.id+'">'+escapeHtml(c.name)+"（"+(c.type==="income"?"收入":"支出")+"）</option>";
-    }).join("");
-    catSel.value = state.ledgerFilterCategory;
+    var cats = type === "income" ? INCOME_CATS : EXPENSE_CATS;
+    sel.innerHTML = cats.map(function(c){ return '<option value="'+c+'">'+c+"</option>"; }).join("");
   }
 
   function computeSums(records){
@@ -1206,78 +1002,10 @@
     return { income:income, expense:expense, balance: income-expense };
   }
 
-  function computeAccountBreakdown(records){
-    var byKey = {}, order = [];
-    records.forEach(function(r){
-      var key = r.account_id || ("snap:"+accountDisplayName(r));
-      if (!byKey[key]){ byKey[key] = { id:r.account_id, name:accountDisplayName(r), income:0, expense:0 }; order.push(key); }
-      if (r.type === "income") byKey[key].income += Number(r.amount)||0;
-      else byKey[key].expense += Number(r.amount)||0;
-    });
-    return order.map(function(k){ return byKey[k]; }).sort(function(a,b){ return (b.income+b.expense)-(a.income+a.expense); });
-  }
-
-  function computeCategoryBreakdown(records){
-    var byKey = {}, order = [];
-    records.forEach(function(r){
-      var key = (r.category_id || ("snap:"+categoryDisplayName(r))) + ":" + r.type;
-      if (!byKey[key]){ byKey[key] = { id:r.category_id, type:r.type, name:categoryDisplayName(r), total:0 }; order.push(key); }
-      byKey[key].total += Number(r.amount)||0;
-    });
-    return order.map(function(k){ return byKey[k]; }).sort(function(a,b){ return b.total-a.total; });
-  }
-
-  function renderLedgerBreakdown(records){
-    var accEl = document.getElementById("ledgerAccountBreakdown");
-    var accs = computeAccountBreakdown(records);
-    accEl.innerHTML = accs.length ? accs.map(function(a){
-      var tag = a.id ? "button" : "div";
-      var attrs = a.id ? ' type="button" data-account-filter="'+a.id+'"' : "";
-      return '<'+tag+' class="ledger-breakdown-row'+(a.id && state.ledgerFilterAccount===a.id?" active":"")+'"'+attrs+'>' +
-        '<span class="lb-name">'+escapeHtml(a.name)+'</span>' +
-        '<span class="lb-income num">+'+fmtMoney(a.income)+'</span>' +
-        '<span class="lb-expense num">-'+fmtMoney(a.expense)+'</span>' +
-      '</'+tag+'>';
-    }).join("") : '<div class="empty" style="padding:6px 2px;">本月尚無紀錄。</div>';
-    accEl.querySelectorAll("[data-account-filter]").forEach(function(btn){
-      btn.addEventListener("click", function(){
-        state.ledgerFilterAccount = state.ledgerFilterAccount === btn.dataset.accountFilter ? "" : btn.dataset.accountFilter;
-        document.getElementById("ledgerFilterAccount").value = state.ledgerFilterAccount;
-        renderLedgerPageFromCache();
-      });
-    });
-
-    var catEl = document.getElementById("ledgerCategoryBreakdown");
-    var cats = computeCategoryBreakdown(records);
-    catEl.innerHTML = cats.length ? cats.map(function(c){
-      var tag = c.id ? "button" : "div";
-      var attrs = c.id ? ' type="button" data-category-filter="'+c.id+'"' : "";
-      return '<'+tag+' class="ledger-breakdown-row'+(c.id && state.ledgerFilterCategory===c.id?" active":"")+'"'+attrs+'>' +
-        '<span class="lb-name">'+escapeHtml(c.name)+'（'+(c.type==="income"?"收入":"支出")+'）</span>' +
-        '<span class="'+(c.type==="income"?"lb-income":"lb-expense")+' num">'+(c.type==="income"?"+":"-")+fmtMoney(c.total)+'</span>' +
-      '</'+tag+'>';
-    }).join("") : '<div class="empty" style="padding:6px 2px;">本月尚無紀錄。</div>';
-    catEl.querySelectorAll("[data-category-filter]").forEach(function(btn){
-      btn.addEventListener("click", function(){
-        state.ledgerFilterCategory = state.ledgerFilterCategory === btn.dataset.categoryFilter ? "" : btn.dataset.categoryFilter;
-        document.getElementById("ledgerFilterCategory").value = state.ledgerFilterCategory;
-        renderLedgerPageFromCache();
-      });
-    });
-  }
-
-  function applyLedgerFilters(records){
-    return records.filter(function(r){
-      if (state.ledgerFilterAccount && r.account_id !== state.ledgerFilterAccount) return false;
-      if (state.ledgerFilterCategory && r.category_id !== state.ledgerFilterCategory) return false;
-      return true;
-    });
-  }
-
   function renderLedgerRows(records){
     var list = document.getElementById("ledgerList");
     if (!records.length){
-      list.innerHTML = '<div class="empty">這個月還沒有任何符合條件的紀錄。</div>';
+      list.innerHTML = '<div class="empty">這個月還沒有任何紀錄。</div>';
       return;
     }
     list.innerHTML = records.map(function(r){
@@ -1285,19 +1013,14 @@
       var sign = r.type === "income" ? "+" : "-";
       return '<div class="ledger-row">' +
         '<div class="ledger-date num">'+d+'</div>' +
-        '<div class="ledger-account" title="'+escapeHtml(accountDisplayName(r))+'">'+escapeHtml(accountDisplayName(r))+'</div>' +
-        '<div class="ledger-tag '+r.type+'">'+escapeHtml(categoryDisplayName(r))+'</div>' +
+        '<div class="ledger-tag '+r.type+'">'+escapeHtml(r.category)+'</div>' +
         '<div class="ledger-note">'+(r.note ? escapeHtml(r.note) : "")+'</div>' +
         '<div class="ledger-amount num '+r.type+'">'+sign+fmtMoney(r.amount)+'</div>' +
-        '<button class="btn btn-ghost btn-icon" data-edit-record="'+r.id+'" aria-label="編輯">'+ICONS.edit+'</button>' +
         '<button class="btn btn-ghost btn-icon" data-del-record="'+r.id+'" aria-label="刪除">'+ICONS.trash+'</button>' +
       '</div>';
     }).join("");
     list.querySelectorAll("[data-del-record]").forEach(function(btn){
       btn.addEventListener("click", function(){ deleteRecord(btn.dataset.delRecord); });
-    });
-    list.querySelectorAll("[data-edit-record]").forEach(function(btn){
-      btn.addEventListener("click", function(){ openLedgerDetail(btn.dataset.editRecord); });
     });
   }
 
@@ -1311,19 +1034,13 @@
     return res.data;
   }
 
-  function renderLedgerPageFromCache(){
-    var filtered = applyLedgerFilters(state.ledgerRecords);
-    var sums = computeSums(filtered);
+  async function refreshLedgerPage(){
+    var records = await fetchLedgerMonth(state.ledgerMonth);
+    var sums = computeSums(records);
     document.getElementById("ledgerIncome").textContent = fmtMoney(sums.income);
     document.getElementById("ledgerExpense").textContent = fmtMoney(sums.expense);
     document.getElementById("ledgerBalance").textContent = fmtMoney(sums.balance);
-    renderLedgerRows(filtered);
-    renderLedgerBreakdown(state.ledgerRecords);
-  }
-
-  async function refreshLedgerPage(){
-    state.ledgerRecords = await fetchLedgerMonth(state.ledgerMonth);
-    renderLedgerPageFromCache();
+    renderLedgerRows(records);
   }
 
   function switchLedgerMonth(monthKey){
@@ -1342,32 +1059,13 @@
   }
 
   async function addRecord(record){
-    var acc = accountsById()[record.accountId];
-    var cat = categoriesById()[record.categoryId];
     var res = await sb.from("ledger_entries").insert({
       entry_date: record.date, type: record.type, amount: record.amount,
-      account_id: record.accountId || null, account: acc ? acc.name : null,
-      category_id: record.categoryId || null, category: cat ? cat.name : "",
-      note: record.note || null
+      category: record.category, note: record.note || null
     });
     if (res.error){ alert("新增失敗：" + res.error.message); return; }
     refreshLedgerPage();
     refreshHomeStats();
-  }
-
-  async function updateRecord(id, record){
-    var acc = accountsById()[record.accountId];
-    var cat = categoriesById()[record.categoryId];
-    var res = await sb.from("ledger_entries").update({
-      entry_date: record.date, type: record.type, amount: record.amount,
-      account_id: record.accountId || null, account: acc ? acc.name : null,
-      category_id: record.categoryId || null, category: cat ? cat.name : "",
-      note: record.note || null
-    }).eq("id", id);
-    if (res.error){ alert("儲存失敗：" + res.error.message); return false; }
-    refreshLedgerPage();
-    refreshHomeStats();
-    return true;
   }
 
   async function deleteRecord(id){
@@ -1375,135 +1073,6 @@
     if (res.error){ alert("刪除失敗：" + res.error.message); return; }
     refreshLedgerPage();
     refreshHomeStats();
-  }
-
-  /* ---- ledger row edit overlay ---- */
-  function renderLedgerDetailCategoryOptions(type){
-    var sel = document.getElementById("ledgerDetailCategory");
-    var cats = state.categories.filter(function(c){ return c.type === type; });
-    sel.innerHTML = cats.map(function(c){ return '<option value="'+c.id+'">'+escapeHtml(c.name)+"</option>"; }).join("");
-  }
-
-  function openLedgerDetail(id){
-    var r = (state.ledgerRecords || []).find(function(x){ return x.id === id; });
-    if (!r) return;
-    state.ledgerEditId = id;
-    document.querySelectorAll("#ledgerDetailTypeSeg button").forEach(function(b){ b.classList.toggle("on", b.dataset.type === r.type); });
-    document.getElementById("ledgerDetailAmount").value = Math.round(Number(r.amount) || 0);
-    document.getElementById("ledgerDetailDate").value = r.entry_date;
-    document.getElementById("ledgerDetailAccount").innerHTML = state.accounts.map(function(a){
-      return '<option value="'+a.id+'">'+escapeHtml(a.name)+"</option>";
-    }).join("");
-    document.getElementById("ledgerDetailAccount").value = r.account_id || "";
-    renderLedgerDetailCategoryOptions(r.type);
-    document.getElementById("ledgerDetailCategory").value = r.category_id || "";
-    document.getElementById("ledgerDetailNote").value = r.note || "";
-    document.getElementById("ledgerDetailStatus").textContent = "";
-    document.getElementById("ledgerDetailOverlay").hidden = false;
-  }
-  function closeLedgerDetail(){
-    state.ledgerEditId = null;
-    document.getElementById("ledgerDetailOverlay").hidden = true;
-  }
-  async function saveLedgerDetail(){
-    if (!state.ledgerEditId) return;
-    var type = document.querySelector("#ledgerDetailTypeSeg button.on").dataset.type;
-    var amount = parseInt(document.getElementById("ledgerDetailAmount").value, 10);
-    if (!amount || amount <= 0){ document.getElementById("ledgerDetailStatus").textContent = "金額需大於 0"; return; }
-    var date = document.getElementById("ledgerDetailDate").value || todayStr();
-    var accountId = document.getElementById("ledgerDetailAccount").value;
-    var categoryId = document.getElementById("ledgerDetailCategory").value;
-    var note = document.getElementById("ledgerDetailNote").value.trim();
-    var ok = await updateRecord(state.ledgerEditId, { type:type, amount:amount, date:date, accountId:accountId, categoryId:categoryId, note:note });
-    if (!ok) return;
-    document.getElementById("ledgerDetailStatus").textContent = "已儲存 ✓";
-    setTimeout(closeLedgerDetail, 400);
-  }
-
-  /* ---- accounts & categories management ---- */
-  async function addAccount(name){
-    name = (name||"").trim();
-    if (!name) return;
-    var maxOrder = state.accounts.reduce(function(m,a){ return Math.max(m, a.sort_order||0); }, -1);
-    var res = await sb.from("accounts").insert({ name:name, sort_order:maxOrder+1 });
-    if (res.error){ alert("新增失敗：" + res.error.message); return; }
-    await refreshAccountsAndCategories();
-  }
-  async function renameAccount(id, name){
-    name = (name||"").trim();
-    if (!name) return;
-    var res = await sb.from("accounts").update({ name:name }).eq("id", id);
-    if (res.error){ alert("更新失敗：" + res.error.message); return; }
-    await refreshAccountsAndCategories();
-    refreshLedgerPage();
-  }
-  async function deleteAccount(id){
-    if (state.accounts.length <= 1){ alert("至少要保留一個帳戶。"); renderAccountManageList(); return; }
-    if (!confirm("刪除這個帳戶嗎？用過這個帳戶的舊紀錄仍會保留原本的帳戶名稱。")) return;
-    var res = await sb.from("accounts").delete().eq("id", id);
-    if (res.error){ alert("刪除失敗：" + res.error.message); return; }
-    if (state.ledgerFilterAccount === id) state.ledgerFilterAccount = "";
-    await refreshAccountsAndCategories();
-    refreshLedgerPage();
-  }
-
-  async function addCategory(name, type){
-    name = (name||"").trim();
-    if (!name) return;
-    var maxOrder = state.categories.filter(function(c){ return c.type===type; }).reduce(function(m,c){ return Math.max(m, c.sort_order||0); }, -1);
-    var res = await sb.from("categories").insert({ name:name, type:type, sort_order:maxOrder+1 });
-    if (res.error){ alert("新增失敗：" + res.error.message); return; }
-    await refreshAccountsAndCategories();
-  }
-  async function renameCategory(id, name){
-    name = (name||"").trim();
-    if (!name) return;
-    var res = await sb.from("categories").update({ name:name }).eq("id", id);
-    if (res.error){ alert("更新失敗：" + res.error.message); return; }
-    await refreshAccountsAndCategories();
-    refreshLedgerPage();
-  }
-  async function deleteCategory(id, type){
-    if (state.categories.filter(function(c){ return c.type===type; }).length <= 1){ alert("每種分類（支出／收入）至少要保留一個。"); renderCategoryManageList(); return; }
-    if (!confirm("刪除這個分類嗎？用過這個分類的舊紀錄仍會保留原本的分類名稱。")) return;
-    var res = await sb.from("categories").delete().eq("id", id);
-    if (res.error){ alert("刪除失敗：" + res.error.message); return; }
-    if (state.ledgerFilterCategory === id) state.ledgerFilterCategory = "";
-    await refreshAccountsAndCategories();
-    refreshLedgerPage();
-  }
-
-  function renderAccountManageList(){
-    var el = document.getElementById("accountManageList");
-    el.innerHTML = state.accounts.map(function(a){
-      return '<div class="ledger-manage-row">' +
-        '<input type="text" class="ledger-manage-name" value="'+escapeHtml(a.name)+'" data-account-name="'+a.id+'" maxlength="20">' +
-        '<button class="btn btn-ghost btn-icon" type="button" data-account-del="'+a.id+'" aria-label="刪除">'+ICONS.trash+'</button>' +
-      '</div>';
-    }).join("");
-    el.querySelectorAll("[data-account-name]").forEach(function(inp){
-      inp.addEventListener("change", function(){ renameAccount(inp.dataset.accountName, inp.value); });
-    });
-    el.querySelectorAll("[data-account-del]").forEach(function(btn){
-      btn.addEventListener("click", function(){ deleteAccount(btn.dataset.accountDel); });
-    });
-  }
-
-  function renderCategoryManageList(){
-    var el = document.getElementById("categoryManageList");
-    var cats = state.categories.filter(function(c){ return c.type === state.categoryManageType; });
-    el.innerHTML = cats.map(function(c){
-      return '<div class="ledger-manage-row">' +
-        '<input type="text" class="ledger-manage-name" value="'+escapeHtml(c.name)+'" data-category-name="'+c.id+'" maxlength="20">' +
-        '<button class="btn btn-ghost btn-icon" type="button" data-category-del="'+c.id+'" aria-label="刪除">'+ICONS.trash+'</button>' +
-      '</div>';
-    }).join("");
-    el.querySelectorAll("[data-category-name]").forEach(function(inp){
-      inp.addEventListener("change", function(){ renameCategory(inp.dataset.categoryName, inp.value); });
-    });
-    el.querySelectorAll("[data-category-del]").forEach(function(btn){
-      btn.addEventListener("click", function(){ deleteCategory(btn.dataset.categoryDel, state.categoryManageType); });
-    });
   }
 
   /* ================= memo ================= */
@@ -1774,14 +1343,12 @@
     state.diaryEditing = true;
     document.getElementById("diaryView").hidden = true;
     document.getElementById("diaryEdit").hidden = false;
-    renderMemoryPointList();
   }
 
   function showViewMode(){
     state.diaryEditing = false;
     document.getElementById("diaryEdit").hidden = true;
     document.getElementById("diaryView").hidden = false;
-    renderMemoryPointList();
   }
 
   function renderMoodForm(){
@@ -1895,53 +1462,32 @@
     return mood;
   }
 
-  var DIARY_SECTION_OPTIONS = [
-    ["", "移動到…"], ["morning", "早上"], ["afternoon", "下午"], ["evening", "晚上"], ["point", "記憶點"]
-  ];
-  var DIARY_SECTION_FIELD = { morning: "morning_text", afternoon: "afternoon_text", evening: "evening_text" };
-
-  function memoryPointMoveSelectHtml(id, disableMove){
-    var opts = DIARY_SECTION_OPTIONS.map(function(o){
-      return '<option value="'+o[0]+'">'+o[1]+'</option>';
-    }).join("");
-    return '<select class="memory-point-move" data-mp-move="'+id+'" aria-label="移動記憶點"'+(disableMove ? ' disabled title="請先儲存或取消編輯後再移動"' : '')+'>'+opts+'</select>';
-  }
-
-  function memoryPointListHtml(points, disableMove){
+  function memoryPointListHtml(points){
     if (!points.length) return '<div class="empty" style="padding:6px 2px;">還沒有記憶點，想到什麼就記一筆吧。</div>';
     return points.map(function(p){
       return '<div class="memory-point-row">' +
         '<span class="memory-point-time">'+escapeHtml(p.time||"")+'</span>' +
         '<span class="memory-point-text">'+escapeHtml(p.text)+'</span>' +
-        memoryPointMoveSelectHtml(p.id, disableMove) +
         '<button class="btn btn-ghost btn-icon" type="button" data-mp-del="'+p.id+'" aria-label="刪除">'+TRASH_ICON+'</button>' +
       '</div>';
     }).join("");
   }
 
-  function renderMemoryPointListInto(elId, points, onDelete, onMove, disableMove){
+  function renderMemoryPointListInto(elId, points, onDelete){
     var el = document.getElementById(elId);
-    el.innerHTML = memoryPointListHtml(points, disableMove);
+    el.innerHTML = memoryPointListHtml(points);
     el.querySelectorAll("[data-mp-del]").forEach(function(btn){
       btn.addEventListener("click", function(){ onDelete(btn.dataset.mpDel); });
-    });
-    el.querySelectorAll("[data-mp-move]").forEach(function(sel){
-      sel.addEventListener("change", function(){
-        var section = sel.value;
-        sel.value = "";
-        if (!section || section === "point") return;
-        onMove(sel.dataset.mpMove, section);
-      });
     });
   }
 
   function renderMemoryPointList(){
     var points = (state.diaryDoc && state.diaryDoc.memory_points) || [];
-    renderMemoryPointListInto("memoryPointList", points, deleteMemoryPoint, moveMemoryPoint, state.diaryEditing);
+    renderMemoryPointListInto("memoryPointList", points, deleteMemoryPoint);
   }
 
   function renderHomeMemoryPointList(points){
-    renderMemoryPointListInto("homeMemoryPointList", points || [], deleteHomeMemoryPoint, moveHomeMemoryPoint, false);
+    renderMemoryPointListInto("homeMemoryPointList", points || [], deleteHomeMemoryPoint);
   }
 
   // Fetches the current row for dateStr fresh (rather than trusting cached state),
@@ -1974,33 +1520,6 @@
     var res = await sb.from("diary_entries").upsert({ entry_date: dateStr, memory_points: points, tags: tags, updated_at: new Date().toISOString() }, { onConflict:"entry_date" });
     if (res.error){ alert("刪除失敗：" + res.error.message); return null; }
     return Object.assign({}, doc, { memory_points: points, tags: tags });
-  }
-
-  // Appends the memory point's text into the chosen section (morning/afternoon/
-  // evening) of that day's diary, removes it from memory_points, and recomputes
-  // tags. Mirrors add/deleteMemoryPointFromDate's fetch-fresh-then-upsert pattern.
-  async function moveMemoryPointToSection(dateStr, id, section){
-    var field = DIARY_SECTION_FIELD[section];
-    if (!field) return null;
-    var cur = await sb.from("diary_entries").select("*").eq("entry_date", dateStr).maybeSingle();
-    if (cur.error){ alert("移動失敗：" + cur.error.message); return null; }
-    var doc = cur.data;
-    var points = (doc && doc.memory_points) || [];
-    var point = points.find(function(p){ return p.id === id; });
-    if (!point) return null;
-    var remaining = points.filter(function(p){ return p.id !== id; });
-    var existingText = (doc && doc[field]) || "";
-    var stamp = point.time ? ("["+point.time+"] ") : "";
-    var mergedText = existingText ? (existingText.replace(/\s+$/,"") + "\n" + stamp + point.text) : (stamp + point.text);
-    var morning = field === "morning_text" ? mergedText : ((doc && doc.morning_text) || "");
-    var afternoon = field === "afternoon_text" ? mergedText : ((doc && doc.afternoon_text) || "");
-    var evening = field === "evening_text" ? mergedText : ((doc && doc.evening_text) || "");
-    var tags = computeDayTags(morning, afternoon, evening, remaining);
-    var patch = { entry_date: dateStr, memory_points: remaining, tags: tags, updated_at: new Date().toISOString() };
-    patch[field] = mergedText;
-    var res = await sb.from("diary_entries").upsert(patch, { onConflict:"entry_date" });
-    if (res.error){ alert("移動失敗：" + res.error.message); return null; }
-    return Object.assign({ entry_date: dateStr }, doc, patch);
   }
 
   async function addMemoryPoint(text){
@@ -2041,29 +1560,6 @@
     if (!doc) return;
     renderHomeMemoryPointList(doc.memory_points);
     if (state.diaryDate === todayStr()){ state.diaryDoc = doc; renderMemoryPointList(); }
-    refreshDiaryTags();
-    refreshDiaryCalendar();
-  }
-
-  async function moveMemoryPoint(id, section){
-    var doc = await moveMemoryPointToSection(state.diaryDate, id, section);
-    if (!doc) return;
-    state.diaryDoc = doc;
-    renderMemoryPointList();
-    if (!state.diaryEditing) renderDiaryView(doc);
-    refreshDiaryTags();
-    refreshDiaryCalendar();
-  }
-
-  async function moveHomeMemoryPoint(id, section){
-    var doc = await moveMemoryPointToSection(todayStr(), id, section);
-    if (!doc) return;
-    renderHomeMemoryPointList(doc.memory_points);
-    if (state.diaryDate === todayStr()){
-      state.diaryDoc = doc;
-      renderMemoryPointList();
-      if (!state.diaryEditing) renderDiaryView(doc);
-    }
     refreshDiaryTags();
     refreshDiaryCalendar();
   }
@@ -2249,15 +1745,13 @@
     if (realtimeChannel) return;
     realtimeChannel = sb.channel("app-changes")
       .on("postgres_changes", { event:"*", schema:"public", table:"ledger_entries" }, function(){ refreshLedgerPage(); refreshHomeStats(); })
-      .on("postgres_changes", { event:"*", schema:"public", table:"accounts" }, function(){ refreshAccountsAndCategories(); refreshLedgerPage(); })
-      .on("postgres_changes", { event:"*", schema:"public", table:"categories" }, function(){ refreshAccountsAndCategories(); refreshLedgerPage(); })
       .on("postgres_changes", { event:"*", schema:"public", table:"memos" }, function(){ refreshMemos(); })
       .on("postgres_changes", { event:"*", schema:"public", table:"diary_entries" }, function(){ refreshDiaryEditor(); refreshDiaryRecent(); refreshDiaryTags(); refreshDiaryCalendar(); refreshHomeDiaryStatus(); refreshHomeMemoryPoints(); })
       .subscribe();
   }
 
   /* ================= boot ================= */
-  async function bootApp(){
+  function bootApp(){
     buildNav(document.getElementById("sidenavList"));
     buildNav(document.getElementById("bottomnav"));
     showPage("home");
@@ -2267,7 +1761,7 @@
     document.getElementById("ledgerMonthLabel").textContent = monthLabel(state.ledgerMonth);
     document.getElementById("diaryDateLabel").textContent = dateLabel(state.diaryDate);
     document.getElementById("diaryDateSearch").value = state.diaryDate;
-    await refreshAccountsAndCategories();
+    renderLedgerForm();
 
     var collapsed = false;
     try { collapsed = localStorage.getItem("nnn-ledger-sidebar-collapsed") === "1"; } catch(e){}
@@ -2290,73 +1784,19 @@
     document.getElementById("ledgerForm").addEventListener("submit", function(e){
       e.preventDefault();
       var type = document.querySelector("#ledgerTypeSeg button.on").dataset.type;
-      var amount = parseInt(document.getElementById("ledgerAmount").value, 10);
+      var amount = parseFloat(document.getElementById("ledgerAmount").value);
       var date = document.getElementById("ledgerDate").value || todayStr();
-      var accountId = document.getElementById("ledgerAccount").value;
-      var categoryId = document.getElementById("ledgerCategory").value;
+      var category = document.getElementById("ledgerCategory").value;
       var note = document.getElementById("ledgerNote").value.trim();
       if (!amount || amount <= 0) return;
-      addRecord({ type:type, amount:amount, date:date, accountId:accountId, categoryId:categoryId, note:note });
+      addRecord({ type:type, amount:amount, date:date, category:category, note:note });
       document.getElementById("ledgerAmount").value = "";
       document.getElementById("ledgerNote").value = "";
     });
 
-    document.getElementById("ledgerAmount").addEventListener("input", function(){ sanitizeIntegerInput(this); });
-    document.getElementById("ledgerDetailAmount").addEventListener("input", function(){ sanitizeIntegerInput(this); });
-
     document.getElementById("ledgerPrev").addEventListener("click", function(){ switchLedgerMonth(addMonths(state.ledgerMonth,-1)); });
     document.getElementById("ledgerNext").addEventListener("click", function(){ switchLedgerMonth(addMonths(state.ledgerMonth,1)); });
     document.getElementById("ledgerToday").addEventListener("click", function(){ switchLedgerMonth(monthKeyOf(todayStr())); });
-
-    document.getElementById("ledgerFilterAccount").addEventListener("change", function(){
-      state.ledgerFilterAccount = this.value;
-      renderLedgerPageFromCache();
-    });
-    document.getElementById("ledgerFilterCategory").addEventListener("change", function(){
-      state.ledgerFilterCategory = this.value;
-      renderLedgerPageFromCache();
-    });
-
-    document.getElementById("ledgerBreakdownToggle").addEventListener("click", function(){
-      var body = document.getElementById("ledgerBreakdownBody");
-      body.hidden = !body.hidden;
-      this.classList.toggle("open", !body.hidden);
-    });
-    document.getElementById("ledgerManageToggle").addEventListener("click", function(){
-      var body = document.getElementById("ledgerManageBody");
-      body.hidden = !body.hidden;
-      this.classList.toggle("open", !body.hidden);
-    });
-
-    document.getElementById("accountAddForm").addEventListener("submit", function(e){
-      e.preventDefault();
-      var input = document.getElementById("accountAddInput");
-      addAccount(input.value);
-      input.value = "";
-    });
-    document.getElementById("categoryAddForm").addEventListener("submit", function(e){
-      e.preventDefault();
-      var input = document.getElementById("categoryAddInput");
-      addCategory(input.value, state.categoryManageType);
-      input.value = "";
-    });
-    document.getElementById("categoryManageTypeSeg").addEventListener("click", function(e){
-      var btn = e.target.closest("button[data-type]");
-      if (!btn) return;
-      document.querySelectorAll("#categoryManageTypeSeg button").forEach(function(b){ b.classList.toggle("on", b===btn); });
-      state.categoryManageType = btn.dataset.type;
-      renderCategoryManageList();
-    });
-
-    document.getElementById("ledgerDetailTypeSeg").addEventListener("click", function(e){
-      var btn = e.target.closest("button[data-type]");
-      if (!btn) return;
-      document.querySelectorAll("#ledgerDetailTypeSeg button").forEach(function(b){ b.classList.toggle("on", b===btn); });
-      renderLedgerDetailCategoryOptions(btn.dataset.type);
-    });
-    document.getElementById("ledgerDetailClose").addEventListener("click", closeLedgerDetail);
-    document.getElementById("ledgerDetailCancel").addEventListener("click", closeLedgerDetail);
-    document.getElementById("ledgerDetailSave").addEventListener("click", saveLedgerDetail);
 
     document.getElementById("memoForm").addEventListener("submit", function(e){
       e.preventDefault();
@@ -2387,7 +1827,6 @@
     });
 
     document.getElementById("memoDetailClose").innerHTML = ICONS.close;
-    document.getElementById("ledgerDetailClose").innerHTML = ICONS.close;
     document.getElementById("memoDetailClose").addEventListener("click", closeMemoDetail);
     document.getElementById("memoDetailCancel").addEventListener("click", closeMemoDetail);
     document.getElementById("memoDetailSave").addEventListener("click", saveMemoDetail);
