@@ -540,7 +540,7 @@
     </div>
     <div class="field">
       <label for="ledgerDetailAmount">金額</label>
-      <input type="number" id="ledgerDetailAmount" inputmode="decimal" min="0" step="1">
+      <input type="text" id="ledgerDetailAmount" inputmode="numeric" pattern="[0-9]*" placeholder="0">
     </div>
     <div class="field">
       <label for="ledgerDetailDate">日期</label>
@@ -683,7 +683,7 @@
           </div>
           <div class="field">
             <label for="ledgerAmount">金額</label>
-            <input type="number" id="ledgerAmount" inputmode="decimal" min="0" step="1" placeholder="0" required>
+            <input type="text" id="ledgerAmount" inputmode="numeric" pattern="[0-9]*" placeholder="0" required>
           </div>
           <div class="field">
             <label for="ledgerDate">日期</label>
@@ -1011,13 +1011,19 @@
   function fmtMoney(n){
     n = Math.round(n || 0);
     var neg = n < 0; n = Math.abs(n);
-    var s = n.toLocaleString("zh-Hant-TW");
-    return (neg ? "-" : "") + "$" + s;
+    return (neg ? "-" : "") + "$" + n;
   }
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, function(c){
       return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c];
     });
+  }
+
+  // Ledger amounts are whole dollars only — strip anything but digits as the
+  // user types, so a decimal point can never be entered in the first place.
+  function sanitizeIntegerInput(el){
+    var digits = el.value.replace(/[^0-9]/g, "");
+    if (digits !== el.value) el.value = digits;
   }
 
   /* ---------------- state ---------------- */
@@ -1383,7 +1389,7 @@
     if (!r) return;
     state.ledgerEditId = id;
     document.querySelectorAll("#ledgerDetailTypeSeg button").forEach(function(b){ b.classList.toggle("on", b.dataset.type === r.type); });
-    document.getElementById("ledgerDetailAmount").value = r.amount;
+    document.getElementById("ledgerDetailAmount").value = Math.round(Number(r.amount) || 0);
     document.getElementById("ledgerDetailDate").value = r.entry_date;
     document.getElementById("ledgerDetailAccount").innerHTML = state.accounts.map(function(a){
       return '<option value="'+a.id+'">'+escapeHtml(a.name)+"</option>";
@@ -1402,7 +1408,7 @@
   async function saveLedgerDetail(){
     if (!state.ledgerEditId) return;
     var type = document.querySelector("#ledgerDetailTypeSeg button.on").dataset.type;
-    var amount = parseFloat(document.getElementById("ledgerDetailAmount").value);
+    var amount = parseInt(document.getElementById("ledgerDetailAmount").value, 10);
     if (!amount || amount <= 0){ document.getElementById("ledgerDetailStatus").textContent = "金額需大於 0"; return; }
     var date = document.getElementById("ledgerDetailDate").value || todayStr();
     var accountId = document.getElementById("ledgerDetailAccount").value;
@@ -2284,7 +2290,7 @@
     document.getElementById("ledgerForm").addEventListener("submit", function(e){
       e.preventDefault();
       var type = document.querySelector("#ledgerTypeSeg button.on").dataset.type;
-      var amount = parseFloat(document.getElementById("ledgerAmount").value);
+      var amount = parseInt(document.getElementById("ledgerAmount").value, 10);
       var date = document.getElementById("ledgerDate").value || todayStr();
       var accountId = document.getElementById("ledgerAccount").value;
       var categoryId = document.getElementById("ledgerCategory").value;
@@ -2294,6 +2300,9 @@
       document.getElementById("ledgerAmount").value = "";
       document.getElementById("ledgerNote").value = "";
     });
+
+    document.getElementById("ledgerAmount").addEventListener("input", function(){ sanitizeIntegerInput(this); });
+    document.getElementById("ledgerDetailAmount").addEventListener("input", function(){ sanitizeIntegerInput(this); });
 
     document.getElementById("ledgerPrev").addEventListener("click", function(){ switchLedgerMonth(addMonths(state.ledgerMonth,-1)); });
     document.getElementById("ledgerNext").addEventListener("click", function(){ switchLedgerMonth(addMonths(state.ledgerMonth,1)); });
