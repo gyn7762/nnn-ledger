@@ -260,18 +260,20 @@
     padding:11px 4px; border-bottom:1px solid var(--rule);
   }
   .ledger-row:last-child{ border-bottom:none; }
-  .ledger-date{ font-size:calc(var(--font-scale) * 12px); color:var(--ink-faint); width:64px; flex:0 0 auto; }
-  .ledger-account{ font-size:calc(var(--font-scale) * 11px); color:var(--ink-faint); flex:0 0 auto; max-width:64px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .ledger-date{ font-size:calc(var(--font-scale) * 12px); color:var(--ink-faint); width:64px; flex:0 0 64px; }
+  .ledger-account{ font-size:calc(var(--font-scale) * 11px); color:var(--ink-faint); flex:0 0 60px; width:60px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   @media (max-width:480px){ .ledger-account{ display:none; } }
   .ledger-tag{
-    font-size:calc(var(--font-scale) * 11.5px); font-weight:600; padding:3px 9px; border-radius:99px; flex:0 0 auto;
+    font-size:calc(var(--font-scale) * 11.5px); font-weight:600; padding:3px 9px; border-radius:99px;
+    flex:0 0 84px; width:84px; box-sizing:border-box; text-align:center; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
   .ledger-tag.income{ background:var(--income-tint); color:var(--income); }
   .ledger-tag.expense{ background:var(--expense-tint); color:var(--expense); }
   .ledger-note{ flex:1; min-width:0; font-size:calc(var(--font-scale) * 13.5px); color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .ledger-amount{ font-weight:700; flex:0 0 auto; }
+  .ledger-amount{ font-weight:700; flex:0 0 auto; min-width:64px; text-align:right; }
   .ledger-amount.income{ color:var(--income); }
   .ledger-amount.expense{ color:var(--expense); }
+  @media (max-width:480px){ .ledger-tag{ flex-basis:68px; width:68px; } }
 
   /* ---------- memo page ---------- */
   .memo-add{ display:flex; gap:10px; margin-bottom:18px; }
@@ -1211,6 +1213,13 @@
     var neg = n < 0; n = Math.abs(n);
     return (neg ? "-" : "") + "$" + n;
   }
+  // Same rounding/sign rules as fmtMoney, but without the "$" — used everywhere
+  // except the 收入/支出/結餘 summary tiles, which keep the "$".
+  function fmtNum(n){
+    n = Math.round(n || 0);
+    var neg = n < 0; n = Math.abs(n);
+    return (neg ? "-" : "") + n;
+  }
   function escapeHtml(s){
     return String(s).replace(/[&<>"']/g, function(c){
       return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"})[c];
@@ -1441,8 +1450,8 @@
       var attrs = a.id ? ' type="button" data-account-filter="'+a.id+'"' : "";
       return '<'+tag+' class="ledger-breakdown-row'+(a.id && state.ledgerFilterAccount===a.id?" active":"")+'"'+attrs+'>' +
         '<span class="lb-name">'+escapeHtml(a.name)+'</span>' +
-        '<span class="lb-income num">+'+fmtMoney(a.income)+'</span>' +
-        '<span class="lb-expense num">-'+fmtMoney(a.expense)+'</span>' +
+        '<span class="lb-income num">+'+fmtNum(a.income)+'</span>' +
+        '<span class="lb-expense num">-'+fmtNum(a.expense)+'</span>' +
       '</'+tag+'>';
     }).join("") : '<div class="empty" style="padding:6px 2px;">本月尚無紀錄。</div>';
     accEl.querySelectorAll("[data-account-filter]").forEach(function(btn){
@@ -1460,7 +1469,7 @@
       var attrs = c.id ? ' type="button" data-category-filter="'+c.id+'"' : "";
       return '<'+tag+' class="ledger-breakdown-row'+(c.id && state.ledgerFilterCategory===c.id?" active":"")+'"'+attrs+'>' +
         '<span class="lb-name">'+escapeHtml(c.name)+'（'+(c.type==="income"?"收入":"支出")+'）</span>' +
-        '<span class="'+(c.type==="income"?"lb-income":"lb-expense")+' num">'+(c.type==="income"?"+":"-")+fmtMoney(c.total)+'</span>' +
+        '<span class="'+(c.type==="income"?"lb-income":"lb-expense")+' num">'+(c.type==="income"?"+":"-")+fmtNum(c.total)+'</span>' +
       '</'+tag+'>';
     }).join("") : '<div class="empty" style="padding:6px 2px;">本月尚無紀錄。</div>';
     catEl.querySelectorAll("[data-category-filter]").forEach(function(btn){
@@ -1494,7 +1503,7 @@
         '<div class="ledger-account" title="'+escapeHtml(accountDisplayName(r))+'">'+escapeHtml(accountDisplayName(r))+'</div>' +
         '<div class="ledger-tag '+r.type+'">'+escapeHtml(categoryDisplayName(r))+'</div>' +
         '<div class="ledger-note">'+(r.note ? escapeHtml(r.note) : "")+'</div>' +
-        '<div class="ledger-amount num '+r.type+'">'+sign+fmtMoney(r.amount)+'</div>' +
+        '<div class="ledger-amount num '+r.type+'">'+sign+fmtNum(r.amount)+'</div>' +
         '<button class="btn btn-ghost btn-icon" data-edit-record="'+r.id+'" aria-label="編輯">'+ICONS.edit+'</button>' +
         '<button class="btn btn-ghost btn-icon" data-del-record="'+r.id+'" aria-label="刪除">'+ICONS.trash+'</button>' +
       '</div>';
