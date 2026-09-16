@@ -340,6 +340,15 @@
   .memo-detail-textarea{ min-height:180px; flex:1; }
   .memo-detail-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:10px; flex-wrap:wrap; flex:0 0 auto; }
   .book-detail-scroll{ overflow-y:auto; flex:1 1 auto; min-height:0; padding-right:2px; }
+  #bookDetailEdit .field{ margin-bottom:14px; }
+  #bookDetailEdit .field:last-child{ margin-bottom:0; }
+  .book-detail-view-row{ display:flex; align-items:baseline; gap:10px; margin-bottom:12px; }
+  .book-detail-view-row .book-detail-view-label{ flex:0 0 auto; margin-bottom:0; }
+  .book-detail-view-block{ margin-bottom:16px; }
+  .book-detail-view-block:last-child{ margin-bottom:0; }
+  .book-detail-view-label{ font-size:calc(var(--font-scale) * 12px); font-weight:600; color:var(--ink-soft); display:block; margin-bottom:5px; }
+  .book-detail-view-value{ font-size:calc(var(--font-scale) * 14px); color:var(--ink); }
+  .book-detail-view-text{ font-size:calc(var(--font-scale) * 14px); color:var(--ink); white-space:pre-wrap; margin:0; line-height:1.55; }
 
   /* ---------- diary page ---------- */
   .diary-layout{ display:grid; grid-template-columns:1fr 240px; gap:20px; align-items:start; }
@@ -628,58 +637,74 @@
     </div>
     <div class="book-detail-cover" id="bookDetailCoverWrap">
       <img id="bookDetailCoverImg" alt="封面">
-      <label class="btn btn-ghost" for="bookDetailCoverInput">更換封面</label>
+      <label class="btn btn-ghost" for="bookDetailCoverInput" id="bookDetailCoverChangeBtn" hidden>更換封面</label>
       <input type="file" id="bookDetailCoverInput" accept="image/*" hidden>
     </div>
     <div class="book-detail-scroll">
-      <div class="field">
-        <label for="bookDetailReadMonth">閱讀年月（選填）</label>
-        <input type="month" id="bookDetailReadMonth">
+      <div id="bookDetailView">
+        <div class="book-detail-view-row"><span class="book-detail-view-label">閱讀年月</span><span class="book-detail-view-value" id="bookDetailViewReadMonth"></span></div>
+        <div class="book-detail-view-row"><span class="book-detail-view-label">作者</span><span class="book-detail-view-value" id="bookDetailViewAuthor"></span></div>
+        <div class="book-detail-view-row"><span class="book-detail-view-label">分類</span><span class="book-detail-view-value" id="bookDetailViewCategory"></span></div>
+        <div class="book-detail-view-block"><span class="book-detail-view-label">最喜歡的一句話</span><p class="book-detail-view-text" id="bookDetailViewQuote"></p></div>
+        <div class="book-detail-view-block"><span class="book-detail-view-label">這本書帶給我的體悟</span><p class="book-detail-view-text" id="bookDetailViewInsight"></p></div>
+        <div class="book-detail-view-block"><span class="book-detail-view-label">心得</span><p class="book-detail-view-text" id="bookDetailViewNote"></p></div>
+        <div class="book-detail-view-row"><span class="book-detail-view-label">狀態</span><span class="book-detail-view-value" id="bookDetailViewStatus"></span></div>
+        <div class="book-detail-view-row"><span class="book-detail-view-label">評分</span><span class="book-detail-view-value" id="bookDetailViewRating"></span></div>
       </div>
-      <div class="field">
-        <label for="bookDetailAuthor">作者</label>
-        <input type="text" id="bookDetailAuthor" maxlength="80">
-      </div>
-      <div class="field">
-        <label for="bookDetailCategory">分類</label>
-        <select id="bookDetailCategory"></select>
-      </div>
-      <div class="field">
-        <label for="bookDetailNote">心得</label>
-        <textarea id="bookDetailNote" class="memo-detail-textarea" style="min-height:100px;" placeholder="寫下你的心得…"></textarea>
-      </div>
-      <div class="field">
-        <label for="bookDetailQuote">最喜歡的一句話</label>
-        <input type="text" id="bookDetailQuote" maxlength="200" placeholder="書裡最打動你的一句話">
-      </div>
-      <div class="field">
-        <label for="bookDetailInsight">這本書帶給我的體悟</label>
-        <textarea id="bookDetailInsight" style="min-height:90px;" placeholder="這本書帶給你的想法或改變…"></textarea>
-      </div>
-      <div class="field">
-        <label for="bookDetailStatusSelect">狀態</label>
-        <select id="bookDetailStatusSelect">
-          <option value="unread">未閱讀</option>
-          <option value="reading">閱讀中</option>
-          <option value="finished">閱畢</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="bookDetailRating">評分（選填）</label>
-        <select id="bookDetailRating">
-          <option value="">未評分</option>
-          <option value="1">★☆☆☆☆</option>
-          <option value="2">★★☆☆☆</option>
-          <option value="3">★★★☆☆</option>
-          <option value="4">★★★★☆</option>
-          <option value="5">★★★★★</option>
-        </select>
+      <div id="bookDetailEdit" hidden>
+        <div class="field">
+          <label for="bookDetailReadMonth">閱讀年月（選填）</label>
+          <input type="month" id="bookDetailReadMonth">
+        </div>
+        <div class="field">
+          <label for="bookDetailAuthor">作者</label>
+          <input type="text" id="bookDetailAuthor" maxlength="80">
+        </div>
+        <div class="field">
+          <label for="bookDetailCategory">分類</label>
+          <select id="bookDetailCategory"></select>
+        </div>
+        <div class="field">
+          <label for="bookDetailQuote">最喜歡的一句話</label>
+          <input type="text" id="bookDetailQuote" maxlength="200" placeholder="書裡最打動你的一句話">
+        </div>
+        <div class="field">
+          <label for="bookDetailInsight">這本書帶給我的體悟</label>
+          <textarea id="bookDetailInsight" style="min-height:90px;" placeholder="這本書帶給你的想法或改變…"></textarea>
+        </div>
+        <div class="field">
+          <label for="bookDetailNote">心得</label>
+          <textarea id="bookDetailNote" class="memo-detail-textarea" style="min-height:100px;" placeholder="寫下你的心得…"></textarea>
+        </div>
+        <div class="field">
+          <label for="bookDetailStatusSelect">狀態</label>
+          <select id="bookDetailStatusSelect">
+            <option value="unread">未閱讀</option>
+            <option value="reading">閱讀中</option>
+            <option value="finished">閱畢</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="bookDetailRating">評分（選填）</label>
+          <select id="bookDetailRating">
+            <option value="">未評分</option>
+            <option value="1">★☆☆☆☆</option>
+            <option value="2">★★☆☆☆</option>
+            <option value="3">★★★☆☆</option>
+            <option value="4">★★★★☆</option>
+            <option value="5">★★★★★</option>
+          </select>
+        </div>
       </div>
     </div>
     <div class="memo-detail-foot">
       <span class="diary-status" id="bookDetailStatusMsg"></span>
-      <div style="display:flex; gap:10px;">
+      <div style="display:flex; gap:10px;" id="bookDetailViewActions">
         <button class="btn btn-ghost" id="bookDetailDelete" type="button">刪除</button>
+        <button class="btn btn-primary" id="bookDetailEditBtn" type="button">編輯</button>
+      </div>
+      <div style="display:flex; gap:10px;" id="bookDetailEditActions" hidden>
+        <button class="btn btn-ghost" id="bookDetailCancelEdit" type="button">取消</button>
         <button class="btn btn-primary" id="bookDetailSave" type="button">儲存</button>
       </div>
     </div>
@@ -1250,6 +1275,8 @@
     bookFilterCategory: "",
     bookFilterStatus: "",
     bookDetailId: null,
+    bookDetailOriginal: null,
+    bookDetailEditing: false,
     bookCoverFile: null,
     bookDetailCoverFile: null,
     diaryDate: todayStr(),
@@ -2589,11 +2616,23 @@
   }
 
   /* ---- book detail overlay ---- */
-  function openBookDetail(id){
-    var b = (state.bookRecords || []).find(function(x){ return x.id === id; });
-    if (!b) return;
-    state.bookDetailId = id;
-    state.bookDetailCoverFile = null;
+  function bookRatingStarsText(n){
+    n = parseInt(n, 10) || 0;
+    if (!n) return "未評分";
+    return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n);
+  }
+  function renderBookDetailView(b){
+    document.getElementById("bookDetailViewReadMonth").textContent = b.read_month ? monthLabel(b.read_month) : "未填寫";
+    document.getElementById("bookDetailViewAuthor").textContent = b.author || "未填寫";
+    var cat = bookCategoriesById()[b.category_id];
+    document.getElementById("bookDetailViewCategory").textContent = cat ? cat.name : (b.category || "未分類");
+    document.getElementById("bookDetailViewQuote").textContent = b.favorite_quote || "尚未填寫";
+    document.getElementById("bookDetailViewInsight").textContent = b.insight || "尚未填寫";
+    document.getElementById("bookDetailViewNote").textContent = b.note || "尚未填寫";
+    document.getElementById("bookDetailViewStatus").textContent = BOOK_STATUS_LABEL[b.status] || "";
+    document.getElementById("bookDetailViewRating").textContent = bookRatingStarsText(b.rating);
+  }
+  function fillBookDetailEditFields(b){
     document.getElementById("bookDetailTitle").value = b.title || "";
     var img = document.getElementById("bookDetailCoverImg");
     img.src = b.cover_url || "";
@@ -2609,13 +2648,48 @@
     document.getElementById("bookDetailNote").value = b.note || "";
     document.getElementById("bookDetailQuote").value = b.favorite_quote || "";
     document.getElementById("bookDetailInsight").value = b.insight || "";
+  }
+  function showBookDetailView(){
+    state.bookDetailEditing = false;
+    document.getElementById("bookDetailEdit").hidden = true;
+    document.getElementById("bookDetailView").hidden = false;
+    document.getElementById("bookDetailViewActions").hidden = false;
+    document.getElementById("bookDetailEditActions").hidden = true;
+    document.getElementById("bookDetailCoverChangeBtn").hidden = true;
+  }
+  function showBookDetailEdit(){
+    state.bookDetailEditing = true;
+    document.getElementById("bookDetailView").hidden = true;
+    document.getElementById("bookDetailEdit").hidden = false;
+    document.getElementById("bookDetailViewActions").hidden = true;
+    document.getElementById("bookDetailEditActions").hidden = false;
+    document.getElementById("bookDetailCoverChangeBtn").hidden = false;
+  }
+  function openBookDetail(id){
+    var b = (state.bookRecords || []).find(function(x){ return x.id === id; });
+    if (!b) return;
+    state.bookDetailId = id;
+    state.bookDetailOriginal = b;
+    state.bookDetailCoverFile = null;
+    document.getElementById("bookDetailCoverInput").value = "";
+    fillBookDetailEditFields(b);
+    renderBookDetailView(b);
     document.getElementById("bookDetailStatusMsg").textContent = "";
     document.getElementById("bookDetailOverlay").hidden = false;
+    showBookDetailView();
   }
   function closeBookDetail(){
     state.bookDetailId = null;
+    state.bookDetailOriginal = null;
     state.bookDetailCoverFile = null;
     document.getElementById("bookDetailOverlay").hidden = true;
+  }
+  function cancelBookDetailEdit(){
+    if (state.bookDetailOriginal) fillBookDetailEditFields(state.bookDetailOriginal);
+    state.bookDetailCoverFile = null;
+    document.getElementById("bookDetailCoverInput").value = "";
+    document.getElementById("bookDetailStatusMsg").textContent = "";
+    showBookDetailView();
   }
   async function saveBookDetail(){
     if (!state.bookDetailId) return;
@@ -2643,9 +2717,12 @@
     }
     var res = await sb.from("books").update(patch).eq("id", state.bookDetailId);
     if (res.error){ document.getElementById("bookDetailStatusMsg").textContent = "儲存失敗"; return; }
+    state.bookDetailOriginal = Object.assign({}, state.bookDetailOriginal, patch);
+    state.bookDetailCoverFile = null;
+    renderBookDetailView(state.bookDetailOriginal);
     document.getElementById("bookDetailStatusMsg").textContent = "已儲存 ✓";
+    showBookDetailView();
     refreshBookPage();
-    setTimeout(closeBookDetail, 400);
   }
   async function deleteBookDetail(){
     if (!state.bookDetailId) return;
@@ -2893,6 +2970,8 @@
     document.getElementById("bookDetailClose").addEventListener("click", closeBookDetail);
     document.getElementById("bookDetailSave").addEventListener("click", saveBookDetail);
     document.getElementById("bookDetailDelete").addEventListener("click", deleteBookDetail);
+    document.getElementById("bookDetailEditBtn").addEventListener("click", showBookDetailEdit);
+    document.getElementById("bookDetailCancelEdit").addEventListener("click", cancelBookDetailEdit);
 
     document.getElementById("memoForm").addEventListener("submit", function(e){
       e.preventDefault();
