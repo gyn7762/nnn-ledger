@@ -324,6 +324,11 @@
     padding:22px; max-width:480px; width:100%; box-shadow:0 4px 18px var(--shadow);
     max-height:86vh; display:flex; flex-direction:column;
   }
+  /* the book note/detail overlay gets extra width on desktop only — phones and
+     tablets keep the same width as every other detail overlay in the app */
+  @media (min-width:1025px){
+    #bookDetailOverlay .memo-detail-card{ max-width:640px; }
+  }
   .memo-detail-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
   .memo-detail-head input{
     flex:1; font-size:calc(var(--font-scale) * 16px); font-weight:700; border:none; border-bottom:1px solid transparent;
@@ -331,7 +336,8 @@
   }
   .memo-detail-head input:focus{ outline:none; border-bottom:1px solid var(--rule); }
   .memo-detail-textarea{ min-height:180px; flex:1; }
-  .memo-detail-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:10px; flex-wrap:wrap; }
+  .memo-detail-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:14px; gap:10px; flex-wrap:wrap; flex:0 0 auto; }
+  .book-detail-scroll{ overflow-y:auto; flex:1 1 auto; min-height:0; padding-right:2px; }
 
   /* ---------- diary page ---------- */
   .diary-layout{ display:grid; grid-template-columns:1fr 240px; gap:20px; align-items:start; }
@@ -344,9 +350,11 @@
   .diary-status{ font-size:calc(var(--font-scale) * 12px); color:var(--ink-faint); }
   .diary-view-block{ margin-bottom:16px; }
   .diary-view-block:last-of-type{ margin-bottom:0; }
-  .diary-view-label{ font-size:calc(var(--font-scale) * 12px); font-weight:600; color:var(--ink-soft); margin-bottom:5px; }
-  .diary-view-text{ font-size:calc(var(--font-scale) * 14.5px); line-height:1.7; color:var(--ink); white-space:pre-wrap; word-break:break-word; }
-  .diary-view-text.is-empty{ color:var(--ink-faint); font-style:italic; }
+  .diary-view-label{
+    display:inline-block; font-size:calc(var(--font-scale) * 13.5px); font-weight:700; color:var(--stamp);
+    background:var(--stamp-tint); padding:3px 11px; border-radius:7px; margin-bottom:7px;
+  }
+  .diary-view-text{ font-size:calc(var(--font-scale) * 14.5px); line-height:1.7; color:var(--ink); white-space:pre-wrap; word-break:break-word; min-height:1.2em; }
 
   /* ---------- calendar ---------- */
   .calendar-card{ margin-bottom:18px; }
@@ -463,11 +471,16 @@
   @media (max-width:1024px){ .book-grid{ grid-template-columns:repeat(3, 1fr); } }
   .book-card{ display:flex; flex-direction:column; gap:6px; }
   .book-cover-btn{
-    display:block; width:100%; aspect-ratio:2/3; padding:0; border:1px solid var(--rule); border-radius:10px;
+    position:relative; display:block; width:100%; aspect-ratio:2/3; padding:0; border:1px solid var(--rule); border-radius:10px;
     background:var(--paper-sunk); cursor:pointer; overflow:hidden;
   }
   .book-cover-btn img{ width:100%; height:100%; object-fit:cover; display:block; }
   .book-cover-btn.no-cover{ display:flex; align-items:center; justify-content:center; color:var(--ink-faint); font-size:calc(var(--font-scale) * 11px); text-align:center; padding:8px; }
+  .book-cover-month{
+    position:absolute; top:6px; left:6px; z-index:1;
+    background:rgba(0,0,0,.55); color:#fff; font-family:'JetBrains Mono',monospace;
+    font-size:calc(var(--font-scale) * 10.5px); font-weight:600; padding:2px 6px; border-radius:6px; line-height:1.4;
+  }
   .book-title-btn{
     display:block; width:100%; text-align:left; background:none; border:none; padding:0; cursor:pointer;
     font-size:calc(var(--font-scale) * 12.5px); font-weight:700; color:var(--ink);
@@ -616,36 +629,50 @@
       <label class="btn btn-ghost" for="bookDetailCoverInput">更換封面</label>
       <input type="file" id="bookDetailCoverInput" accept="image/*" hidden>
     </div>
-    <div class="field">
-      <label for="bookDetailAuthor">作者</label>
-      <input type="text" id="bookDetailAuthor" maxlength="80">
-    </div>
-    <div class="field">
-      <label for="bookDetailCategory">分類</label>
-      <select id="bookDetailCategory"></select>
-    </div>
-    <div class="field">
-      <label for="bookDetailStatusSelect">狀態</label>
-      <select id="bookDetailStatusSelect">
-        <option value="unread">未閱讀</option>
-        <option value="reading">閱讀中</option>
-        <option value="finished">閱畢</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="bookDetailRating">評分（選填）</label>
-      <select id="bookDetailRating">
-        <option value="">未評分</option>
-        <option value="1">★☆☆☆☆</option>
-        <option value="2">★★☆☆☆</option>
-        <option value="3">★★★☆☆</option>
-        <option value="4">★★★★☆</option>
-        <option value="5">★★★★★</option>
-      </select>
-    </div>
-    <div class="field">
-      <label for="bookDetailNote">心得</label>
-      <textarea id="bookDetailNote" class="memo-detail-textarea" style="min-height:120px;" placeholder="寫下你的心得…"></textarea>
+    <div class="book-detail-scroll">
+      <div class="field">
+        <label for="bookDetailReadMonth">閱讀年月（選填）</label>
+        <input type="month" id="bookDetailReadMonth">
+      </div>
+      <div class="field">
+        <label for="bookDetailAuthor">作者</label>
+        <input type="text" id="bookDetailAuthor" maxlength="80">
+      </div>
+      <div class="field">
+        <label for="bookDetailCategory">分類</label>
+        <select id="bookDetailCategory"></select>
+      </div>
+      <div class="field">
+        <label for="bookDetailNote">心得</label>
+        <textarea id="bookDetailNote" class="memo-detail-textarea" style="min-height:100px;" placeholder="寫下你的心得…"></textarea>
+      </div>
+      <div class="field">
+        <label for="bookDetailQuote">最喜歡的一句話</label>
+        <input type="text" id="bookDetailQuote" maxlength="200" placeholder="書裡最打動你的一句話">
+      </div>
+      <div class="field">
+        <label for="bookDetailInsight">這本書帶給我的體悟</label>
+        <textarea id="bookDetailInsight" style="min-height:90px;" placeholder="這本書帶給你的想法或改變…"></textarea>
+      </div>
+      <div class="field">
+        <label for="bookDetailStatusSelect">狀態</label>
+        <select id="bookDetailStatusSelect">
+          <option value="unread">未閱讀</option>
+          <option value="reading">閱讀中</option>
+          <option value="finished">閱畢</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="bookDetailRating">評分（選填）</label>
+        <select id="bookDetailRating">
+          <option value="">未評分</option>
+          <option value="1">★☆☆☆☆</option>
+          <option value="2">★★☆☆☆</option>
+          <option value="3">★★★☆☆</option>
+          <option value="4">★★★★☆</option>
+          <option value="5">★★★★★</option>
+        </select>
+      </div>
     </div>
     <div class="memo-detail-foot">
       <span class="diary-status" id="bookDetailStatusMsg"></span>
@@ -1939,8 +1966,7 @@
   }
 
   function diaryViewSegHtml(text){
-    text = text || "";
-    return text ? escapeHtml(text) : '<span class="is-empty">（空白）</span>';
+    return text ? escapeHtml(text) : "";
   }
 
   function renderDiaryView(doc){
@@ -2474,11 +2500,17 @@
     });
   }
 
+  function bookMonthBadgeText(b){
+    var d = (b.created_at || "").slice(0,7);
+    return d ? d.replace("-",".") : "";
+  }
+
   function bookCardHtml(b){
     var statusOptions = ["unread","reading","finished"].map(function(s){
       return '<option value="'+s+'"'+(b.status===s?' selected':'')+'>'+BOOK_STATUS_LABEL[s]+'</option>';
     }).join("");
-    var coverInner = b.cover_url ? '<img src="'+escapeHtml(b.cover_url)+'" alt="">' : '無封面';
+    var monthBadge = '<span class="book-cover-month">'+escapeHtml(bookMonthBadgeText(b))+'</span>';
+    var coverInner = monthBadge + (b.cover_url ? '<img src="'+escapeHtml(b.cover_url)+'" alt="">' : '<span>無封面</span>');
     return '<div class="book-card">' +
       '<button type="button" class="book-cover-btn'+(b.cover_url?'':' no-cover')+'" data-book-open="'+b.id+'">'+coverInner+'</button>' +
       '<button type="button" class="book-title-btn" data-book-open="'+b.id+'">'+escapeHtml(b.title)+'</button>' +
@@ -2557,6 +2589,7 @@
     var img = document.getElementById("bookDetailCoverImg");
     img.src = b.cover_url || "";
     img.style.visibility = b.cover_url ? "visible" : "hidden";
+    document.getElementById("bookDetailReadMonth").value = b.read_month || "";
     document.getElementById("bookDetailAuthor").value = b.author || "";
     document.getElementById("bookDetailCategory").innerHTML = state.bookCategories.map(function(c){
       return '<option value="'+c.id+'">'+escapeHtml(c.name)+"</option>";
@@ -2565,6 +2598,8 @@
     document.getElementById("bookDetailStatusSelect").value = b.status;
     document.getElementById("bookDetailRating").value = b.rating ? String(b.rating) : "";
     document.getElementById("bookDetailNote").value = b.note || "";
+    document.getElementById("bookDetailQuote").value = b.favorite_quote || "";
+    document.getElementById("bookDetailInsight").value = b.insight || "";
     document.getElementById("bookDetailStatusMsg").textContent = "";
     document.getElementById("bookDetailOverlay").hidden = false;
   }
@@ -2577,16 +2612,21 @@
     if (!state.bookDetailId) return;
     var title = document.getElementById("bookDetailTitle").value.trim();
     if (!title){ document.getElementById("bookDetailStatusMsg").textContent = "書名不能空白"; return; }
+    var readMonth = document.getElementById("bookDetailReadMonth").value;
     var author = document.getElementById("bookDetailAuthor").value.trim();
     var categoryId = document.getElementById("bookDetailCategory").value;
     var cat = bookCategoriesById()[categoryId];
     var status = document.getElementById("bookDetailStatusSelect").value;
     var ratingVal = document.getElementById("bookDetailRating").value;
     var note = document.getElementById("bookDetailNote").value;
+    var quote = document.getElementById("bookDetailQuote").value.trim();
+    var insight = document.getElementById("bookDetailInsight").value;
     var patch = {
       title: title, author: author || null,
       category_id: categoryId || null, category: cat ? cat.name : null,
-      status: status, rating: ratingVal ? parseInt(ratingVal,10) : null, note: note
+      read_month: readMonth || null,
+      status: status, rating: ratingVal ? parseInt(ratingVal,10) : null, note: note,
+      favorite_quote: quote, insight: insight
     };
     if (state.bookDetailCoverFile){
       var cover = await uploadBookCover(state.bookDetailCoverFile);
