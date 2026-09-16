@@ -247,6 +247,7 @@
   /* ---------- ledger page ---------- */
   .month-switch{ display:flex; align-items:center; gap:10px; margin-bottom:16px; }
   .month-switch .label{ font-family:'Noto Serif TC',serif; font-weight:700; font-size:calc(var(--font-scale) * 16.5px); min-width:110px; text-align:center; }
+  select.label{ width:auto; min-width:110px; padding:7px 10px; cursor:pointer; }
 
   .ledger-form{ display:grid; grid-template-columns:auto 1fr 1fr; gap:12px 14px; margin-bottom:22px; }
   .ledger-form .seg{ grid-column:1 / -1; max-width:220px; }
@@ -476,11 +477,18 @@
   .book-cover-preview{ margin-top:10px; width:96px; }
   .book-cover-preview img{ width:96px; height:136px; object-fit:cover; border-radius:8px; border:1px solid var(--rule); display:block; }
 
-  .book-grid{
-    display:grid; grid-template-columns:repeat(5, 1fr); gap:16px 14px; margin-top:4px;
+  .book-grid{ display:flex; flex-direction:column; gap:22px; margin-top:4px; }
+  .book-month-row-label{
+    font-family:'Noto Serif TC',serif; font-weight:700; color:var(--ink-soft);
+    font-size:calc(var(--font-scale) * 14px); margin-bottom:9px;
   }
-  @media (max-width:1024px){ .book-grid{ grid-template-columns:repeat(3, 1fr); } }
-  .book-card{ display:flex; flex-direction:column; gap:6px; }
+  .book-month-row-strip{
+    display:flex; gap:14px; overflow-x:auto; padding-bottom:8px; scrollbar-width:thin;
+  }
+  .book-month-row-strip::-webkit-scrollbar{ height:6px; }
+  .book-month-row-strip::-webkit-scrollbar-thumb{ background:var(--rule); border-radius:99px; }
+  .book-card{ display:flex; flex-direction:column; gap:6px; flex:0 0 auto; width:190px; }
+  @media (max-width:600px){ .book-card{ width:132px; } }
   .book-cover-btn{
     position:relative; display:block; width:100%; aspect-ratio:2/3; padding:0; border:1px solid var(--rule); border-radius:10px;
     background:var(--paper-sunk); cursor:pointer; overflow:hidden;
@@ -1086,14 +1094,14 @@
         </div>
 
         <div class="month-switch">
-          <button class="btn btn-icon" id="bookPrev" type="button" aria-label="上一月">
+          <button class="btn btn-icon" id="bookPrev" type="button" aria-label="上一年">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
           </button>
-          <div class="label num" id="bookMonthLabel"></div>
-          <button class="btn btn-icon" id="bookNext" type="button" aria-label="下一月">
+          <select class="label num" id="bookYearSelect" aria-label="選擇年份"></select>
+          <button class="btn btn-icon" id="bookNext" type="button" aria-label="下一年">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
           </button>
-          <button class="btn" id="bookToday" type="button" style="margin-left:auto;">回到本月</button>
+          <button class="btn" id="bookToday" type="button" style="margin-left:auto;">回到今年</button>
         </div>
 
         <div class="card">
@@ -1150,7 +1158,7 @@
 
         <div class="card">
           <button class="mood-toggle" id="bookGridToggle" type="button">
-            <span>本月書單</span>
+            <span>年度書單</span>
             <span class="mood-toggle-arrow">▾</span>
           </button>
           <div class="mood-body" id="bookGridBody" hidden>
@@ -1232,6 +1240,9 @@
     var d = new Date(p[0], p[1]-1+n, 1);
     return d.getFullYear() + "-" + pad(d.getMonth()+1);
   }
+  function addYears(yearKey, n){
+    return String(parseInt(yearKey, 10) + n);
+  }
   function monthLabel(monthKey){
     var p = monthKey.split("-");
     return p[0] + "年" + parseInt(p[1],10) + "月";
@@ -1278,8 +1289,9 @@
     ledgerRecords: [],
     ledgerEditId: null,
     categoryManageType: "expense",
-    bookMonth: monthKeyOf(todayStr()),
+    bookYear: todayStr().slice(0, 4),
     bookCategories: [],
+    bookAllRecords: [],
     bookRecords: [],
     bookFilterCategory: "",
     bookFilterStatus: "",
@@ -2545,9 +2557,20 @@
     });
   }
 
+  // A book's month bucket is its 閱讀年月 (read_month) when the user has filled
+  // it in; books without one (e.g. just added, before anyone opens the detail
+  // overlay to set it) fall back to the month they were added, so nothing
+  // silently disappears from every month's list.
+  function bookEffectiveMonth(b){
+    return b.read_month || (b.created_at || "").slice(0, 7);
+  }
+  function bookEffectiveYear(b){
+    return bookEffectiveMonth(b).slice(0, 4);
+  }
+
   function bookMonthBadgeText(b){
-    var d = (b.created_at || "").slice(0,7);
-    return d ? d.replace("-",".") : "";
+    var m = bookEffectiveMonth(b);
+    return m ? m.replace("-",".") : "";
   }
 
   function bookCardHtml(b){
@@ -2564,10 +2587,26 @@
     '</div>';
   }
 
+  // Groups the year's books by month (newest month first) and renders each
+  // month as its own horizontally-scrolling strip — once a month has more
+  // books than fit on screen, the rest are a swipe/scroll away instead of
+  // wrapping into more rows, so a month is always visually one row.
   function renderBookGrid(records){
     var el = document.getElementById("bookGrid");
-    if (!records.length){ el.innerHTML = '<div class="empty" style="grid-column:1 / -1;">這個月還沒有加入任何書。</div>'; return; }
-    el.innerHTML = records.map(bookCardHtml).join("");
+    if (!records.length){ el.innerHTML = '<div class="empty">這一年還沒有加入任何書。</div>'; return; }
+    var groups = {};
+    records.forEach(function(b){
+      var m = bookEffectiveMonth(b);
+      (groups[m] = groups[m] || []).push(b);
+    });
+    var months = Object.keys(groups).sort().reverse();
+    el.innerHTML = months.map(function(m){
+      var monthNum = parseInt(m.split("-")[1], 10) || 0;
+      return '<div class="book-month-row">' +
+        '<div class="book-month-row-label">'+monthNum+'月</div>' +
+        '<div class="book-month-row-strip">'+groups[m].map(bookCardHtml).join("")+'</div>' +
+      '</div>';
+    }).join("");
     el.querySelectorAll("[data-book-open]").forEach(function(btn){
       btn.addEventListener("click", function(){ openBookDetail(btn.dataset.bookOpen); });
     });
@@ -2583,29 +2622,44 @@
     renderBookGrid(applyBookFilters(state.bookRecords));
   }
 
-  // A book's month bucket is its 閱讀年月 (read_month) when the user has filled
-  // it in; books without one (e.g. just added, before anyone opens the detail
-  // overlay to set it) fall back to the month they were added, so nothing
-  // silently disappears from every month's list.
-  function bookEffectiveMonth(b){
-    return b.read_month || (b.created_at || "").slice(0, 7);
+  function getAvailableBookYears(){
+    var years = {};
+    (state.bookAllRecords || []).forEach(function(b){ years[bookEffectiveYear(b)] = true; });
+    years[todayStr().slice(0,4)] = true;
+    years[state.bookYear] = true;
+    return Object.keys(years).sort().reverse();
   }
 
-  async function fetchBooksMonth(monthKey){
+  function renderBookYearOptions(){
+    var sel = document.getElementById("bookYearSelect");
+    sel.innerHTML = getAvailableBookYears().map(function(y){
+      return '<option value="'+y+'">'+y+'年</option>';
+    }).join("");
+    sel.value = state.bookYear;
+  }
+
+  async function fetchAllBooksRaw(){
     var res = await sb.from("books").select("*").order("created_at", { ascending:false });
     if (res.error){ console.error(res.error); return []; }
-    return res.data.filter(function(b){ return bookEffectiveMonth(b) === monthKey; });
+    return res.data;
   }
 
-  async function refreshBookPage(){
-    state.bookRecords = await fetchBooksMonth(state.bookMonth);
+  function applyBookYearFilter(){
+    state.bookRecords = (state.bookAllRecords || []).filter(function(b){
+      return bookEffectiveYear(b) === state.bookYear;
+    });
+    renderBookYearOptions();
     renderBookPageFromCache();
   }
 
-  function switchBookMonth(monthKey){
-    state.bookMonth = monthKey;
-    document.getElementById("bookMonthLabel").textContent = monthLabel(monthKey);
-    refreshBookPage();
+  async function refreshBookPage(){
+    state.bookAllRecords = await fetchAllBooksRaw();
+    applyBookYearFilter();
+  }
+
+  function switchBookYear(year){
+    state.bookYear = year;
+    applyBookYearFilter();
   }
 
   async function addBook(record){
@@ -2733,9 +2787,9 @@
     state.bookDetailOriginal = Object.assign({}, state.bookDetailOriginal, patch);
     state.bookDetailCoverFile = null;
     renderBookDetailView(state.bookDetailOriginal);
-    var effMonth = bookEffectiveMonth(state.bookDetailOriginal);
+    var effYear = bookEffectiveYear(state.bookDetailOriginal);
     document.getElementById("bookDetailStatusMsg").textContent =
-      (effMonth !== state.bookMonth) ? ("已儲存 ✓（已移至" + monthLabel(effMonth) + "的書單）") : "已儲存 ✓";
+      (effYear !== state.bookYear) ? ("已儲存 ✓（已移至" + effYear + "年的書單）") : "已儲存 ✓";
     showBookDetailView();
     refreshBookPage();
   }
@@ -2821,7 +2875,6 @@
 
     document.getElementById("ledgerDate").value = todayStr();
     document.getElementById("ledgerMonthLabel").textContent = monthLabel(state.ledgerMonth);
-    document.getElementById("bookMonthLabel").textContent = monthLabel(state.bookMonth);
     document.getElementById("diaryDateLabel").textContent = dateLabel(state.diaryDate);
     document.getElementById("diaryDateSearch").value = state.diaryDate;
     await refreshAccountsAndCategories();
@@ -2917,9 +2970,10 @@
     document.getElementById("ledgerDetailCancel").addEventListener("click", closeLedgerDetail);
     document.getElementById("ledgerDetailSave").addEventListener("click", saveLedgerDetail);
 
-    document.getElementById("bookPrev").addEventListener("click", function(){ switchBookMonth(addMonths(state.bookMonth,-1)); });
-    document.getElementById("bookNext").addEventListener("click", function(){ switchBookMonth(addMonths(state.bookMonth,1)); });
-    document.getElementById("bookToday").addEventListener("click", function(){ switchBookMonth(monthKeyOf(todayStr())); });
+    document.getElementById("bookPrev").addEventListener("click", function(){ switchBookYear(addYears(state.bookYear,-1)); });
+    document.getElementById("bookNext").addEventListener("click", function(){ switchBookYear(addYears(state.bookYear,1)); });
+    document.getElementById("bookToday").addEventListener("click", function(){ switchBookYear(todayStr().slice(0,4)); });
+    document.getElementById("bookYearSelect").addEventListener("change", function(){ switchBookYear(this.value); });
 
     document.getElementById("bookFilterCategory").addEventListener("change", function(){
       state.bookFilterCategory = this.value;
