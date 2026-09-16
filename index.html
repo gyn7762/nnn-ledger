@@ -1096,37 +1096,43 @@
           <button class="btn" id="bookToday" type="button" style="margin-left:auto;">回到本月</button>
         </div>
 
-        <form class="card book-form" id="bookForm">
-          <div class="field row-note">
-            <label for="bookCoverInput">封面圖片</label>
-            <input type="file" id="bookCoverInput" accept="image/*">
-            <div class="book-cover-preview" id="bookCoverPreview" hidden><img id="bookCoverPreviewImg" alt="封面預覽"></div>
-          </div>
-          <div class="field row-note">
-            <label for="bookTitleInput">書名</label>
-            <input type="text" id="bookTitleInput" maxlength="120" placeholder="書名" required>
-          </div>
-          <div class="field">
-            <label for="bookAuthorInput">作者（選填）</label>
-            <input type="text" id="bookAuthorInput" maxlength="80" placeholder="作者">
-          </div>
-          <div class="field">
-            <label for="bookCategorySelect">分類</label>
-            <select id="bookCategorySelect"></select>
-          </div>
-          <div class="field">
-            <label for="bookStatusSelect">狀態</label>
-            <select id="bookStatusSelect">
-              <option value="unread">未閱讀</option>
-              <option value="reading">閱讀中</option>
-              <option value="finished">閱畢</option>
-            </select>
-          </div>
-          <div class="row-submit">
-            <span class="diary-status" id="bookFormStatus" style="margin-right:auto;"></span>
-            <button type="submit" class="btn btn-primary" id="bookSubmitBtn">新增書籍</button>
-          </div>
-        </form>
+        <div class="card">
+          <button class="mood-toggle" id="bookAddToggle" type="button">
+            <span>新增書籍</span>
+            <span class="mood-toggle-arrow">▾</span>
+          </button>
+          <form class="book-form mood-body" id="bookForm" hidden>
+            <div class="field row-note">
+              <label for="bookCoverInput">封面圖片</label>
+              <input type="file" id="bookCoverInput" accept="image/*">
+              <div class="book-cover-preview" id="bookCoverPreview" hidden><img id="bookCoverPreviewImg" alt="封面預覽"></div>
+            </div>
+            <div class="field row-note">
+              <label for="bookTitleInput">書名</label>
+              <input type="text" id="bookTitleInput" maxlength="120" placeholder="書名" required>
+            </div>
+            <div class="field">
+              <label for="bookAuthorInput">作者（選填）</label>
+              <input type="text" id="bookAuthorInput" maxlength="80" placeholder="作者">
+            </div>
+            <div class="field">
+              <label for="bookCategorySelect">分類</label>
+              <select id="bookCategorySelect"></select>
+            </div>
+            <div class="field">
+              <label for="bookStatusSelect">狀態</label>
+              <select id="bookStatusSelect">
+                <option value="unread">未閱讀</option>
+                <option value="reading">閱讀中</option>
+                <option value="finished">閱畢</option>
+              </select>
+            </div>
+            <div class="row-submit">
+              <span class="diary-status" id="bookFormStatus" style="margin-right:auto;"></span>
+              <button type="submit" class="btn btn-primary" id="bookSubmitBtn">新增書籍</button>
+            </div>
+          </form>
+        </div>
 
         <div class="card">
           <button class="mood-toggle" id="bookManageToggle" type="button">
@@ -1143,9 +1149,12 @@
         </div>
 
         <div class="card">
-          <div class="ledger-list-head">
-            <div class="section-title" style="margin:0;">本月書單</div>
-            <div class="ledger-filter-row">
+          <button class="mood-toggle" id="bookGridToggle" type="button">
+            <span>本月書單</span>
+            <span class="mood-toggle-arrow">▾</span>
+          </button>
+          <div class="mood-body" id="bookGridBody" hidden>
+            <div class="ledger-filter-row" style="margin-bottom:10px;">
               <select id="bookFilterCategory"><option value="">全部分類</option></select>
               <select id="bookFilterStatus">
                 <option value="">全部狀態</option>
@@ -1154,8 +1163,8 @@
                 <option value="finished">閱畢</option>
               </select>
             </div>
+            <div class="book-grid" id="bookGrid"></div>
           </div>
-          <div class="book-grid" id="bookGrid"></div>
         </div>
       </section>
 
@@ -2574,14 +2583,18 @@
     renderBookGrid(applyBookFilters(state.bookRecords));
   }
 
+  // A book's month bucket is its 閱讀年月 (read_month) when the user has filled
+  // it in; books without one (e.g. just added, before anyone opens the detail
+  // overlay to set it) fall back to the month they were added, so nothing
+  // silently disappears from every month's list.
+  function bookEffectiveMonth(b){
+    return b.read_month || (b.created_at || "").slice(0, 7);
+  }
+
   async function fetchBooksMonth(monthKey){
-    var start = monthKey + "-01T00:00:00";
-    var nextStart = addMonths(monthKey, 1) + "-01T00:00:00";
-    var res = await sb.from("books").select("*")
-      .gte("created_at", start).lt("created_at", nextStart)
-      .order("created_at", { ascending:false });
+    var res = await sb.from("books").select("*").order("created_at", { ascending:false });
     if (res.error){ console.error(res.error); return []; }
-    return res.data;
+    return res.data.filter(function(b){ return bookEffectiveMonth(b) === monthKey; });
   }
 
   async function refreshBookPage(){
@@ -2720,7 +2733,9 @@
     state.bookDetailOriginal = Object.assign({}, state.bookDetailOriginal, patch);
     state.bookDetailCoverFile = null;
     renderBookDetailView(state.bookDetailOriginal);
-    document.getElementById("bookDetailStatusMsg").textContent = "已儲存 ✓";
+    var effMonth = bookEffectiveMonth(state.bookDetailOriginal);
+    document.getElementById("bookDetailStatusMsg").textContent =
+      (effMonth !== state.bookMonth) ? ("已儲存 ✓（已移至" + monthLabel(effMonth) + "的書單）") : "已儲存 ✓";
     showBookDetailView();
     refreshBookPage();
   }
@@ -2917,6 +2932,16 @@
 
     document.getElementById("bookManageToggle").addEventListener("click", function(){
       var body = document.getElementById("bookManageBody");
+      body.hidden = !body.hidden;
+      this.classList.toggle("open", !body.hidden);
+    });
+    document.getElementById("bookAddToggle").addEventListener("click", function(){
+      var body = document.getElementById("bookForm");
+      body.hidden = !body.hidden;
+      this.classList.toggle("open", !body.hidden);
+    });
+    document.getElementById("bookGridToggle").addEventListener("click", function(){
+      var body = document.getElementById("bookGridBody");
       body.hidden = !body.hidden;
       this.classList.toggle("open", !body.hidden);
     });
