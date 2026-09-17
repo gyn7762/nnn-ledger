@@ -386,6 +386,32 @@
   .calendar-day.has-entry{ box-shadow:inset 0 0 0 2px var(--stamp); color:var(--stamp); font-weight:700; }
   .calendar-day.today:not(.current){ box-shadow:inset 0 0 0 1px var(--ink-faint); }
   .calendar-day.current{ background:var(--stamp); color:var(--stamp-ink); font-weight:700; box-shadow:none; }
+
+  /* ---------- diary: annual special records ---------- */
+  .special-link-row{ text-align:right; margin:-6px 0 18px; }
+  .special-records-card{ margin-bottom:18px; }
+  .special-records-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px; }
+  .special-records-head h2{ margin:0; font-family:'Noto Serif TC',serif; font-size:calc(var(--font-scale) * 17px); }
+  .special-records-hint{ font-size:calc(var(--font-scale) * 12px); color:var(--ink-faint); margin:-6px 0 16px; line-height:1.6; }
+  .special-records-grid{ margin-top:4px; }
+  .special-record-row-strip{ display:flex; gap:14px; overflow-x:auto; padding-bottom:8px; scrollbar-width:thin; align-items:flex-start; }
+  .special-record-row-strip::-webkit-scrollbar{ height:6px; }
+  .special-record-row-strip::-webkit-scrollbar-thumb{ background:var(--rule); border-radius:99px; }
+  .special-record-col{
+    flex:0 0 auto; width:190px; border:1px solid var(--rule); border-radius:12px; padding:12px; box-sizing:border-box;
+  }
+  @media (max-width:600px){ .special-record-col{ width:150px; } }
+  .special-record-col-head{
+    font-size:calc(var(--font-scale) * 12.5px); font-weight:700; color:var(--stamp); background:var(--paper-sunk);
+    padding:4px 10px; border-radius:99px; display:inline-block; margin-bottom:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:100%;
+  }
+  .special-record-col-body{ display:flex; flex-direction:column; gap:10px; }
+  .special-record-item{ display:flex; flex-direction:column; gap:2px; }
+  .special-record-date{
+    align-self:flex-start; background:none; border:none; padding:0; color:var(--stamp); font-weight:700; cursor:pointer;
+    font-size:calc(var(--font-scale) * 12px); font-family:inherit; text-decoration:underline;
+  }
+  .special-record-text{ font-size:calc(var(--font-scale) * 13px); color:var(--ink); line-height:1.5; word-break:break-word; }
   .recent-list{ display:flex; flex-direction:column; gap:8px; }
   .recent-item{
     display:block; width:100%; text-align:left; background:var(--paper); border:1px solid var(--rule);
@@ -1001,7 +1027,30 @@
           </div>
         </div>
 
-        <div class="diary-layout">
+        <div class="special-link-row">
+          <button class="link-btn" id="diarySpecialOpenBtn" type="button">年度特別紀錄 →</button>
+        </div>
+
+        <div class="card special-records-card" id="diarySpecialCard" hidden>
+          <div class="special-records-head">
+            <h2>年度特別紀錄</h2>
+            <button class="link-btn" id="diarySpecialCloseBtn" type="button">← 返回日記</button>
+          </div>
+          <div class="month-switch">
+            <button class="btn btn-icon" id="specialYearPrev" type="button" aria-label="上一年">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+            </button>
+            <select class="label num" id="specialYearSelect" aria-label="選擇年度"></select>
+            <button class="btn btn-icon" id="specialYearNext" type="button" aria-label="下一年">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+            <button class="btn" id="specialYearToday" type="button" style="margin-left:auto;">回到今年</button>
+          </div>
+          <p class="special-records-hint">在日記或記憶點中打「#標籤 文字」（標籤和文字之間留一個空格），文字就會自動整理到這裡對應的標籤欄位下，例如「#餐廳 貳樓小吃」。</p>
+          <div class="special-records-grid" id="specialRecordsGrid"></div>
+        </div>
+
+        <div class="diary-layout" id="diaryLayout">
           <div>
             <div class="date-switch">
               <button class="btn btn-icon" id="diaryPrev" type="button" aria-label="前一天">
@@ -1249,6 +1298,10 @@
     var wd = ["日","一","二","三","四","五","六"][d.getDay()];
     return p[0] + "/" + p[1] + "/" + p[2] + "（週" + wd + "）";
   }
+  function shortDateLabel(dateStr){
+    var p = dateStr.split("-").map(Number);
+    return p[1] + "/" + p[2];
+  }
   function fmtMoney(n){
     n = Math.round(n || 0);
     var neg = n < 0; n = Math.abs(n);
@@ -1301,6 +1354,7 @@
     diaryDoc: null,
     diaryActiveTag: null,
     diaryEditing: false,
+    specialYear: todayStr().slice(0, 4),
     calendarMonth: monthKeyOf(todayStr()),
     calendarMarked: [],
     memoAll: [],
@@ -2013,6 +2067,31 @@
     return uniq;
   }
 
+  // ---- annual special records: "#標籤 後面接的文字" -> one record under that tag ----
+  // Unlike extractTags (which only grabs the tag word itself, for the tag-chip
+  // cloud), this also grabs whatever text follows the tag + a space, up to the
+  // end of that line or the next "#tag" — that trailing text becomes the
+  // "event" shown on the 年度特別紀錄 page. A tag with nothing typed after it
+  // (no space + text) contributes nothing here.
+  function extractTagEvents(text, entryDate, out){
+    if (!text) return;
+    var re = /#([^\s#,.!?，。！？、；;：:]+)[^\S\r\n]+([^\r\n#]*)/g;
+    var m;
+    while ((m = re.exec(text))){
+      var tag = m[1];
+      var eventText = (m[2] || "").trim();
+      if (tag && eventText) out.push({ tag: tag, event: eventText, date: entryDate });
+    }
+  }
+  function collectSpecialRecordsFromDoc(d){
+    var out = [];
+    extractTagEvents(d.morning_text, d.entry_date, out);
+    extractTagEvents(d.afternoon_text, d.entry_date, out);
+    extractTagEvents(d.evening_text, d.entry_date, out);
+    (d.memory_points || []).forEach(function(p){ extractTagEvents(p.text, d.entry_date, out); });
+    return out;
+  }
+
   function markDiaryDirty(){
     state.diaryDirty = true;
     document.getElementById("diaryStatus").textContent = "尚未儲存";
@@ -2393,6 +2472,82 @@
       refreshDiaryRecent();
     }
     renderDiaryTagList(all);
+  }
+
+  /* ---- annual special records page (年度特別紀錄) ---- */
+  function getAvailableSpecialYears(){
+    var years = {};
+    var base = parseInt(todayStr().slice(0,4), 10);
+    for (var i=-5; i<=1; i++){ years[String(base+i)] = true; }
+    years[state.specialYear] = true;
+    return Object.keys(years).sort().reverse();
+  }
+  function renderSpecialYearOptions(){
+    var sel = document.getElementById("specialYearSelect");
+    sel.innerHTML = getAvailableSpecialYears().map(function(y){ return '<option value="'+y+'">'+y+'年</option>'; }).join("");
+    sel.value = state.specialYear;
+  }
+  function groupSpecialRecordsByTag(records){
+    var groups = {};
+    records.forEach(function(r){ (groups[r.tag] = groups[r.tag] || []).push(r); });
+    Object.keys(groups).forEach(function(t){
+      groups[t].sort(function(a,b){ return a.date < b.date ? -1 : (a.date > b.date ? 1 : 0); });
+    });
+    return groups;
+  }
+  function specialRecordColumnHtml(tag, items){
+    return '<div class="special-record-col">' +
+      '<div class="special-record-col-head">#'+escapeHtml(tag)+'</div>' +
+      '<div class="special-record-col-body">' +
+        items.map(function(it){
+          return '<div class="special-record-item">' +
+            '<button type="button" class="special-record-date" data-special-jump="'+it.date+'">'+shortDateLabel(it.date)+'</button>' +
+            '<div class="special-record-text">'+escapeHtml(it.event)+'</div>' +
+          '</div>';
+        }).join("") +
+      '</div>' +
+    '</div>';
+  }
+  function renderSpecialRecordsGrid(records){
+    var el = document.getElementById("specialRecordsGrid");
+    if (!records.length){ el.innerHTML = '<div class="empty">這一年還沒有帶標籤的特別紀錄。</div>'; return; }
+    var groups = groupSpecialRecordsByTag(records);
+    var tags = Object.keys(groups).sort(function(a,b){ return a.localeCompare(b, "zh-Hant"); });
+    el.innerHTML = '<div class="special-record-row-strip">' + tags.map(function(t){ return specialRecordColumnHtml(t, groups[t]); }).join("") + '</div>';
+    el.querySelectorAll("[data-special-jump]").forEach(function(btn){
+      btn.addEventListener("click", function(){
+        closeSpecialRecords();
+        switchDiaryDate(btn.dataset.specialJump);
+      });
+    });
+  }
+  async function fetchDiaryEntriesForYear(year){
+    var nextYear = String(parseInt(year, 10) + 1);
+    var res = await sb.from("diary_entries").select("*")
+      .gte("entry_date", year+"-01-01").lt("entry_date", nextYear+"-01-01")
+      .order("entry_date", { ascending:true });
+    if (res.error){ console.error(res.error); return []; }
+    return res.data;
+  }
+  async function refreshSpecialRecords(){
+    renderSpecialYearOptions();
+    var docs = await fetchDiaryEntriesForYear(state.specialYear);
+    var records = [];
+    docs.forEach(function(d){ records = records.concat(collectSpecialRecordsFromDoc(d)); });
+    renderSpecialRecordsGrid(records);
+  }
+  function switchSpecialYear(year){
+    state.specialYear = year;
+    refreshSpecialRecords();
+  }
+  function openSpecialRecords(){
+    document.getElementById("diaryLayout").hidden = true;
+    document.getElementById("diarySpecialCard").hidden = false;
+    refreshSpecialRecords();
+  }
+  function closeSpecialRecords(){
+    document.getElementById("diarySpecialCard").hidden = true;
+    document.getElementById("diaryLayout").hidden = false;
   }
 
   async function refreshDiaryEditor(){
@@ -3117,6 +3272,12 @@
       body.hidden = !body.hidden;
       this.classList.toggle("open", !body.hidden);
     });
+    document.getElementById("diarySpecialOpenBtn").addEventListener("click", openSpecialRecords);
+    document.getElementById("diarySpecialCloseBtn").addEventListener("click", closeSpecialRecords);
+    document.getElementById("specialYearPrev").addEventListener("click", function(){ switchSpecialYear(addYears(state.specialYear,-1)); });
+    document.getElementById("specialYearNext").addEventListener("click", function(){ switchSpecialYear(addYears(state.specialYear,1)); });
+    document.getElementById("specialYearToday").addEventListener("click", function(){ switchSpecialYear(todayStr().slice(0,4)); });
+    document.getElementById("specialYearSelect").addEventListener("change", function(){ switchSpecialYear(this.value); });
     document.getElementById("calPrev").addEventListener("click", function(){ switchCalendarMonth(addMonths(state.calendarMonth,-1)); });
     document.getElementById("calNext").addEventListener("click", function(){ switchCalendarMonth(addMonths(state.calendarMonth,1)); });
     document.getElementById("diaryDateSearch").addEventListener("change", function(){
