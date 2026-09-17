@@ -2302,11 +2302,25 @@
     refreshDiaryCalendar();
   }
 
+  // The morning/afternoon/evening textareas in edit mode only get (re)populated
+  // when the diary editor loads a date (refreshDiaryEditor). Moving a memory
+  // point into one of those sections updates the DB and the read-only view
+  // straight away, but if we don't also refresh the (currently hidden) edit
+  // textareas, they keep showing whatever stale text they had before the move —
+  // and pressing 編輯 then 儲存 would save that stale text over the DB, silently
+  // erasing the just-moved point. Keep them in sync any time the doc changes.
+  function syncDiaryEditTextareas(doc){
+    document.getElementById("diaryMorning").value = (doc && doc.morning_text) || "";
+    document.getElementById("diaryAfternoon").value = (doc && doc.afternoon_text) || "";
+    document.getElementById("diaryEvening").value = (doc && doc.evening_text) || "";
+  }
+
   async function moveMemoryPoint(id, section){
     var doc = await moveMemoryPointToSection(state.diaryDate, id, section);
     if (!doc) return;
     state.diaryDoc = doc;
     renderMemoryPointList();
+    syncDiaryEditTextareas(doc);
     if (!state.diaryEditing) renderDiaryView(doc);
     refreshDiaryTags();
     refreshDiaryCalendar();
@@ -2319,6 +2333,7 @@
     if (state.diaryDate === todayStr()){
       state.diaryDoc = doc;
       renderMemoryPointList();
+      syncDiaryEditTextareas(doc);
       if (!state.diaryEditing) renderDiaryView(doc);
     }
     refreshDiaryTags();
