@@ -567,16 +567,17 @@
   }
   .auth-card h1{ font-size:calc(var(--font-scale) * 20px); margin-bottom:6px; }
   .auth-card p{ color:var(--ink-soft); font-size:calc(var(--font-scale) * 13.5px); line-height:1.6; margin:0 0 22px; }
-  .google-btn{
-    display:inline-flex; align-items:center; justify-content:center; gap:10px;
-    width:100%; padding:11px 16px; border-radius:9px; border:1px solid var(--rule);
-    background:var(--paper); color:var(--ink); font-size:calc(var(--font-scale) * 14px); font-weight:600; cursor:pointer;
-  }
-  .google-btn:hover{ background:var(--paper-sunk); }
-  .google-btn svg{ width:18px; height:18px; }
   .auth-note{ margin-top:16px; font-size:calc(var(--font-scale) * 11.5px); color:var(--ink-faint); }
   .auth-denied .auth-mark{ background:var(--expense); }
   .auth-spinner{ font-size:calc(var(--font-scale) * 13px); color:var(--ink-faint); }
+  .auth-card form{ text-align:left; }
+  .auth-card .field{ margin-bottom:14px; }
+  .auth-card .btn{ width:100%; }
+  .auth-error{
+    font-size:calc(var(--font-scale) * 12.5px); color:var(--expense); text-align:left;
+    margin:-6px 0 14px; line-height:1.5;
+  }
+  .auth-forgot{ margin-top:16px; }
 
   .signout-btn{
     display:flex; align-items:center; gap:8px; width:100%;
@@ -1254,8 +1255,6 @@
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
     books: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15.5a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 0 4 22V5.5z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H19"/><path d="M8 7h7"/></svg>'
   };
-  var GOOGLE_ICON = '<svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.4 0 10.3-2.1 14-5.5l-6.5-5.4c-2 1.5-4.6 2.4-7.5 2.4-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.2 4.2-4.1 5.6l6.5 5.4C41.4 36 44 30.6 44 24c0-1.3-.1-2.7-.4-3.5z"/></svg>';
-
   var PAGES = [
     { key:"home",   label:"首頁", icon:ICONS.home },
     { key:"ledger", label:"記帳", icon:ICONS.ledger },
@@ -1365,7 +1364,7 @@
   var realtimeChannel = null;
 
   /* ================= auth ================= */
-  function showAuthScreen(kind, email){
+  function showAuthScreen(kind, data){
     document.getElementById("authScreen").hidden = false;
     document.getElementById("appRoot").hidden = true;
     var card = document.getElementById("authCard");
@@ -1375,17 +1374,80 @@
       body.innerHTML =
         '<h1>日日帳</h1>' +
         '<p>記帳・備忘・日記，只有你能打開的私人手帳。</p>' +
-        '<button class="google-btn" id="googleLoginBtn" type="button">' + GOOGLE_ICON + '<span>使用 Google 帳號登入</span></button>' +
+        '<form id="loginForm">' +
+          '<div class="field"><label for="loginEmail">Email</label><input type="email" id="loginEmail" autocomplete="username" required></div>' +
+          '<div class="field"><label for="loginPassword">密碼</label><input type="password" id="loginPassword" autocomplete="current-password" required></div>' +
+          '<div class="auth-error" id="loginError" hidden></div>' +
+          '<button class="btn btn-primary" type="submit">登入</button>' +
+        '</form>' +
+        '<div class="auth-forgot"><button class="link-btn" id="forgotPwBtn" type="button">忘記密碼？</button></div>' +
         '<div class="auth-note">僅限授權帳號使用</div>';
-      document.getElementById("googleLoginBtn").addEventListener("click", function(){
-        sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: window.location.origin + window.location.pathname } });
+      document.getElementById("loginForm").addEventListener("submit", function(e){
+        e.preventDefault();
+        var email = document.getElementById("loginEmail").value.trim();
+        var password = document.getElementById("loginPassword").value;
+        var errEl = document.getElementById("loginError");
+        errEl.hidden = true;
+        var btn = e.target.querySelector("button[type=submit]");
+        btn.disabled = true;
+        sb.auth.signInWithPassword({ email: email, password: password }).then(function(res){
+          btn.disabled = false;
+          if (res.error){
+            errEl.textContent = "登入失敗，請確認 email 與密碼是否正確。";
+            errEl.hidden = false;
+          }
+          // success is picked up by onAuthStateChange -> handleSession
+        });
+      });
+      document.getElementById("forgotPwBtn").addEventListener("click", function(){
+        var btn = document.getElementById("forgotPwBtn");
+        var email = (document.getElementById("loginEmail").value || "").trim() || ALLOWED_EMAIL;
+        btn.disabled = true;
+        btn.textContent = "寄送中…";
+        sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname }).then(function(res){
+          btn.disabled = false;
+          btn.textContent = res.error ? "寄送失敗，請稍後再試" : "已寄出重設密碼信，請至信箱查收";
+        });
       });
     } else if (kind === "denied"){
       body.innerHTML =
         '<h1>此帳號未授權</h1>' +
-        '<p>' + escapeHtml(email || "") + ' 沒有使用這個工具的權限，請改用授權的 Google 帳號登入。</p>' +
-        '<button class="google-btn" id="switchAccountBtn" type="button">切換帳號</button>';
-      document.getElementById("switchAccountBtn").addEventListener("click", function(){ sb.auth.signOut(); });
+        '<p>' + escapeHtml((data && data.email) || "") + ' 沒有使用這個工具的權限。</p>' +
+        '<button class="btn btn-primary" id="signOutBtn" type="button">登出</button>';
+      document.getElementById("signOutBtn").addEventListener("click", function(){ sb.auth.signOut(); });
+    } else if (kind === "recovery"){
+      body.innerHTML =
+        '<h1>設定新密碼</h1>' +
+        '<p>請輸入您要使用的新密碼（至少 8 碼）。</p>' +
+        '<form id="recoveryForm">' +
+          '<div class="field"><label for="newPassword">新密碼</label><input type="password" id="newPassword" autocomplete="new-password" required minlength="8"></div>' +
+          '<div class="field"><label for="newPassword2">再輸入一次</label><input type="password" id="newPassword2" autocomplete="new-password" required minlength="8"></div>' +
+          '<div class="auth-error" id="recoveryError" hidden></div>' +
+          '<button class="btn btn-primary" type="submit">儲存新密碼</button>' +
+        '</form>';
+      document.getElementById("recoveryForm").addEventListener("submit", function(e){
+        e.preventDefault();
+        var p1 = document.getElementById("newPassword").value;
+        var p2 = document.getElementById("newPassword2").value;
+        var errEl = document.getElementById("recoveryError");
+        errEl.hidden = true;
+        if (p1 !== p2){
+          errEl.textContent = "兩次輸入的密碼不一致，請重新輸入。";
+          errEl.hidden = false;
+          return;
+        }
+        var btn = e.target.querySelector("button[type=submit]");
+        btn.disabled = true;
+        sb.auth.updateUser({ password: p1 }).then(function(res){
+          btn.disabled = false;
+          if (res.error){
+            errEl.textContent = "設定失敗：" + res.error.message;
+            errEl.hidden = false;
+            return;
+          }
+          sb.auth.getSession().then(function(sres){ handleSession(sres.data.session); });
+        });
+      });
     } else {
       body.innerHTML = '<p class="auth-spinner">連線中…</p>';
     }
@@ -1398,7 +1460,7 @@
     }
     var email = session.user && session.user.email;
     if (email !== ALLOWED_EMAIL){
-      showAuthScreen("denied", email);
+      showAuthScreen("denied", { email: email });
       return;
     }
     document.getElementById("authScreen").hidden = true;
@@ -1411,8 +1473,25 @@
 
   function initAuth(){
     showAuthScreen("loading");
-    sb.auth.getSession().then(function(res){ handleSession(res.data.session); });
-    sb.auth.onAuthStateChange(function(_event, session){ handleSession(session); });
+    // A password-reset email link lands here with "type=recovery" in the URL
+    // fragment. supabase-js auto-detects it and fires a PASSWORD_RECOVERY
+    // event, but it also briefly looks like a normal valid session — so when
+    // the URL says this is a recovery link, skip the immediate getSession()
+    // check below and wait for that event instead, otherwise the user could
+    // get bounced straight into the app instead of being asked to set a new
+    // password first.
+    var isRecovery = /type=recovery/.test(window.location.hash || "") || /type=recovery/.test(window.location.search || "");
+    sb.auth.onAuthStateChange(function(event, session){
+      if (event === "PASSWORD_RECOVERY"){
+        showAuthScreen("recovery");
+        return;
+      }
+      if (isRecovery && !appBooted) return;
+      handleSession(session);
+    });
+    if (!isRecovery){
+      sb.auth.getSession().then(function(res){ handleSession(res.data.session); });
+    }
   }
 
   /* ================= nav / shell ================= */
