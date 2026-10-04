@@ -1473,25 +1473,21 @@
 
   function initAuth(){
     showAuthScreen("loading");
-    // A password-reset email link lands here with "type=recovery" in the URL
-    // fragment. supabase-js auto-detects it and fires a PASSWORD_RECOVERY
-    // event, but it also briefly looks like a normal valid session — so when
-    // the URL says this is a recovery link, skip the immediate getSession()
-    // check below and wait for that event instead, otherwise the user could
-    // get bounced straight into the app instead of being asked to set a new
-    // password first.
-    var isRecovery = /type=recovery/.test(window.location.hash || "") || /type=recovery/.test(window.location.search || "");
+    // Everything (including the very first "do we already have a session"
+    // check) goes through this single onAuthStateChange stream rather than a
+    // separate getSession() call racing against it. A password-reset email
+    // link makes supabase-js fire a PASSWORD_RECOVERY event for that first
+    // delivery, in order, on this same stream — so there is no window where
+    // a competing getSession() promise could resolve first and boot straight
+    // into the app before the "set a new password" screen gets a chance to
+    // show.
     sb.auth.onAuthStateChange(function(event, session){
       if (event === "PASSWORD_RECOVERY"){
         showAuthScreen("recovery");
         return;
       }
-      if (isRecovery && !appBooted) return;
       handleSession(session);
     });
-    if (!isRecovery){
-      sb.auth.getSession().then(function(res){ handleSession(res.data.session); });
-    }
   }
 
   /* ================= nav / shell ================= */
