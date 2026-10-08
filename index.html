@@ -536,6 +536,7 @@
   .book-status-select.unread{ color:var(--ink-faint); }
   .book-status-select.reading{ color:var(--stamp); border-color:var(--stamp-tint); background:var(--stamp-tint); }
   .book-status-select.finished{ color:var(--income); border-color:var(--income-tint); background:var(--income-tint); }
+  .book-status-select.abandoned{ color:var(--expense); border-color:var(--expense-tint); background:var(--expense-tint); }
 
   .book-detail-cover{ display:flex; align-items:center; gap:14px; margin-bottom:14px; }
   .book-detail-cover img{ width:78px; height:110px; object-fit:cover; border-radius:8px; border:1px solid var(--rule); background:var(--paper-sunk); }
@@ -713,6 +714,7 @@
             <option value="unread">未閱讀</option>
             <option value="reading">閱讀中</option>
             <option value="finished">閱畢</option>
+            <option value="abandoned">放棄閱讀</option>
           </select>
         </div>
         <div class="field">
@@ -1179,6 +1181,7 @@
                 <option value="unread">未閱讀</option>
                 <option value="reading">閱讀中</option>
                 <option value="finished">閱畢</option>
+                <option value="abandoned">放棄閱讀</option>
               </select>
             </div>
             <div class="row-submit">
@@ -1215,6 +1218,7 @@
                 <option value="unread">未閱讀</option>
                 <option value="reading">閱讀中</option>
                 <option value="finished">閱畢</option>
+                <option value="abandoned">放棄閱讀</option>
               </select>
             </div>
             <div class="book-grid" id="bookGrid"></div>
@@ -2740,7 +2744,7 @@
   }
 
   /* ================= books ================= */
-  var BOOK_STATUS_LABEL = { unread:"未閱讀", reading:"閱讀中", finished:"閱畢" };
+  var BOOK_STATUS_LABEL = { unread:"未閱讀", reading:"閱讀中", finished:"閱畢", abandoned:"放棄閱讀" };
 
   function bookCategoriesById(){
     var map = {};
@@ -2810,7 +2814,7 @@
   }
 
   function bookCardHtml(b){
-    var statusOptions = ["unread","reading","finished"].map(function(s){
+    var statusOptions = ["unread","reading","finished","abandoned"].map(function(s){
       return '<option value="'+s+'"'+(b.status===s?' selected':'')+'>'+BOOK_STATUS_LABEL[s]+'</option>';
     }).join("");
     var coverInner = b.cover_url ? '<img src="'+escapeHtml(b.cover_url)+'" alt="">' : '<span>無封面</span>';
