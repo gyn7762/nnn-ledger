@@ -122,7 +122,7 @@
     padding:9px 10px; border-radius:9px;
     color:var(--ink-soft); cursor:pointer;
     border:1px solid transparent;
-    font-size:calc(var(--font-scale) * 14.5px); font-weight:500;
+    font-size:calc(var(--font-scale) * 15.5px); font-weight:500;
     background:none; width:100%; text-align:left;
   }
   .navitem:hover{ background:var(--paper-sunk); color:var(--ink); }
@@ -173,8 +173,8 @@
   .bottomnav .navitem{
     flex:1 1 0; min-width:0;
     flex-direction:column; justify-content:center; gap:3px;
-    font-size:calc(var(--font-scale) * 10.5px); font-weight:600;
-    padding:8px 2px; min-height:52px;
+    font-size:calc(var(--font-scale) * 12.5px); font-weight:600;
+    padding:8px 2px; min-height:56px;
     border:none; border-radius:999px; text-align:center;
     -webkit-tap-highlight-color:transparent;
     transition:background .15s ease, color .15s ease;
@@ -558,8 +558,98 @@
   .book-status-select.finished{ color:var(--income); border-color:var(--income-tint); background:var(--income-tint); }
   .book-status-select.abandoned{ color:var(--expense); border-color:var(--expense-tint); background:var(--expense-tint); }
 
-  .book-detail-cover{ display:flex; align-items:center; gap:14px; margin-bottom:14px; }
-  .book-detail-cover img{ width:78px; height:110px; object-fit:cover; border-radius:8px; border:1px solid var(--rule); background:var(--paper-sunk); }
+  .book-detail-cover{ display:flex; align-items:flex-start; gap:16px; margin-bottom:18px; }
+  .bj-cover-col{ display:flex; flex-direction:column; align-items:center; gap:8px; flex:0 0 auto; }
+  .book-detail-cover img{ width:86px; height:122px; object-fit:cover; border-radius:6px; border:1px solid var(--rule); background:var(--paper-sunk); box-shadow:0 3px 10px var(--shadow); }
+
+  /* ---------- 閱讀手帳 (book reading journal) ---------- */
+  .bj-meta[hidden]{ display:none; }
+  .bj-meta{ margin:2px 0 0; display:flex; flex-direction:column; gap:7px; min-width:0; flex:1; }
+  .bj-meta > div{ display:flex; gap:10px; align-items:baseline; border-bottom:1px dashed var(--rule); padding-bottom:6px; }
+  .bj-meta dt{ flex:0 0 auto; width:2.6em; font-size:calc(var(--font-scale) * 11.5px); font-weight:600; color:var(--ink-faint); }
+  .bj-meta dd{ margin:0; font-size:calc(var(--font-scale) * 13.5px); color:var(--ink); min-width:0; overflow-wrap:anywhere; }
+  .bj-stars{ color:var(--stamp); letter-spacing:1px; }
+  .bj{ --bj-lh:calc(var(--font-scale) * 30px); }
+  .bj-sec{ margin:0 0 22px; }
+  #bookDetailView .bj-sec{ cursor:text; border-radius:10px; padding:4px 6px 6px; margin-left:-6px; margin-right:-6px; transition:background .15s ease; }
+  #bookDetailView .bj-sec:hover{ background:var(--paper-sunk); }
+  .bj-head{
+    display:flex; align-items:center; gap:9px; margin:0 0 8px;
+    font-family:'Noto Serif TC', serif; font-size:calc(var(--font-scale) * 15px); font-weight:700; color:var(--ink);
+  }
+  .bj-head label{ font:inherit; color:inherit; margin:0; display:inline; }
+  .bj-head small{ font-family:'Noto Sans TC', sans-serif; font-size:calc(var(--font-scale) * 11.5px); font-weight:500; color:var(--ink-faint); }
+  .bj-head::after{ content:""; flex:1; height:0; border-top:1px dashed var(--rule); margin-left:4px; }
+  .bj-num{
+    display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto;
+    width:22px; height:22px; border-radius:50%;
+    background:var(--stamp-tint); color:var(--stamp);
+    font-family:'JetBrains Mono', monospace; font-size:calc(var(--font-scale) * 11px); font-weight:700;
+  }
+  /* notebook ruling: one rule per line, text sits on the rule */
+  .bj-ruled{
+    line-height:var(--bj-lh); min-height:calc(var(--bj-lh) * 2);
+    background-image:linear-gradient(to bottom, transparent calc(var(--bj-lh) - 1px), var(--rule) calc(var(--bj-lh) - 1px), var(--rule) var(--bj-lh), transparent var(--bj-lh));
+    background-size:100% var(--bj-lh);
+    background-attachment:local;
+    font-size:calc(var(--font-scale) * 14.5px); color:var(--ink);
+    white-space:pre-wrap; overflow-wrap:anywhere; margin:0; padding:0 4px;
+  }
+  .bj-ruled-tall{ min-height:calc(var(--bj-lh) * 4); }
+  .bj-ruled-input{
+    display:block; width:100%; box-sizing:border-box; resize:vertical;
+    border:none; border-radius:0; background-color:transparent; box-shadow:none;
+    padding:0 4px; font-family:inherit;
+  }
+  .bj-ruled-input:focus{ outline:none; background-color:var(--paper-sunk); }
+  .bj-quote{ position:relative; padding-left:22px; font-family:'Noto Serif TC', serif; }
+  .bj-quote::before{
+    content:"「"; position:absolute; left:0; top:0;
+    color:var(--stamp); font-weight:700; line-height:var(--bj-lh);
+  }
+  .bj-empty{ color:var(--ink-faint); font-style:normal; }
+  .bj-keys{ list-style:none; margin:0; padding:0; counter-reset:bjk; }
+  .bj-keys li{
+    counter-increment:bjk; display:flex; gap:8px; align-items:baseline;
+    min-height:var(--bj-lh); line-height:1.5; padding:5px 4px 4px;
+    border-bottom:1px solid var(--rule);
+    font-size:calc(var(--font-scale) * 14.5px); color:var(--ink); overflow-wrap:anywhere;
+  }
+  .bj-keys li::before{ content:counter(bjk) "."; flex:0 0 auto; width:1.3em; color:var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size:.9em; }
+  .bj-keyrow{ display:flex; align-items:baseline; gap:8px; border-bottom:1px solid var(--rule); padding:0 4px; }
+  .bj-keyno{ flex:0 0 auto; width:1.3em; color:var(--ink-faint); font-family:'JetBrains Mono', monospace; font-size:calc(var(--font-scale) * 13px); }
+  .bj-line-input{
+    flex:1; min-width:0; border:none; border-radius:0; background:transparent; box-shadow:none;
+    padding:9px 0 7px; font-size:calc(var(--font-scale) * 14.5px);
+  }
+  .bj-line-input:focus{ outline:none; }
+  .bj-keyrow:focus-within{ border-bottom-color:var(--stamp); }
+  .bj-checks{ list-style:none; margin:0; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:6px 14px; }
+  @media (max-width:480px){ .bj-checks{ grid-template-columns:1fr; } }
+  .bj-checks li{ display:flex; align-items:center; gap:9px; font-size:calc(var(--font-scale) * 14px); color:var(--ink-faint); padding:3px 0; }
+  .bj-checks li.on{ color:var(--ink); }
+  .bj-box{
+    flex:0 0 auto; width:17px; height:17px; border-radius:4px; border:1.5px solid var(--rule);
+    display:inline-flex; align-items:center; justify-content:center;
+  }
+  .bj-checks li.on .bj-box{ background:var(--stamp); border-color:var(--stamp); }
+  .bj-box svg{ width:12px; height:12px; stroke:var(--stamp-ink); }
+  .bj-checks-edit label{
+    display:flex; align-items:center; gap:9px; margin:0; padding:6px 0; cursor:pointer;
+    font-size:calc(var(--font-scale) * 14px); font-weight:400; color:var(--ink);
+  }
+  .bj-checks-edit input[type="checkbox"]{ width:17px; height:17px; margin:0; accent-color:var(--stamp); flex:0 0 auto; }
+  .bj-checks-edit .bj-other{ grid-column:1 / -1; display:flex; align-items:center; gap:9px; }
+  .bj-checks-edit .bj-other label{ flex:0 0 auto; }
+  .bj-checks-edit .bj-other input[type="text"]{ flex:1; min-width:0; border:none; border-bottom:1px solid var(--rule); border-radius:0; background:transparent; padding:6px 2px; box-shadow:none; }
+  .bj-checks-edit .bj-other input[type="text"]:focus{ outline:none; border-bottom-color:var(--stamp); }
+  .bj-motto{
+    margin:6px 0 4px; text-align:right;
+    font-family:'Noto Serif TC', serif; font-size:calc(var(--font-scale) * 12.5px); color:var(--ink-faint); letter-spacing:.5px;
+  }
+  .bj-form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; margin-bottom:22px; }
+  .bj-form-grid .field:first-child{ grid-column:1 / -1; }
+  @media (max-width:330px){ .bj-form-grid{ grid-template-columns:1fr; } }
 
   .banner{
     display:flex; align-items:center; gap:10px; font-size:calc(var(--font-scale) * 13px);
@@ -687,67 +777,96 @@
       <input type="text" id="bookDetailTitle" maxlength="120" placeholder="書名">
       <button class="btn btn-icon btn-ghost" id="bookDetailClose" type="button" aria-label="關閉"></button>
     </div>
-    <div class="book-detail-cover" id="bookDetailCoverWrap">
-      <img id="bookDetailCoverImg" alt="封面">
-      <label class="btn btn-ghost" for="bookDetailCoverInput" id="bookDetailCoverChangeBtn" hidden>更換封面</label>
-      <input type="file" id="bookDetailCoverInput" accept="image/*" hidden>
-    </div>
     <div class="book-detail-scroll">
-      <div id="bookDetailView">
-        <div class="book-detail-view-row"><span class="book-detail-view-label">閱讀年月</span><span class="book-detail-view-value" id="bookDetailViewReadMonth"></span></div>
-        <div class="book-detail-view-row"><span class="book-detail-view-label">作者</span><span class="book-detail-view-value" id="bookDetailViewAuthor"></span></div>
-        <div class="book-detail-view-row"><span class="book-detail-view-label">分類</span><span class="book-detail-view-value" id="bookDetailViewCategory"></span></div>
-        <div class="book-detail-view-block"><span class="book-detail-view-label">最喜歡的一句話</span><p class="book-detail-view-text" id="bookDetailViewQuote"></p></div>
-        <div class="book-detail-view-block"><span class="book-detail-view-label">這本書帶給我的體悟</span><p class="book-detail-view-text" id="bookDetailViewInsight"></p></div>
-        <div class="book-detail-view-block"><span class="book-detail-view-label">心得</span><p class="book-detail-view-text" id="bookDetailViewNote"></p></div>
-        <div class="book-detail-view-row"><span class="book-detail-view-label">狀態</span><span class="book-detail-view-value" id="bookDetailViewStatus"></span></div>
-        <div class="book-detail-view-row"><span class="book-detail-view-label">評分</span><span class="book-detail-view-value" id="bookDetailViewRating"></span></div>
+      <div class="book-detail-cover" id="bookDetailCoverWrap">
+        <div class="bj-cover-col">
+          <img id="bookDetailCoverImg" alt="封面">
+          <label class="btn btn-ghost" for="bookDetailCoverInput" id="bookDetailCoverChangeBtn" hidden>更換封面</label>
+          <input type="file" id="bookDetailCoverInput" accept="image/*" hidden>
+        </div>
+        <dl class="bj-meta" id="bookDetailViewMeta">
+          <div><dt>作者</dt><dd id="bookDetailViewAuthor"></dd></div>
+          <div><dt>閱讀</dt><dd id="bookDetailViewReadMonth"></dd></div>
+          <div><dt>分類</dt><dd id="bookDetailViewCategory"></dd></div>
+          <div><dt>狀態</dt><dd id="bookDetailViewStatus"></dd></div>
+          <div><dt>評分</dt><dd id="bookDetailViewRating" class="bj-stars"></dd></div>
+        </dl>
       </div>
-      <div id="bookDetailEdit" hidden>
-        <div class="field">
-          <label for="bookDetailReadMonth">閱讀年月（選填）</label>
-          <input type="month" id="bookDetailReadMonth">
+
+      <div id="bookDetailView" class="bj">
+        <section class="bj-sec" data-focus="bookDetailKey1">
+          <h3 class="bj-head"><span class="bj-num">1</span>這本書的重點<small>3 個關鍵句</small></h3>
+          <ol class="bj-keys" id="bookDetailViewKeys"></ol>
+        </section>
+        <section class="bj-sec" data-focus="bookDetailQuote">
+          <h3 class="bj-head"><span class="bj-num">2</span>我最喜歡的句子</h3>
+          <blockquote class="bj-quote bj-ruled" id="bookDetailViewQuote"></blockquote>
+        </section>
+        <section class="bj-sec" data-focus="bookDetailNote">
+          <h3 class="bj-head"><span class="bj-num">3</span>我的想法</h3>
+          <div class="bj-ruled bj-ruled-tall" id="bookDetailViewNote"></div>
+        </section>
+        <section class="bj-sec" data-focus="bookDetailChange_self">
+          <h3 class="bj-head"><span class="bj-num">4</span>這本書帶給我的改變</h3>
+          <ul class="bj-checks" id="bookDetailViewChanges"></ul>
+        </section>
+        <p class="bj-motto">閱讀，是一場與更好的自己相遇的旅程。</p>
+      </div>
+
+      <div id="bookDetailEdit" class="bj" hidden>
+        <div class="bj-form-grid">
+          <div class="field">
+            <label for="bookDetailAuthor">作者</label>
+            <input type="text" id="bookDetailAuthor" maxlength="80">
+          </div>
+          <div class="field">
+            <label for="bookDetailReadMonth">閱讀年月（選填）</label>
+            <input type="month" id="bookDetailReadMonth">
+          </div>
+          <div class="field">
+            <label for="bookDetailCategory">分類</label>
+            <select id="bookDetailCategory"></select>
+          </div>
+          <div class="field">
+            <label for="bookDetailStatusSelect">狀態</label>
+            <select id="bookDetailStatusSelect">
+              <option value="unread">未閱讀</option>
+              <option value="reading">閱讀中</option>
+              <option value="finished">閱畢</option>
+              <option value="abandoned">放棄閱讀</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="bookDetailRating">評分（選填）</label>
+            <select id="bookDetailRating">
+              <option value="">未評分</option>
+              <option value="1">★☆☆☆☆</option>
+              <option value="2">★★☆☆☆</option>
+              <option value="3">★★★☆☆</option>
+              <option value="4">★★★★☆</option>
+              <option value="5">★★★★★</option>
+            </select>
+          </div>
         </div>
-        <div class="field">
-          <label for="bookDetailAuthor">作者</label>
-          <input type="text" id="bookDetailAuthor" maxlength="80">
-        </div>
-        <div class="field">
-          <label for="bookDetailCategory">分類</label>
-          <select id="bookDetailCategory"></select>
-        </div>
-        <div class="field">
-          <label for="bookDetailQuote">最喜歡的一句話</label>
-          <input type="text" id="bookDetailQuote" maxlength="200" placeholder="書裡最打動你的一句話">
-        </div>
-        <div class="field">
-          <label for="bookDetailInsight">這本書帶給我的體悟</label>
-          <textarea id="bookDetailInsight" style="min-height:90px;" placeholder="這本書帶給你的想法或改變…"></textarea>
-        </div>
-        <div class="field">
-          <label for="bookDetailNote">心得</label>
-          <textarea id="bookDetailNote" class="memo-detail-textarea" style="min-height:100px;" placeholder="寫下你的心得…"></textarea>
-        </div>
-        <div class="field">
-          <label for="bookDetailStatusSelect">狀態</label>
-          <select id="bookDetailStatusSelect">
-            <option value="unread">未閱讀</option>
-            <option value="reading">閱讀中</option>
-            <option value="finished">閱畢</option>
-            <option value="abandoned">放棄閱讀</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="bookDetailRating">評分（選填）</label>
-          <select id="bookDetailRating">
-            <option value="">未評分</option>
-            <option value="1">★☆☆☆☆</option>
-            <option value="2">★★☆☆☆</option>
-            <option value="3">★★★☆☆</option>
-            <option value="4">★★★★☆</option>
-            <option value="5">★★★★★</option>
-          </select>
-        </div>
+
+        <section class="bj-sec">
+          <h3 class="bj-head"><span class="bj-num">1</span>這本書的重點<small>3 個關鍵句</small></h3>
+          <div class="bj-keyrow"><span class="bj-keyno">1.</span><input type="text" class="bj-line-input" id="bookDetailKey1" maxlength="200" placeholder="第一個關鍵句"></div>
+          <div class="bj-keyrow"><span class="bj-keyno">2.</span><input type="text" class="bj-line-input" id="bookDetailKey2" maxlength="200" placeholder="第二個關鍵句"></div>
+          <div class="bj-keyrow"><span class="bj-keyno">3.</span><input type="text" class="bj-line-input" id="bookDetailKey3" maxlength="200" placeholder="第三個關鍵句"></div>
+        </section>
+        <section class="bj-sec">
+          <h3 class="bj-head"><span class="bj-num">2</span><label for="bookDetailQuote">我最喜歡的句子</label></h3>
+          <textarea id="bookDetailQuote" class="bj-ruled bj-ruled-input" rows="2" maxlength="500" placeholder="書裡最打動你的一句話"></textarea>
+        </section>
+        <section class="bj-sec">
+          <h3 class="bj-head"><span class="bj-num">3</span><label for="bookDetailNote">我的想法</label></h3>
+          <textarea id="bookDetailNote" class="bj-ruled bj-ruled-input bj-ruled-tall" rows="5" placeholder="讀完之後，你在想什麼？"></textarea>
+        </section>
+        <section class="bj-sec">
+          <h3 class="bj-head"><span class="bj-num">4</span>這本書帶給我的改變</h3>
+          <div class="bj-checks bj-checks-edit" id="bookDetailChangeList"></div>
+        </section>
       </div>
     </div>
     <div class="memo-detail-foot">
@@ -2947,16 +3066,57 @@
     if (!n) return "未評分";
     return "★★★★★".slice(0, n) + "☆☆☆☆☆".slice(0, 5 - n);
   }
+  // 閱讀手帳「這本書帶給我的改變」— stored as codes in books.changes;
+  // the 其他 free text lives in books.insight.
+  var BOOK_CHANGE_OPTIONS = [
+    { key:"self",     label:"更了解自己" },
+    { key:"mindset",  label:"調整了我的想法" },
+    { key:"solution", label:"提供了解決問題的方向" },
+    { key:"strength", label:"讓我更加有力量" }
+  ];
+  var BJ_TICK = '<svg viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  function setBjText(el, text, emptyText){
+    if (text){ el.textContent = text; el.classList.remove("bj-empty"); }
+    else { el.textContent = emptyText; el.classList.add("bj-empty"); }
+  }
   function renderBookDetailView(b){
     document.getElementById("bookDetailViewReadMonth").textContent = b.read_month ? monthLabel(b.read_month) : "未填寫";
     document.getElementById("bookDetailViewAuthor").textContent = b.author || "未填寫";
     var cat = bookCategoriesById()[b.category_id];
     document.getElementById("bookDetailViewCategory").textContent = cat ? cat.name : (b.category || "未分類");
-    document.getElementById("bookDetailViewQuote").textContent = b.favorite_quote || "尚未填寫";
-    document.getElementById("bookDetailViewInsight").textContent = b.insight || "尚未填寫";
-    document.getElementById("bookDetailViewNote").textContent = b.note || "尚未填寫";
     document.getElementById("bookDetailViewStatus").textContent = BOOK_STATUS_LABEL[b.status] || "";
     document.getElementById("bookDetailViewRating").textContent = bookRatingStarsText(b.rating);
+
+    var keys = b.key_points || [];
+    document.getElementById("bookDetailViewKeys").innerHTML = [0,1,2].map(function(i){
+      var k = (keys[i] || "").trim();
+      return k ? "<li>" + escapeHtml(k) + "</li>" : '<li class="bj-empty"></li>';
+    }).join("");
+    setBjText(document.getElementById("bookDetailViewQuote"), b.favorite_quote, "還沒寫下喜歡的句子，點這裡開始寫");
+    setBjText(document.getElementById("bookDetailViewNote"), b.note, "讀完之後，你在想什麼？點這裡開始寫");
+
+    var on = b.changes || [];
+    var items = BOOK_CHANGE_OPTIONS.map(function(o){
+      var hit = on.indexOf(o.key) !== -1;
+      return '<li class="' + (hit ? "on" : "") + '"><span class="bj-box">' + (hit ? BJ_TICK : "") + "</span>" + o.label + "</li>";
+    });
+    var otherOn = on.indexOf("other") !== -1 || !!(b.insight || "").trim();
+    items.push('<li class="' + (otherOn ? "on" : "") + '" style="grid-column:1 / -1;"><span class="bj-box">' + (otherOn ? BJ_TICK : "") + "</span>其他" +
+      ((b.insight || "").trim() ? "：" + escapeHtml(b.insight.trim()) : "") + "</li>");
+    document.getElementById("bookDetailViewChanges").innerHTML = items.join("");
+  }
+  function buildBookChangeEditList(){
+    var box = document.getElementById("bookDetailChangeList");
+    if (box.dataset.built) return;
+    box.innerHTML = BOOK_CHANGE_OPTIONS.map(function(o){
+      return '<label><input type="checkbox" id="bookDetailChange_' + o.key + '" value="' + o.key + '">' + o.label + "</label>";
+    }).join("") +
+      '<div class="bj-other"><label><input type="checkbox" id="bookDetailChange_other" value="other">其他：</label>' +
+      '<input type="text" id="bookDetailInsight" maxlength="200" placeholder="自己寫…" aria-label="其他改變"></div>';
+    document.getElementById("bookDetailInsight").addEventListener("input", function(){
+      if (this.value.trim()) document.getElementById("bookDetailChange_other").checked = true;
+    });
+    box.dataset.built = "1";
   }
   function fillBookDetailEditFields(b){
     document.getElementById("bookDetailTitle").value = b.title || "";
@@ -2973,7 +3133,15 @@
     document.getElementById("bookDetailRating").value = b.rating ? String(b.rating) : "";
     document.getElementById("bookDetailNote").value = b.note || "";
     document.getElementById("bookDetailQuote").value = b.favorite_quote || "";
+    var keys = b.key_points || [];
+    [1,2,3].forEach(function(n){ document.getElementById("bookDetailKey" + n).value = keys[n-1] || ""; });
+    buildBookChangeEditList();
+    var on = b.changes || [];
+    BOOK_CHANGE_OPTIONS.concat([{ key:"other" }]).forEach(function(o){
+      document.getElementById("bookDetailChange_" + o.key).checked = on.indexOf(o.key) !== -1;
+    });
     document.getElementById("bookDetailInsight").value = b.insight || "";
+    if ((b.insight || "").trim()) document.getElementById("bookDetailChange_other").checked = true;
   }
   function showBookDetailView(){
     state.bookDetailEditing = false;
@@ -2982,6 +3150,7 @@
     document.getElementById("bookDetailViewActions").hidden = false;
     document.getElementById("bookDetailEditActions").hidden = true;
     document.getElementById("bookDetailCoverChangeBtn").hidden = true;
+    document.getElementById("bookDetailViewMeta").hidden = false;
   }
   function showBookDetailEdit(){
     state.bookDetailEditing = true;
@@ -2990,7 +3159,19 @@
     document.getElementById("bookDetailViewActions").hidden = true;
     document.getElementById("bookDetailEditActions").hidden = false;
     document.getElementById("bookDetailCoverChangeBtn").hidden = false;
+    document.getElementById("bookDetailViewMeta").hidden = true;
   }
+  // tapping a journal section in view mode jumps straight into editing it
+  document.getElementById("bookDetailView").addEventListener("click", function(e){
+    var sec = e.target.closest(".bj-sec[data-focus]");
+    if (!sec || state.bookDetailEditing) return;
+    showBookDetailEdit();
+    var target = document.getElementById(sec.dataset.focus);
+    if (target){
+      target.scrollIntoView({ block:"center" });
+      try { target.focus({ preventScroll:true }); } catch(_){ target.focus(); }
+    }
+  });
   function openBookDetail(id){
     var b = (state.bookRecords || []).find(function(x){ return x.id === id; });
     if (!b) return;
@@ -3029,13 +3210,20 @@
     var ratingVal = document.getElementById("bookDetailRating").value;
     var note = document.getElementById("bookDetailNote").value;
     var quote = document.getElementById("bookDetailQuote").value.trim();
-    var insight = document.getElementById("bookDetailInsight").value;
+    var insight = document.getElementById("bookDetailInsight").value.trim();
+    var keyPoints = [1,2,3].map(function(n){ return document.getElementById("bookDetailKey" + n).value.trim(); });
+    while (keyPoints.length && !keyPoints[keyPoints.length-1]) keyPoints.pop();
+    var changes = BOOK_CHANGE_OPTIONS.concat([{ key:"other" }])
+      .filter(function(o){ return document.getElementById("bookDetailChange_" + o.key).checked; })
+      .map(function(o){ return o.key; });
+    if (insight && changes.indexOf("other") === -1) changes.push("other");
     var patch = {
       title: title, author: author || null,
       category_id: categoryId || null, category: cat ? cat.name : null,
       read_month: readMonth || null,
       status: status, rating: ratingVal ? parseInt(ratingVal,10) : null, note: note,
-      favorite_quote: quote, insight: insight
+      favorite_quote: quote, insight: insight,
+      key_points: keyPoints, changes: changes
     };
     if (state.bookDetailCoverFile){
       var cover = await uploadBookCover(state.bookDetailCoverFile);
