@@ -83,8 +83,13 @@
     text-wrap:balance;
     margin:0;
   }
-  /* Huninn (粉圓) ships a single weight; bold headings use the browser's
-     synthesized bold, which reads clearer than the regular weight. */
+  /* Huninn (粉圓) ships a single weight, so "bold" is browser-synthesized:
+     a fixed-width stroke added around each glyph. On high-density phone /
+     tablet screens that stroke is hairline-thin and reads well; on ~1x
+     desktop monitors it looks heavy and smeared, so turn it off there. */
+  @media (max-resolution: 1.49dppx){
+    body{ font-synthesis-weight:none; }
+  }
   .num{ font-family:'JetBrains Mono', ui-monospace, monospace; font-variant-numeric:tabular-nums; }
   button{ font-family:inherit; }
   :focus-visible{ outline:2px solid var(--focus); outline-offset:2px; }
