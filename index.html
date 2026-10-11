@@ -437,9 +437,7 @@
   }
   /* the book note/detail overlay gets extra width on desktop only — phones and
      tablets keep the same width as every other detail overlay in the app */
-  @media (min-width:1025px){
-    #bookDetailOverlay .memo-detail-card{ max-width:640px; }
-  }
+
   .memo-detail-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
   .memo-detail-head input{
     flex:1; font-size:calc(var(--font-scale) * 16px); font-weight:700; border:none; border-bottom:1px solid transparent;
@@ -646,6 +644,31 @@
   .book-status-select.finished{ color:var(--income); border-color:var(--income-tint); background:var(--income-tint); }
   .book-status-select.abandoned{ color:var(--expense); border-color:var(--expense-tint); background:var(--expense-tint); }
 
+  /* Book detail = full-screen writing sheet, not a floating dialog, so the
+     reading journal gets the whole screen. Head and action bar stay pinned. */
+  #bookDetailOverlay{
+    background:var(--paper); padding:0; align-items:stretch; justify-content:center;
+    overflow-y:auto; overscroll-behavior:contain;
+  }
+  #bookDetailOverlay .memo-detail-card{
+    max-width:760px; width:100%; max-height:none; min-height:100%;
+    border:none; border-radius:0; box-shadow:none; background:var(--paper);
+    padding:0 20px; display:block; box-sizing:border-box;
+  }
+  #bookDetailOverlay .memo-detail-head{
+    position:sticky; top:0; z-index:2; margin:0 -20px 10px; padding:calc(12px + env(safe-area-inset-top)) 20px 12px;
+    background:var(--paper); border-bottom:1px solid var(--rule);
+    flex-direction:row-reverse;
+  }
+  #bookDetailOverlay .memo-detail-head input{ font-family:var(--font-round); font-size:calc(var(--font-scale) * 19px); }
+  #bookDetailOverlay .book-detail-scroll{ overflow:visible; padding:14px 0 8px; }
+  #bookDetailOverlay .memo-detail-foot{
+    position:sticky; bottom:0; z-index:2; margin:0 -20px; padding:12px 20px calc(12px + env(safe-area-inset-bottom));
+    background:var(--paper); border-top:1px solid var(--rule);
+  }
+  #bookDetailOverlay .bj-ruled-input.bj-ruled-tall{ min-height:calc(var(--bj-lh) * 9); }
+  #bookDetailOverlay .bj-ruled-tall{ min-height:calc(var(--bj-lh) * 5); }
+  body.sheet-open{ overflow:hidden; }
   .book-detail-cover{ display:flex; align-items:flex-start; gap:16px; margin-bottom:18px; }
   .bj-cover-col{ display:flex; flex-direction:column; align-items:center; gap:8px; flex:0 0 auto; }
   .book-detail-cover img{ width:86px; height:122px; object-fit:cover; border-radius:6px; border:1px solid var(--rule); background:var(--paper-sunk); box-shadow:0 3px 10px var(--shadow); }
@@ -736,6 +759,7 @@
     font-family:var(--font-round); font-size:calc(var(--font-scale) * 12.5px); color:var(--ink-faint); letter-spacing:.5px;
   }
   .bj-form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 14px; margin-bottom:22px; }
+  .bj-info-head{ margin-top:6px; }
   .bj-form-grid .field:first-child{ grid-column:1 / -1; }
   @media (max-width:330px){ .bj-form-grid{ grid-template-columns:1fr; } }
 
@@ -863,7 +887,7 @@
   <div class="memo-detail-card">
     <div class="memo-detail-head">
       <input type="text" id="bookDetailTitle" maxlength="120" placeholder="書名">
-      <button class="btn btn-icon btn-ghost" id="bookDetailClose" type="button" aria-label="關閉"></button>
+      <button class="btn btn-icon btn-ghost" id="bookDetailClose" type="button" aria-label="返回書單"></button>
     </div>
     <div class="book-detail-scroll">
       <div class="book-detail-cover" id="bookDetailCoverWrap">
@@ -902,6 +926,25 @@
       </div>
 
       <div id="bookDetailEdit" class="bj" hidden>
+        <section class="bj-sec">
+          <h3 class="bj-head"><span class="bj-num">1</span>這本書的重點<small>3 個關鍵句</small></h3>
+          <div class="bj-keyrow"><span class="bj-keyno">1.</span><input type="text" class="bj-line-input" id="bookDetailKey1" maxlength="200" placeholder="第一個關鍵句"></div>
+          <div class="bj-keyrow"><span class="bj-keyno">2.</span><input type="text" class="bj-line-input" id="bookDetailKey2" maxlength="200" placeholder="第二個關鍵句"></div>
+          <div class="bj-keyrow"><span class="bj-keyno">3.</span><input type="text" class="bj-line-input" id="bookDetailKey3" maxlength="200" placeholder="第三個關鍵句"></div>
+        </section>
+        <section class="bj-sec">
+          <h3 class="bj-head"><span class="bj-num">2</span><label for="bookDetailQuote">我最喜歡的句子</label></h3>
+          <textarea id="bookDetailQuote" class="bj-ruled bj-ruled-input" rows="2" maxlength="500" placeholder="書裡最打動你的一句話"></textarea>
+        </section>
+        <section class="bj-sec">
+          <h3 class="bj-head"><span class="bj-num">3</span><label for="bookDetailNote">我的想法</label></h3>
+          <textarea id="bookDetailNote" class="bj-ruled bj-ruled-input bj-ruled-tall" rows="5" placeholder="讀完之後，你在想什麼？"></textarea>
+        </section>
+        <section class="bj-sec">
+          <h3 class="bj-head"><span class="bj-num">4</span>這本書帶給我的改變</h3>
+          <div class="bj-checks bj-checks-edit" id="bookDetailChangeList"></div>
+        </section>
+        <h3 class="bj-head bj-info-head"><span class="bj-num">i</span>書籍資料</h3>
         <div class="bj-form-grid">
           <div class="field">
             <label for="bookDetailAuthor">作者</label>
@@ -937,24 +980,6 @@
           </div>
         </div>
 
-        <section class="bj-sec">
-          <h3 class="bj-head"><span class="bj-num">1</span>這本書的重點<small>3 個關鍵句</small></h3>
-          <div class="bj-keyrow"><span class="bj-keyno">1.</span><input type="text" class="bj-line-input" id="bookDetailKey1" maxlength="200" placeholder="第一個關鍵句"></div>
-          <div class="bj-keyrow"><span class="bj-keyno">2.</span><input type="text" class="bj-line-input" id="bookDetailKey2" maxlength="200" placeholder="第二個關鍵句"></div>
-          <div class="bj-keyrow"><span class="bj-keyno">3.</span><input type="text" class="bj-line-input" id="bookDetailKey3" maxlength="200" placeholder="第三個關鍵句"></div>
-        </section>
-        <section class="bj-sec">
-          <h3 class="bj-head"><span class="bj-num">2</span><label for="bookDetailQuote">我最喜歡的句子</label></h3>
-          <textarea id="bookDetailQuote" class="bj-ruled bj-ruled-input" rows="2" maxlength="500" placeholder="書裡最打動你的一句話"></textarea>
-        </section>
-        <section class="bj-sec">
-          <h3 class="bj-head"><span class="bj-num">3</span><label for="bookDetailNote">我的想法</label></h3>
-          <textarea id="bookDetailNote" class="bj-ruled bj-ruled-input bj-ruled-tall" rows="5" placeholder="讀完之後，你在想什麼？"></textarea>
-        </section>
-        <section class="bj-sec">
-          <h3 class="bj-head"><span class="bj-num">4</span>這本書帶給我的改變</h3>
-          <div class="bj-checks bj-checks-edit" id="bookDetailChangeList"></div>
-        </section>
       </div>
     </div>
     <div class="memo-detail-foot">
@@ -3370,15 +3395,30 @@
     fillBookDetailEditFields(b);
     renderBookDetailView(b);
     document.getElementById("bookDetailStatusMsg").textContent = "";
-    document.getElementById("bookDetailOverlay").hidden = false;
+    var ov = document.getElementById("bookDetailOverlay");
+    ov.hidden = false;
+    ov.scrollTop = 0;
+    document.body.classList.add("sheet-open");
     showBookDetailView();
+    // full-screen sheet: give it a history entry so the phone's back
+    // gesture / browser back closes the sheet instead of leaving the app
+    try { if (!(history.state && history.state.sheet === "book")) history.pushState({ sheet:"book" }, ""); } catch(_){}
   }
-  function closeBookDetail(){
+  function hideBookDetailSheet(){
     state.bookDetailId = null;
     state.bookDetailOriginal = null;
     state.bookDetailCoverFile = null;
     document.getElementById("bookDetailOverlay").hidden = true;
+    document.body.classList.remove("sheet-open");
   }
+  function closeBookDetail(){
+    // pop our history entry; the popstate handler does the actual hiding
+    if (history.state && history.state.sheet === "book"){ history.back(); return; }
+    hideBookDetailSheet();
+  }
+  window.addEventListener("popstate", function(){
+    if (!document.getElementById("bookDetailOverlay").hidden) hideBookDetailSheet();
+  });
   function cancelBookDetailEdit(){
     if (state.bookDetailOriginal) fillBookDetailEditFields(state.bookDetailOriginal);
     state.bookDetailCoverFile = null;
@@ -3961,7 +4001,7 @@
 
     document.getElementById("memoDetailClose").innerHTML = ICONS.close;
     document.getElementById("ledgerDetailClose").innerHTML = ICONS.close;
-    document.getElementById("bookDetailClose").innerHTML = ICONS.close;
+    document.getElementById("bookDetailClose").innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>';
     document.getElementById("memoDetailClose").addEventListener("click", closeMemoDetail);
     document.getElementById("memoDetailCancel").addEventListener("click", closeMemoDetail);
     document.getElementById("memoDetailSave").addEventListener("click", saveMemoDetail);
