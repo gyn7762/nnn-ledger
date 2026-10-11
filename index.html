@@ -3658,19 +3658,16 @@
       document.getElementById("gymDaySummary").textContent = "";
     } else {
       list.innerHTML = day.map(function(r){
-        var vol = gymVolume(r);
         return '<div class="gym-row' + (state.gymEditId === r.id ? " editing" : "") + '">' +
           '<div class="gym-row-main"><div class="gym-ex">' + escapeHtml(r.exercise) + gymTags(r) + '</div>' +
-          '<div class="gym-detail">' + gymDetail(r) + (vol ? ' <span class="gym-vol">· ' + gymNum(vol) + ' kg</span>' : "") + '</div>' +
+          '<div class="gym-detail">' + gymDetail(r) + '</div>' +
           (r.note ? '<div class="gym-note">' + escapeHtml(r.note) + '</div>' : "") + '</div>' +
           '<button class="btn btn-icon btn-ghost" type="button" data-gym-edit="' + r.id + '" aria-label="編輯">' + ICONS.edit + '</button>' +
           '<button class="btn btn-icon btn-ghost" type="button" data-gym-del="' + r.id + '" aria-label="刪除">' + ICONS.trash + '</button>' +
           '</div>';
       }).join("");
       var sets = day.reduce(function(s, r){ return s + r.sets; }, 0);
-      var vol = day.reduce(function(s, r){ return s + gymVolume(r); }, 0);
-      document.getElementById("gymDaySummary").textContent =
-        day.length + " 個動作 · " + sets + " 組" + (vol ? " · 總量 " + gymNum(vol) + " kg" : "");
+      document.getElementById("gymDaySummary").textContent = day.length + " 個動作 · " + sets + " 組";
     }
 
     // exercise suggestions + progress selector
