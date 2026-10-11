@@ -190,6 +190,86 @@
     .content{ padding:18px 16px calc(104px + env(safe-area-inset-bottom)); }
   }
 
+
+  /* ---------- home launcher ---------- */
+  :root{ --c-memo:#b23328; --c-ledger:#2f6f5e; --c-gym:#a05a1c; --c-diary:#5b6bb8; --c-books:#7d5a8c; }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --c-memo:#e2685a; --c-ledger:#6fbfa5; --c-gym:#e0a060; --c-diary:#94a2e6; --c-books:#c19ad0; }
+  }
+  :root[data-theme="dark"]{ --c-memo:#e2685a; --c-ledger:#6fbfa5; --c-gym:#e0a060; --c-diary:#94a2e6; --c-books:#c19ad0; }
+  .home-launch-title{
+    font-family:'Noto Serif TC', serif; font-size:calc(var(--font-scale) * 18px); font-weight:700;
+    color:var(--ink); margin:4px 0 14px;
+  }
+  .home-launch{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:22px; }
+  .launch-tile{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px;
+    min-height:132px; padding:18px 10px;
+    background:var(--paper-raised); border:1px solid var(--rule); border-radius:18px;
+    box-shadow:0 1px 2px var(--shadow);
+    color:var(--ink); cursor:pointer; font-family:inherit;
+    transition:transform .12s ease, box-shadow .15s ease, border-color .15s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .launch-tile:hover{ transform:translateY(-2px); box-shadow:0 6px 16px var(--shadow); border-color:color-mix(in srgb, var(--tile-c) 35%, var(--rule)); }
+  .launch-tile:active{ transform:scale(.98); }
+  .launch-ic{
+    width:54px; height:54px; border-radius:16px; display:flex; align-items:center; justify-content:center;
+    background:color-mix(in srgb, var(--tile-c) 14%, transparent); color:var(--tile-c);
+  }
+  .launch-ic svg{ width:28px; height:28px; }
+  .launch-label{ font-family:'Noto Serif TC', serif; font-size:calc(var(--font-scale) * 18px); font-weight:700; letter-spacing:.06em; }
+  .launch-wide{ grid-column:1 / -1; flex-direction:row; min-height:84px; gap:16px; }
+  @media (min-width:781px){
+    .home-launch{ grid-template-columns:repeat(5, 1fr); }
+    .launch-wide{ grid-column:auto; flex-direction:column; min-height:132px; gap:12px; }
+  }
+  .home-folds{ padding:4px 18px; }
+  .home-fold + .home-fold{ border-top:1px solid var(--rule); }
+  .home-fold .home-fold-toggle{ padding:16px 0; }
+  .home-fold-title{ display:flex; align-items:center; gap:10px; }
+  .home-fold-ic{ width:20px; height:20px; color:var(--ink-soft); display:inline-flex; }
+  .home-fold-ic svg{ width:20px; height:20px; }
+  .home-fold-body{ padding:0 0 16px; }
+
+  /* ---------- gym ---------- */
+  .gym-stack{ display:flex; flex-direction:column; gap:16px; }
+  .gym-form{ display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:12px 14px; }
+  .gym-f-note, .gym-last, .gym-f-submit{ grid-column:1 / -1; }
+  .gym-f-submit{ display:flex; justify-content:flex-end; gap:10px; }
+  .gym-form input{ width:100%; box-sizing:border-box; }
+  @media (max-width:640px){
+    .gym-form{ grid-template-columns:1fr 1fr 1fr; }
+    .gym-f-ex{ grid-column:1 / -1; }
+  }
+  .gym-last{
+    font-size:calc(var(--font-scale) * 12.5px); color:var(--ink-soft);
+    background:var(--paper-sunk); border-radius:8px; padding:8px 12px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  }
+  .gym-day-head{ display:flex; align-items:baseline; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:6px; }
+  .gym-day-summary{ font-size:calc(var(--font-scale) * 12.5px); color:var(--ink-soft); }
+  .gym-row{ display:flex; align-items:center; gap:10px; padding:11px 2px; border-bottom:1px solid var(--rule); }
+  .gym-row:last-child{ border-bottom:none; }
+  .gym-row.editing{ background:var(--stamp-tint); border-radius:8px; }
+  .gym-row-main{ flex:1; min-width:0; }
+  .gym-ex{ font-weight:700; font-size:calc(var(--font-scale) * 14.5px); color:var(--ink); }
+  .gym-detail{ font-size:calc(var(--font-scale) * 13px); color:var(--ink-soft); margin-top:2px; }
+  .gym-note{ font-size:calc(var(--font-scale) * 12px); color:var(--ink-faint); margin-top:2px; overflow-wrap:anywhere; }
+  .gym-vol{ color:var(--c-gym); font-weight:700; white-space:nowrap; }
+  .gym-detail, .gym-day-summary, .gym-recent-date, .gym-last{ font-variant-numeric:tabular-nums; }
+  .gym-row .btn-icon svg{ width:15px; height:15px; }
+  .gym-recent-row{
+    display:flex; align-items:baseline; gap:12px; width:100%; text-align:left;
+    background:none; border:none; border-bottom:1px solid var(--rule); padding:10px 2px; cursor:pointer; font-family:inherit; color:var(--ink);
+  }
+  .gym-recent-row:last-child{ border-bottom:none; }
+  .gym-recent-row:hover{ background:var(--paper-sunk); }
+  .gym-recent-date{ flex:0 0 auto; font-weight:700; font-size:calc(var(--font-scale) * 13px); min-width:6.5em; }
+  .gym-recent-ex{ flex:1; min-width:0; font-size:calc(var(--font-scale) * 13px); color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .gym-pr{ display:inline-block; margin-left:6px; font-size:calc(var(--font-scale) * 10.5px); font-weight:700; color:var(--stamp); background:var(--stamp-tint); border-radius:999px; padding:1px 7px; vertical-align:1px; }
+  #gymProgressSelect{ width:100%; padding:9px 10px; }
+
   /* ---------- shared bits ---------- */
   .page[hidden]{ display:none; }
   .page-head{ margin-bottom:20px; }
@@ -919,42 +999,57 @@
           <p id="homeDateLine"></p>
         </div>
 
-        <div class="card memory-point-card">
-          <div class="section-title" style="margin:0 0 10px;">快速記一筆</div>
-          <form class="memory-point-add" id="homeMemoryPointForm">
-            <input type="text" id="homeMemoryPointInput" placeholder="見什麼人？去什麼地方？完成什麼事？" maxlength="140" required>
-            <button type="submit" class="btn btn-primary">加入</button>
-          </form>
-          <div class="memory-point-list" id="homeMemoryPointList"></div>
+        <h2 class="home-launch-title">今天要記錄些什麼呢？</h2>
+        <div class="home-launch">
+          <button type="button" class="launch-tile" data-nav="memo"   style="--tile-c:var(--c-memo);"><span class="launch-ic" data-icon="memo"></span><span class="launch-label">備忘</span></button>
+          <button type="button" class="launch-tile" data-nav="ledger" style="--tile-c:var(--c-ledger);"><span class="launch-ic" data-icon="ledger"></span><span class="launch-label">記帳</span></button>
+          <button type="button" class="launch-tile" data-nav="gym"    style="--tile-c:var(--c-gym);"><span class="launch-ic" data-icon="gym"></span><span class="launch-label">健身</span></button>
+          <button type="button" class="launch-tile" data-nav="diary"  style="--tile-c:var(--c-diary);"><span class="launch-ic" data-icon="diary"></span><span class="launch-label">日記</span></button>
+          <button type="button" class="launch-tile launch-wide" data-nav="books"  style="--tile-c:var(--c-books);"><span class="launch-ic" data-icon="books"></span><span class="launch-label">書單</span></button>
         </div>
 
-        <div class="stat-row">
-          <div class="stat-tile income">
-            <div class="stat-label">本月收入</div>
-            <div class="stat-value num" id="homeIncome">$0</div>
-          </div>
-          <div class="stat-tile expense">
-            <div class="stat-label">本月支出</div>
-            <div class="stat-value num" id="homeExpense">$0</div>
-          </div>
-          <div class="stat-tile balance">
-            <div class="stat-label">本月結餘</div>
-            <div class="stat-value num" id="homeBalance">$0</div>
-          </div>
-        </div>
-
-        <div class="home-grid">
-          <div class="card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-              <div class="section-title" style="margin:0;">待辦備忘</div>
-              <button class="link-btn" data-nav="memo">前往備忘 →</button>
+        <div class="card home-folds">
+          <div class="home-fold" data-fold="quick">
+            <button class="mood-toggle home-fold-toggle" type="button"><span class="home-fold-title"><span class="home-fold-ic" data-icon="edit"></span>快速記一筆</span><span class="mood-toggle-arrow">▾</span></button>
+            <div class="home-fold-body" hidden>
+              <form class="memory-point-add" id="homeMemoryPointForm">
+                <input type="text" id="homeMemoryPointInput" placeholder="見什麼人？去什麼地方？完成什麼事？" maxlength="140" required>
+                <button type="submit" class="btn btn-primary">加入</button>
+              </form>
+              <div class="memory-point-list" id="homeMemoryPointList"></div>
             </div>
-            <div id="homeMemoList"></div>
           </div>
-
-          <div class="card">
-            <div class="section-title">今日日記</div>
-            <div id="homeDiaryStatus"></div>
+          <div class="home-fold" data-fold="money">
+            <button class="mood-toggle home-fold-toggle" type="button"><span class="home-fold-title"><span class="home-fold-ic" data-icon="ledger"></span>本月收支</span><span class="mood-toggle-arrow">▾</span></button>
+            <div class="home-fold-body" hidden>
+              <div class="stat-row" style="margin-bottom:0;">
+                <div class="stat-tile income">
+                  <div class="stat-label">本月收入</div>
+                  <div class="stat-value num" id="homeIncome">$0</div>
+                </div>
+                <div class="stat-tile expense">
+                  <div class="stat-label">本月支出</div>
+                  <div class="stat-value num" id="homeExpense">$0</div>
+                </div>
+                <div class="stat-tile balance">
+                  <div class="stat-label">本月結餘</div>
+                  <div class="stat-value num" id="homeBalance">$0</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="home-fold" data-fold="memo">
+            <button class="mood-toggle home-fold-toggle" type="button"><span class="home-fold-title"><span class="home-fold-ic" data-icon="memo"></span>待辦備忘</span><span class="mood-toggle-arrow">▾</span></button>
+            <div class="home-fold-body" hidden>
+              <div id="homeMemoList"></div>
+              <div style="text-align:right;margin-top:6px;"><button class="link-btn" data-nav="memo">前往備忘 →</button></div>
+            </div>
+          </div>
+          <div class="home-fold" data-fold="diary">
+            <button class="mood-toggle home-fold-toggle" type="button"><span class="home-fold-title"><span class="home-fold-ic" data-icon="diary"></span>今日日記</span><span class="mood-toggle-arrow">▾</span></button>
+            <div class="home-fold-body" hidden>
+              <div id="homeDiaryStatus"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -1274,6 +1369,82 @@
         </div>
       </section>
 
+      <section class="page" data-page="gym" id="page-gym" hidden>
+        <div class="page-head">
+          <h1>健身</h1>
+          <p>記錄每次重訓的動作、重量與組數</p>
+        </div>
+
+        <div class="date-switch">
+          <button class="btn btn-icon" id="gymPrev" type="button" aria-label="前一天"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+          <div class="label" id="gymDateLabel"></div>
+          <button class="btn btn-icon" id="gymNext" type="button" aria-label="後一天"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+          <button class="btn" id="gymToday" type="button" style="margin-left:auto;">回到今天</button>
+        </div>
+
+        <div class="gym-stack">
+          <div class="card">
+            <form class="gym-form" id="gymForm" autocomplete="off">
+              <div class="field gym-f-ex">
+                <label for="gymExercise">動作</label>
+                <input type="text" id="gymExercise" list="gymExerciseList" maxlength="40" placeholder="例如：深蹲" required>
+                <datalist id="gymExerciseList"></datalist>
+              </div>
+              <div class="field">
+                <label for="gymWeight">重量（kg）</label>
+                <input type="number" id="gymWeight" min="0" step="0.5" inputmode="decimal" placeholder="自體重免填">
+              </div>
+              <div class="field">
+                <label for="gymReps">次數</label>
+                <input type="number" id="gymReps" min="1" step="1" inputmode="numeric" placeholder="每組幾下">
+              </div>
+              <div class="field">
+                <label for="gymSets">組數</label>
+                <input type="number" id="gymSets" min="1" step="1" inputmode="numeric" value="3" required>
+              </div>
+              <div class="field gym-f-note">
+                <label for="gymNote">備註（選填）</label>
+                <input type="text" id="gymNote" maxlength="120" placeholder="感覺、器材、休息時間…">
+              </div>
+              <div class="gym-last" id="gymLastHint" hidden></div>
+              <div class="gym-f-submit">
+                <button type="button" class="btn btn-ghost" id="gymCancelEdit" hidden>取消編輯</button>
+                <button type="submit" class="btn btn-primary" id="gymSubmit">新增動作</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <div class="gym-day-head">
+              <div class="section-title" style="margin:0;">這天的訓練</div>
+              <div class="gym-day-summary" id="gymDaySummary"></div>
+            </div>
+            <div id="gymDayList"></div>
+          </div>
+
+          <div class="card">
+            <button class="mood-toggle" id="gymProgressToggle" type="button">
+              <span>動作進步紀錄</span>
+              <span class="mood-toggle-arrow">▾</span>
+            </button>
+            <div class="mood-body" id="gymProgressBody" hidden>
+              <select id="gymProgressSelect" aria-label="選擇動作"></select>
+              <div id="gymProgressList"></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <button class="mood-toggle open" id="gymRecentToggle" type="button">
+              <span>最近的訓練</span>
+              <span class="mood-toggle-arrow">▾</span>
+            </button>
+            <div class="mood-body" id="gymRecentBody">
+              <div id="gymRecentList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section class="page" data-page="books" id="page-books" hidden>
         <div class="page-head">
           <h1>書單</h1>
@@ -1396,15 +1567,20 @@
     down: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
     close: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+    gym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M3.5 9v6M17.5 6.5v11M20.5 9v6M6.5 12h11"/></svg>',
     books: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H19v15.5a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 0 4 22V5.5z"/><path d="M4 18.5A2.5 2.5 0 0 1 6.5 16H19"/><path d="M8 7h7"/></svg>'
   };
   var PAGES = [
     { key:"home",   label:"首頁", icon:ICONS.home },
-    { key:"ledger", label:"記帳", icon:ICONS.ledger },
     { key:"memo",   label:"備忘", icon:ICONS.memo },
+    { key:"ledger", label:"記帳", icon:ICONS.ledger },
+    { key:"gym",    label:"健身", icon:ICONS.gym },
     { key:"diary",  label:"日記", icon:ICONS.diary },
     { key:"books",  label:"書單", icon:ICONS.books }
   ];
+  // phone bottom bar shows only these, in this order; the desktop sidebar
+  // lists every page. Other pages are reached from the home launcher tiles.
+  var BOTTOM_NAV_KEYS = ["memo", "home", "ledger"];
 
   // Accounts and categories are now custom, user-editable rows fetched from
   // Supabase (see state.accounts / state.categories below) rather than these
@@ -1486,6 +1662,9 @@
     bookRecords: [],
     bookFilterCategory: "",
     bookFilterStatus: "",
+    gymDate: null,
+    gymRows: [],
+    gymEditId: null,
     bookDetailId: null,
     bookDetailOriginal: null,
     bookDetailEditing: false,
@@ -1634,9 +1813,10 @@
   }
 
   /* ================= nav / shell ================= */
-  function buildNav(container){
+  function buildNav(container, keys){
     container.innerHTML = "";
-    PAGES.forEach(function(p){
+    var pages = keys ? keys.map(function(k){ return PAGES.filter(function(p){ return p.key === k; })[0]; }) : PAGES;
+    pages.forEach(function(p){
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "navitem";
@@ -3299,6 +3479,246 @@
     document.getElementById("homeDateLine").textContent = dateLabel(todayStr());
   }
 
+  /* ================= home folds ================= */
+  // Collapsible summary sections under the launcher; open/closed state is a
+  // per-device convenience kept in localStorage (safe if storage is blocked).
+  function setupHomeFolds(){
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem("homeFolds") || "{}") || {}; } catch(_){ saved = {}; }
+    document.querySelectorAll(".home-fold").forEach(function(fold){
+      var key = fold.dataset.fold;
+      var btn = fold.querySelector(".home-fold-toggle");
+      var body = fold.querySelector(".home-fold-body");
+      var open = !!saved[key];
+      body.hidden = !open; btn.classList.toggle("open", open);
+      btn.addEventListener("click", function(){
+        body.hidden = !body.hidden;
+        btn.classList.toggle("open", !body.hidden);
+        saved[key] = !body.hidden;
+        try { localStorage.setItem("homeFolds", JSON.stringify(saved)); } catch(_){}
+      });
+    });
+  }
+
+  /* ================= gym ================= */
+  // workout_sets: one row = one exercise on one day (weight × reps × sets).
+  // The whole table is small personal data, so it is fetched once and every
+  // view (day list, history, recent days) is derived from state.gymRows.
+  function gymNum(n){
+    if (n === null || n === undefined || n === "") return "";
+    var v = Number(n);
+    return (Math.round(v * 100) / 100).toLocaleString("zh-TW");
+  }
+  function gymDetail(r){
+    var parts = [];
+    parts.push(r.weight !== null && r.weight !== undefined ? gymNum(r.weight) + " kg" : "自體重");
+    if (r.reps) parts.push(r.reps + " 下");
+    parts.push(r.sets + " 組");
+    return parts.join(" × ");
+  }
+  function gymVolume(r){
+    return (r.weight && r.reps) ? Number(r.weight) * r.reps * r.sets : 0;
+  }
+  function gymShortDate(d){
+    var p = d.split("-");
+    return parseInt(p[1],10) + "/" + parseInt(p[2],10);
+  }
+  async function refreshGym(){
+    var res = await sb.from("workout_sets").select("*")
+      .order("workout_date", { ascending:false })
+      .order("sort_order", { ascending:true })
+      .order("created_at", { ascending:true });
+    if (res.error){ console.warn("workout_sets", res.error.message); return; }
+    state.gymRows = res.data || [];
+    renderGym();
+  }
+  function gymExerciseNames(){
+    // most recently used first
+    var seen = {}, out = [];
+    (state.gymRows || []).forEach(function(r){
+      var k = r.exercise.trim();
+      if (!seen[k]){ seen[k] = 1; out.push(k); }
+    });
+    return out;
+  }
+  function renderGym(){
+    var rows = state.gymRows || [];
+    document.getElementById("gymDateLabel").textContent = dateLabel(state.gymDate);
+
+    // day list
+    var day = rows.filter(function(r){ return r.workout_date === state.gymDate; });
+    var list = document.getElementById("gymDayList");
+    if (!day.length){
+      list.innerHTML = '<div class="empty">這天還沒有訓練紀錄，從上面新增第一個動作。</div>';
+      document.getElementById("gymDaySummary").textContent = "";
+    } else {
+      list.innerHTML = day.map(function(r){
+        var vol = gymVolume(r);
+        return '<div class="gym-row' + (state.gymEditId === r.id ? " editing" : "") + '">' +
+          '<div class="gym-row-main"><div class="gym-ex">' + escapeHtml(r.exercise) + '</div>' +
+          '<div class="gym-detail">' + gymDetail(r) + (vol ? ' <span class="gym-vol">· ' + gymNum(vol) + ' kg</span>' : "") + '</div>' +
+          (r.note ? '<div class="gym-note">' + escapeHtml(r.note) + '</div>' : "") + '</div>' +
+          '<button class="btn btn-icon btn-ghost" type="button" data-gym-edit="' + r.id + '" aria-label="編輯">' + ICONS.edit + '</button>' +
+          '<button class="btn btn-icon btn-ghost" type="button" data-gym-del="' + r.id + '" aria-label="刪除">' + ICONS.trash + '</button>' +
+          '</div>';
+      }).join("");
+      var sets = day.reduce(function(s, r){ return s + r.sets; }, 0);
+      var vol = day.reduce(function(s, r){ return s + gymVolume(r); }, 0);
+      document.getElementById("gymDaySummary").textContent =
+        day.length + " 個動作 · " + sets + " 組" + (vol ? " · 總量 " + gymNum(vol) + " kg" : "");
+    }
+
+    // exercise suggestions + progress selector
+    var names = gymExerciseNames();
+    document.getElementById("gymExerciseList").innerHTML = names.map(function(n){ return '<option value="' + escapeHtml(n) + '">'; }).join("");
+    var sel = document.getElementById("gymProgressSelect");
+    var cur = sel.value;
+    sel.innerHTML = names.length ? names.map(function(n){ return '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + "</option>"; }).join("")
+                                 : '<option value="">還沒有紀錄</option>';
+    if (cur && names.indexOf(cur) !== -1) sel.value = cur;
+    renderGymProgress();
+
+    // recent training days
+    var byDate = {}, dates = [];
+    rows.forEach(function(r){
+      if (!byDate[r.workout_date]){ byDate[r.workout_date] = []; dates.push(r.workout_date); }
+      if (byDate[r.workout_date].indexOf(r.exercise) === -1) byDate[r.workout_date].push(r.exercise);
+    });
+    document.getElementById("gymRecentList").innerHTML = dates.length ? dates.slice(0, 10).map(function(d){
+      return '<button type="button" class="gym-recent-row" data-gym-date="' + d + '"><span class="gym-recent-date">' + escapeHtml(dateLabel(d)) + '</span>' +
+        '<span class="gym-recent-ex">' + byDate[d].map(escapeHtml).join("、") + "</span></button>";
+    }).join("") : '<div class="empty">還沒有任何訓練紀錄。</div>';
+
+    updateGymLastHint();
+  }
+  function renderGymProgress(){
+    var name = document.getElementById("gymProgressSelect").value;
+    var box = document.getElementById("gymProgressList");
+    if (!name){ box.innerHTML = '<div class="empty">新增動作後，這裡會列出同一個動作每次的重量變化。</div>'; return; }
+    var hist = (state.gymRows || []).filter(function(r){ return r.exercise.trim() === name; });
+    var best = hist.reduce(function(m, r){ return Math.max(m, Number(r.weight) || 0); }, 0);
+    var bestMarked = false;
+    // hist is newest-first; mark the earliest session that reached the best weight
+    var bestIdx = -1;
+    for (var i = hist.length - 1; i >= 0; i--){ if (best && Number(hist[i].weight) === best){ bestIdx = i; break; } }
+    box.innerHTML = hist.map(function(r, i){
+      return '<div class="gym-row"><div class="gym-row-main"><div class="gym-ex">' + escapeHtml(dateLabel(r.workout_date)) +
+        (i === bestIdx ? '<span class="gym-pr">最重</span>' : "") + '</div>' +
+        '<div class="gym-detail">' + gymDetail(r) + "</div></div></div>";
+    }).join("");
+  }
+  function gymLastFor(name){
+    name = (name || "").trim();
+    if (!name) return null;
+    var rows = state.gymRows || [];
+    for (var i = 0; i < rows.length; i++){
+      var r = rows[i];
+      if (r.exercise.trim() === name && r.id !== state.gymEditId && r.workout_date !== state.gymDate) return r;
+    }
+    return null;
+  }
+  function updateGymLastHint(){
+    var hint = document.getElementById("gymLastHint");
+    var last = state.gymEditId ? null : gymLastFor(document.getElementById("gymExercise").value);
+    if (!last){ hint.hidden = true; hint.innerHTML = ""; return; }
+    hint.hidden = false;
+    hint.innerHTML = '<span>上次（' + gymShortDate(last.workout_date) + '）：' + gymDetail(last) + '</span>' +
+      '<button type="button" class="link-btn" id="gymApplyLast">套用</button>';
+    document.getElementById("gymApplyLast").addEventListener("click", function(){
+      document.getElementById("gymWeight").value = last.weight !== null ? Number(last.weight) : "";
+      document.getElementById("gymReps").value = last.reps || "";
+      document.getElementById("gymSets").value = last.sets || 3;
+    });
+  }
+  function resetGymForm(){
+    state.gymEditId = null;
+    document.getElementById("gymForm").reset();
+    document.getElementById("gymSets").value = 3;
+    document.getElementById("gymSubmit").textContent = "新增動作";
+    document.getElementById("gymCancelEdit").hidden = true;
+  }
+  function switchGymDate(d){
+    state.gymDate = d;
+    if (state.gymEditId) resetGymForm();
+    renderGym();
+  }
+  async function saveGymForm(){
+    var ex = document.getElementById("gymExercise").value.trim();
+    if (!ex) return;
+    var w = document.getElementById("gymWeight").value;
+    var reps = document.getElementById("gymReps").value;
+    var sets = parseInt(document.getElementById("gymSets").value, 10) || 1;
+    var rec = {
+      exercise: ex,
+      weight: w === "" ? null : Number(w),
+      reps: reps === "" ? null : parseInt(reps, 10),
+      sets: sets,
+      note: document.getElementById("gymNote").value.trim()
+    };
+    var res;
+    if (state.gymEditId){
+      res = await sb.from("workout_sets").update(rec).eq("id", state.gymEditId);
+    } else {
+      var day = (state.gymRows || []).filter(function(r){ return r.workout_date === state.gymDate; });
+      rec.workout_date = state.gymDate;
+      rec.sort_order = day.reduce(function(m, r){ return Math.max(m, r.sort_order || 0); }, -1) + 1;
+      res = await sb.from("workout_sets").insert(rec);
+    }
+    if (res.error){ alert("儲存失敗：" + res.error.message); return; }
+    resetGymForm();
+    document.getElementById("gymExercise").focus();
+    refreshGym();
+  }
+  function startGymEdit(id){
+    var r = (state.gymRows || []).find(function(x){ return x.id === id; });
+    if (!r) return;
+    state.gymEditId = id;
+    document.getElementById("gymExercise").value = r.exercise;
+    document.getElementById("gymWeight").value = r.weight !== null ? Number(r.weight) : "";
+    document.getElementById("gymReps").value = r.reps || "";
+    document.getElementById("gymSets").value = r.sets;
+    document.getElementById("gymNote").value = r.note || "";
+    document.getElementById("gymSubmit").textContent = "更新";
+    document.getElementById("gymCancelEdit").hidden = false;
+    renderGym();
+    document.getElementById("gymForm").scrollIntoView({ block:"center", behavior:"smooth" });
+  }
+  async function deleteGymRow(id){
+    var r = (state.gymRows || []).find(function(x){ return x.id === id; });
+    if (!r || !confirm("刪除「" + r.exercise + "」這筆紀錄嗎？")) return;
+    var res = await sb.from("workout_sets").delete().eq("id", id);
+    if (res.error){ alert("刪除失敗：" + res.error.message); return; }
+    if (state.gymEditId === id) resetGymForm();
+    refreshGym();
+  }
+  function wireGym(){
+    if (!state.gymDate) state.gymDate = todayStr();
+    document.getElementById("gymPrev").addEventListener("click", function(){ switchGymDate(addDays(state.gymDate, -1)); });
+    document.getElementById("gymNext").addEventListener("click", function(){ switchGymDate(addDays(state.gymDate, 1)); });
+    document.getElementById("gymToday").addEventListener("click", function(){ switchGymDate(todayStr()); });
+    document.getElementById("gymForm").addEventListener("submit", function(e){ e.preventDefault(); saveGymForm(); });
+    document.getElementById("gymCancelEdit").addEventListener("click", function(){ resetGymForm(); renderGym(); });
+    document.getElementById("gymExercise").addEventListener("input", updateGymLastHint);
+    document.getElementById("gymDayList").addEventListener("click", function(e){
+      var ed = e.target.closest("[data-gym-edit]"); if (ed){ startGymEdit(ed.dataset.gymEdit); return; }
+      var del = e.target.closest("[data-gym-del]"); if (del){ deleteGymRow(del.dataset.gymDel); }
+    });
+    document.getElementById("gymRecentList").addEventListener("click", function(e){
+      var b = e.target.closest("[data-gym-date]");
+      if (b){ switchGymDate(b.dataset.gymDate); window.scrollTo({ top:0, behavior:"smooth" }); }
+    });
+    document.getElementById("gymProgressSelect").addEventListener("change", renderGymProgress);
+    document.getElementById("gymProgressToggle").addEventListener("click", function(){
+      var body = document.getElementById("gymProgressBody");
+      body.hidden = !body.hidden; this.classList.toggle("open", !body.hidden);
+    });
+    document.getElementById("gymRecentToggle").addEventListener("click", function(){
+      var body = document.getElementById("gymRecentBody");
+      body.hidden = !body.hidden; this.classList.toggle("open", !body.hidden);
+    });
+    renderGym();
+  }
+
   /* ================= realtime ================= */
   function setupRealtime(){
     if (realtimeChannel) return;
@@ -3309,6 +3729,7 @@
       .on("postgres_changes", { event:"*", schema:"public", table:"memos" }, function(){ refreshMemos(); })
       .on("postgres_changes", { event:"*", schema:"public", table:"diary_entries" }, function(){ refreshDiaryEditor(); refreshDiaryRecent(); refreshDiaryTags(); refreshDiaryCalendar(); refreshHomeDiaryStatus(); refreshHomeMemoryPoints(); })
       .on("postgres_changes", { event:"*", schema:"public", table:"books" }, function(){ refreshBookPage(); })
+      .on("postgres_changes", { event:"*", schema:"public", table:"workout_sets" }, function(){ refreshGym(); })
       .on("postgres_changes", { event:"*", schema:"public", table:"book_categories" }, function(){ refreshBookCategoriesUI(); refreshBookPage(); })
       .subscribe();
   }
@@ -3316,7 +3737,10 @@
   /* ================= boot ================= */
   async function bootApp(){
     buildNav(document.getElementById("sidenavList"));
-    buildNav(document.getElementById("bottomnav"));
+    buildNav(document.getElementById("bottomnav"), BOTTOM_NAV_KEYS);
+    document.querySelectorAll("[data-icon]").forEach(function(el){ el.innerHTML = ICONS[el.dataset.icon] || ""; });
+    setupHomeFolds();
+    wireGym();
     showPage("home");
     renderHomeGreeting();
 
@@ -3607,6 +4031,7 @@
     refreshDiaryRecent();
     refreshDiaryTags();
     refreshDiaryCalendar();
+    refreshGym();
     setupRealtime();
   }
 
