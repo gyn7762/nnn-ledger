@@ -27,6 +27,11 @@
     --font-round:'Huninn', 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
     color-scheme: light;
   }
+  /* desktop / wide screens read text from farther away: scale everything up.
+     Phones keep 1.12 so narrow layouts (ledger rows, bottom bar) don't crowd. */
+  @media (min-width:781px){
+    :root{ --font-scale:1.26; }
+  }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       --paper:#171a15;
