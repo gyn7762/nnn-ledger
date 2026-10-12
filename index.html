@@ -565,6 +565,7 @@
 
   /* ---------- memory points ---------- */
   .memory-point-card{ margin-bottom:18px; }
+  .memory-point-date{ font-weight:500; color:var(--ink-faint); font-size:.92em; margin-left:4px; }
   .memory-point-add{ display:flex; gap:10px; }
   .memory-point-add input{ flex:1; min-width:0; }
   .memory-point-add button{ flex:0 0 auto; white-space:nowrap; }
@@ -1321,6 +1322,15 @@
           </div>
         </div>
 
+        <div class="card memory-point-card">
+          <div class="section-title" style="margin:0 0 10px;">加入記憶點 <span class="memory-point-date" id="memoryPointDateLabel"></span></div>
+          <form class="memory-point-add" id="memoryPointForm">
+            <input type="text" id="memoryPointInput" placeholder="隨手記一個瞬間，晚點再整理…" maxlength="140" required>
+            <button type="submit" class="btn btn-primary">加入</button>
+          </form>
+          <div class="memory-point-list" id="memoryPointList"></div>
+        </div>
+
         <div class="special-link-row">
           <button class="link-btn" id="diarySpecialOpenBtn" type="button">年度特別紀錄 →</button>
         </div>
@@ -1386,15 +1396,6 @@
                   </div>
                 </div>
               </div>
-            </div>
-
-            <div class="card memory-point-card">
-              <div class="section-title" style="margin:0 0 10px;">加入記憶點</div>
-              <form class="memory-point-add" id="memoryPointForm">
-                <input type="text" id="memoryPointInput" placeholder="隨手記一個瞬間，晚點再整理…" maxlength="140" required>
-                <button type="submit" class="btn btn-primary">加入</button>
-              </form>
-              <div class="memory-point-list" id="memoryPointList"></div>
             </div>
 
             <div class="card mood-card">
@@ -3042,6 +3043,7 @@
     if (state.diaryDirty && !confirm("目前的日記還沒有儲存，確定要離開嗎？")) return;
     state.diaryDate = dateStr;
     document.getElementById("diaryDateLabel").textContent = dateLabel(dateStr);
+    document.getElementById("memoryPointDateLabel").textContent = "· 記到 " + dateLabel(dateStr);
     document.getElementById("diaryDateSearch").value = dateStr;
     refreshDiaryEditor();
     document.querySelectorAll("#diaryRecent .recent-item").forEach(function(el){
@@ -3876,6 +3878,7 @@
     document.getElementById("ledgerDate").value = todayStr();
     document.getElementById("ledgerMonthLabel").textContent = monthLabel(state.ledgerMonth);
     document.getElementById("diaryDateLabel").textContent = dateLabel(state.diaryDate);
+    document.getElementById("memoryPointDateLabel").textContent = "· 記到 " + dateLabel(state.diaryDate);
     document.getElementById("diaryDateSearch").value = state.diaryDate;
     await refreshAccountsAndCategories();
     await refreshBookCategoriesUI();
