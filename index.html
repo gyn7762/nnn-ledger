@@ -398,6 +398,30 @@
   .ledger-amount.income{ color:var(--income); }
   .ledger-amount.expense{ color:var(--expense); }
   @media (max-width:480px){ .ledger-tag{ flex-basis:68px; width:68px; } }
+  /* phones: two-line rows so the note is readable.
+       line 1: note (wraps)                        amount
+       line 2: date · category · account     edit  delete   */
+  @media (max-width:600px){
+    .ledger-row{
+      display:grid; align-items:center;
+      grid-template-columns:auto auto minmax(0,1fr) auto auto;
+      grid-template-areas:
+        "note note note amt amt"
+        "date tag  acct edit del";
+      column-gap:8px; row-gap:6px; padding:12px 2px;
+    }
+    .ledger-note{
+      grid-area:note; white-space:normal; overflow:visible; overflow-wrap:anywhere;
+      font-size:calc(var(--font-scale) * 14.5px); color:var(--ink); line-height:1.45;
+    }
+    .ledger-note:empty::before{ content:"（無備註）"; color:var(--ink-faint); }
+    .ledger-amount{ grid-area:amt; align-self:start; min-width:0; font-size:calc(var(--font-scale) * 15px); }
+    .ledger-date{ grid-area:date; width:auto; flex:none; }
+    .ledger-tag{ grid-area:tag; width:auto; flex:none; max-width:9em; padding:2px 9px; }
+    .ledger-account{ grid-area:acct; display:block; width:auto; flex:none; }
+    .ledger-row > [data-edit-record]{ grid-area:edit; }
+    .ledger-row > [data-del-record]{ grid-area:del; }
+  }
 
   /* ---------- memo page ---------- */
   .memo-add{ display:flex; gap:10px; margin-bottom:18px; }
