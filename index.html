@@ -484,6 +484,9 @@
     .date-switch .btn:not(.btn-icon){ padding:8px 10px; }
   }
   .diary-textarea{ min-height:130px; line-height:1.7; font-size:calc(var(--font-scale) * 14.5px); }
+  .diary-textarea-single{ min-height:320px; width:100%; box-sizing:border-box; }
+  .diary-view-single{ min-height:3.4em; }
+  .diary-view-single.is-empty{ color:var(--ink-faint); }
   .diary-save-row{ display:flex; align-items:center; justify-content:space-between; margin-top:12px; gap:10px; }
   .diary-save-actions{ display:flex; gap:8px; }
   .diary-status{ font-size:calc(var(--font-scale) * 12px); color:var(--ink-faint); }
@@ -1357,34 +1360,23 @@
             <div class="card">
               <div id="diaryView" hidden>
                 <div class="diary-view-block">
-                  <div class="diary-view-label">早上</div>
-                  <div class="diary-view-text" id="diaryViewMorning"></div>
+                  <div class="diary-view-text diary-view-single" id="diaryViewMorning"></div>
                 </div>
-                <div class="diary-view-block">
-                  <div class="diary-view-label">下午</div>
-                  <div class="diary-view-text" id="diaryViewAfternoon"></div>
-                </div>
-                <div class="diary-view-block">
-                  <div class="diary-view-label">晚上</div>
-                  <div class="diary-view-text" id="diaryViewEvening"></div>
-                </div>
+                <!-- diary is a single box since 2026-10-12; the old afternoon/evening
+                     slots stay as hidden, always-empty elements so existing code paths
+                     (tags, memory points, save) keep working unchanged -->
+                <div hidden id="diaryViewAfternoon"></div>
+                <div hidden id="diaryViewEvening"></div>
                 <div class="diary-save-row">
                   <span class="diary-status" id="diaryViewStatus"></span>
                   <button class="btn" id="diaryEditBtn" type="button">✎ 編輯</button>
                 </div>
               </div>
               <div id="diaryEdit" hidden>
-                <div class="field" style="margin-bottom:14px;">
-                  <label for="diaryMorning">早上</label>
-                  <textarea class="diary-textarea" id="diaryMorning" placeholder="早上發生了什麼事？"></textarea>
-                </div>
-                <div class="field" style="margin-bottom:14px;">
-                  <label for="diaryAfternoon">下午</label>
-                  <textarea class="diary-textarea" id="diaryAfternoon" placeholder="下午發生了什麼事？"></textarea>
-                </div>
                 <div class="field">
-                  <label for="diaryEvening">晚上</label>
-                  <textarea class="diary-textarea" id="diaryEvening" placeholder="晚上發生了什麼事？"></textarea>
+                  <textarea class="diary-textarea diary-textarea-single" id="diaryMorning" aria-label="日記內容" placeholder="今天發生了什麼事？可以用 #標籤 標記人、地方或事件，例如 #餐廳 紅牌鐵板燒"></textarea>
+                  <textarea hidden id="diaryAfternoon"></textarea>
+                  <textarea hidden id="diaryEvening"></textarea>
                 </div>
                 <div class="diary-save-row">
                   <span class="diary-status" id="diaryStatus"></span>
@@ -2568,7 +2560,10 @@
   }
 
   function renderDiaryView(doc){
-    document.getElementById("diaryViewMorning").innerHTML = diaryViewSegHtml(doc && doc.morning_text);
+    var single = document.getElementById("diaryViewMorning");
+    var txt = (doc && doc.morning_text) || "";
+    single.innerHTML = txt ? diaryViewSegHtml(txt) : "這天還沒有寫日記，按「編輯」開始寫。";
+    single.classList.toggle("is-empty", !txt);
     document.getElementById("diaryViewAfternoon").innerHTML = diaryViewSegHtml(doc && doc.afternoon_text);
     document.getElementById("diaryViewEvening").innerHTML = diaryViewSegHtml(doc && doc.evening_text);
   }
@@ -2699,7 +2694,7 @@
   }
 
   var DIARY_SECTION_OPTIONS = [
-    ["", "移動到…"], ["morning", "早上"], ["afternoon", "下午"], ["evening", "晚上"], ["point", "記憶點"]
+    ["", "移動到…"], ["morning", "日記"], ["point", "記憶點"]
   ];
   var DIARY_SECTION_FIELD = { morning: "morning_text", afternoon: "afternoon_text", evening: "evening_text" };
 
