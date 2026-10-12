@@ -249,7 +249,97 @@
   .gym-stack{ display:flex; flex-direction:column; gap:16px; }
   .gym-form{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px 14px; }
   .gym-f-top, .gym-f-note, .gym-last, .gym-f-submit{ grid-column:1 / -1; }
-  .gym-f-top{ display:grid; grid-template-columns:auto 2fr 1.3fr; gap:12px 14px; }
+  .gym-f-top{ display:grid; grid-template-columns:auto minmax(0,1fr); gap:12px 14px; align-items:start; }
+  .gym-pick-btn{
+    width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:14px; border-radius:12px; border:1.5px dashed var(--rule); background:var(--paper);
+    color:var(--stamp); font-weight:700; font-size:calc(var(--font-scale) * 14.5px); cursor:pointer; font-family:inherit;
+  }
+  .gym-pick-btn:hover{ background:var(--stamp-tint); border-color:var(--stamp-tint); }
+  .gym-picked-card{
+    display:flex; align-items:center; gap:12px; padding:8px; border-radius:12px;
+    border:1px solid var(--rule); background:var(--paper);
+  }
+  .gym-picked-card .gym-thumb{ width:64px; height:64px; }
+  .gym-picked-info{ flex:1; min-width:0; }
+  .gym-picked-name{ font-weight:700; font-size:calc(var(--font-scale) * 15px); color:var(--ink); }
+  .gym-picked-benefit{ font-size:calc(var(--font-scale) * 12px); color:var(--ink-soft); margin-top:3px; }
+  .gym-manual{ display:grid; grid-template-columns:2fr 1.3fr 1fr; gap:8px; }
+  .gym-manual-links{ display:flex; gap:14px; margin-top:6px; font-size:calc(var(--font-scale) * 12.5px); }
+  .gym-thumb{
+    flex:0 0 auto; width:44px; height:44px; border-radius:10px; object-fit:cover; background:var(--paper-sunk);
+    border:1px solid var(--rule); display:inline-flex; align-items:center; justify-content:center; color:var(--ink-faint); overflow:hidden; cursor:zoom-in;
+  }
+  .gym-thumb svg{ width:22px; height:22px; }
+  .gym-thumb.empty{ cursor:default; }
+  .gym-tag.part{ background:color-mix(in srgb, var(--c-diary) 14%, transparent); color:var(--c-diary); }
+  /* library / picker grid */
+  .gym-filter{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  .gym-filter button{
+    border:1px solid var(--rule); background:var(--paper); color:var(--ink-soft); border-radius:999px;
+    padding:5px 12px; font-size:calc(var(--font-scale) * 12.5px); font-weight:600; cursor:pointer; font-family:inherit;
+  }
+  .gym-filter button.on{ background:var(--stamp-tint); border-color:var(--stamp-tint); color:var(--stamp); }
+  .gym-filter .sep{ width:1px; background:var(--rule); margin:2px 4px; }
+  .gym-lib-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(150px, 1fr)); gap:10px; }
+  .gym-lib-card{
+    display:flex; flex-direction:column; text-align:left; gap:6px; padding:8px; border-radius:12px;
+    border:1px solid var(--rule); background:var(--paper-raised); cursor:pointer; font-family:inherit; color:var(--ink);
+  }
+  .gym-lib-card:hover{ border-color:var(--stamp); }
+  .gym-lib-card.current{ border-color:var(--stamp); box-shadow:0 0 0 2px var(--stamp-tint); }
+  .gym-lib-img{ width:100%; aspect-ratio:1; border-radius:8px; background:var(--paper-sunk); object-fit:cover; display:flex; align-items:center; justify-content:center; color:var(--ink-faint); font-size:calc(var(--font-scale) * 11px); }
+  .gym-lib-name{ font-weight:700; font-size:calc(var(--font-scale) * 13.5px); line-height:1.35; }
+  .gym-lib-meta{ display:flex; flex-wrap:wrap; gap:4px; }
+  .gym-lib-meta .gym-tag{ margin-left:0; }
+  .gym-lib-count{ font-family:var(--font-round); font-size:.8em; color:var(--ink-faint); font-weight:400; }
+  .gym-lib-tools{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .gym-import-status{ font-size:calc(var(--font-scale) * 12.5px); color:var(--ink-soft); }
+  .gym-lib-hint{ margin:0; font-size:calc(var(--font-scale) * 12px); color:var(--ink-faint); line-height:1.6; }
+  @media (max-width:480px){ .gym-lib-grid{ grid-template-columns:1fr 1fr; } }
+  /* full-screen picker sheet */
+  .gym-sheet{ position:fixed; inset:0; z-index:95; background:var(--paper); overflow-y:auto; overscroll-behavior:contain; }
+  .gym-sheet-inner{ max-width:900px; margin:0 auto; padding:0 16px calc(24px + env(safe-area-inset-bottom)); }
+  .gym-sheet-head{
+    position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:8px; margin:0 -16px 12px;
+    padding:calc(10px + env(safe-area-inset-top)) 16px 10px; background:var(--paper); border-bottom:1px solid var(--rule);
+  }
+  .gym-sheet-head h3{ font-size:calc(var(--font-scale) * 18px); }
+  .gym-sheet-foot{ text-align:center; padding:18px 0 6px; }
+  /* lightbox */
+  .gym-lightbox{ position:fixed; inset:0; z-index:100; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; padding:16px; }
+  .gym-lb-card{ position:relative; background:var(--paper-raised); border-radius:16px; padding:12px; max-width:560px; width:100%; max-height:92vh; overflow:auto; }
+  .gym-lb-card img{ width:100%; border-radius:10px; display:block; background:var(--paper-sunk); }
+  .gym-lb-close{ position:absolute; top:8px; right:8px; background:var(--paper-raised); }
+  .gym-lb-text{ padding:10px 4px 2px; font-size:calc(var(--font-scale) * 13.5px); color:var(--ink-soft); line-height:1.6; }
+  .gym-lb-text b{ color:var(--ink); font-size:calc(var(--font-scale) * 15px); }
+  /* gym calendar */
+  .gym-cal-card .calendar-nav{ margin-top:12px; }
+  .gym-cal-week, .gym-cal-grid{ display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:4px; }
+  .gym-cal-week{ margin:8px 0 4px; text-align:center; font-size:calc(var(--font-scale) * 11px); color:var(--ink-faint); }
+  .gym-cal-cell{
+    min-height:62px; border-radius:8px; padding:4px 3px; background:var(--paper); border:1px solid transparent;
+    display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer; font-family:inherit; color:var(--ink);
+  }
+  .gym-cal-cell.blank{ background:transparent; cursor:default; }
+  .gym-cal-cell.has{ background:color-mix(in srgb, var(--c-gym) 7%, var(--paper)); }
+  .gym-cal-cell.today .gym-cal-num{ color:var(--stamp); font-weight:800; }
+  .gym-cal-cell.selected{ border-color:var(--stamp); }
+  .gym-cal-num{ font-size:calc(var(--font-scale) * 12px); font-weight:600; line-height:1.2; }
+  .gym-cal-locs{ display:flex; gap:2px; }
+  .gym-loc-dot{
+    display:inline-flex; align-items:center; justify-content:center; width:1.45em; height:1.45em; border-radius:50%;
+    font-size:calc(var(--font-scale) * 9.5px); font-weight:700; line-height:1;
+  }
+  .gym-loc-dot.home{ background:color-mix(in srgb, var(--c-ledger) 18%, transparent); color:var(--c-ledger); }
+  .gym-loc-dot.gym{ background:color-mix(in srgb, var(--c-gym) 18%, transparent); color:var(--c-gym); }
+  .gym-cal-parts{ display:flex; flex-wrap:wrap; justify-content:center; gap:2px; }
+  .gym-part-chip{
+    display:inline-block; padding:0 4px; border-radius:4px; line-height:1.5;
+    font-size:calc(var(--font-scale) * 9.5px); font-weight:700;
+    background:color-mix(in srgb, var(--c-diary) 14%, transparent); color:var(--c-diary);
+  }
+  .gym-cal-legend{ margin-top:10px; font-size:calc(var(--font-scale) * 11.5px); color:var(--ink-faint); display:flex; align-items:center; flex-wrap:wrap; gap:4px; }
   .gym-loc-seg button{ white-space:nowrap; padding:9px 14px; }
   .gym-loc-seg button.on{ background:var(--stamp-tint); color:var(--stamp); }
   .gym-tag{
@@ -261,9 +351,10 @@
   .gym-f-submit{ display:flex; justify-content:flex-end; gap:10px; }
   .gym-form input{ width:100%; box-sizing:border-box; }
   @media (max-width:640px){
-    .gym-f-top{ grid-template-columns:1fr 1fr; }
-    .gym-f-loc{ grid-column:1 / -1; }
+    .gym-f-top{ grid-template-columns:1fr; }
     .gym-loc-seg{ max-width:240px; }
+    .gym-manual{ grid-template-columns:1fr 1fr; }
+    .gym-manual #gymExercise{ grid-column:1 / -1; }
   }
   .gym-last{
     font-size:calc(var(--font-scale) * 12.5px); color:var(--ink-soft);
@@ -1446,6 +1537,23 @@
           <p>記錄每次重訓的動作、重量與組數</p>
         </div>
 
+        <div class="card gym-cal-card">
+          <button class="mood-toggle open" id="gymCalToggle" type="button">
+            <span>健身日曆</span>
+            <span class="mood-toggle-arrow">▾</span>
+          </button>
+          <div id="gymCalBody">
+            <div class="calendar-nav gym-cal-nav">
+              <button class="btn btn-icon" id="gymCalPrev" type="button" aria-label="上個月"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+              <div class="label" id="gymCalLabel"></div>
+              <button class="btn btn-icon" id="gymCalNext" type="button" aria-label="下個月"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+            </div>
+            <div class="gym-cal-week"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+            <div class="gym-cal-grid" id="gymCalGrid"></div>
+            <div class="gym-cal-legend"><span class="gym-loc-dot home">家</span>居家　<span class="gym-loc-dot gym">健</span>健身房　<span class="gym-part-chip">胸</span>當天練的部位</div>
+          </div>
+        </div>
+
         <div class="date-switch">
           <button class="btn btn-icon" id="gymPrev" type="button" aria-label="前一天"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
           <div class="label" id="gymDateLabel"></div>
@@ -1464,15 +1572,19 @@
                     <button type="button" data-loc="gym" role="radio">健身房</button>
                   </div>
                 </div>
-                <div class="field gym-f-ex">
-                  <label for="gymExercise">動作</label>
-                  <input type="text" id="gymExercise" list="gymExerciseList" maxlength="40" placeholder="例如：彎舉" required>
-                  <datalist id="gymExerciseList"></datalist>
-                </div>
-                <div class="field gym-f-eq">
-                  <label for="gymEquipment">器具</label>
-                  <input type="text" id="gymEquipment" list="gymEquipmentList" maxlength="30" placeholder="啞鈴、槓鈴…">
-                  <datalist id="gymEquipmentList"></datalist>
+                <div class="field gym-f-pick">
+                  <label>動作</label>
+                  <div id="gymPicked"></div>
+                  <div class="gym-manual" id="gymManual" hidden>
+                    <input type="text" id="gymExercise" list="gymExerciseList" maxlength="40" placeholder="動作名稱，例如：彎舉" aria-label="動作名稱">
+                    <datalist id="gymExerciseList"></datalist>
+                    <input type="text" id="gymEquipment" list="gymEquipmentList" maxlength="30" placeholder="器具：啞鈴、器械…" aria-label="器具">
+                    <datalist id="gymEquipmentList"></datalist>
+                    <select id="gymBodyPart" aria-label="部位">
+                      <option value="">部位（選填）</option>
+                      <option>胸</option><option>肩</option><option>背</option><option>手臂</option><option>腿</option><option>臀</option><option>核心</option>
+                    </select>
+                  </div>
                 </div>
               </div>
               <div class="field">
@@ -1526,6 +1638,43 @@
             <div class="mood-body" id="gymRecentBody">
               <div id="gymRecentList"></div>
             </div>
+          </div>
+
+          <div class="card">
+            <button class="mood-toggle" id="gymLibToggle" type="button">
+              <span>動作庫 <span class="gym-lib-count" id="gymLibCount"></span></span>
+              <span class="mood-toggle-arrow">▾</span>
+            </button>
+            <div class="mood-body" id="gymLibBody" hidden>
+              <div class="gym-lib-tools">
+                <label class="btn" for="gymImportInput">匯入圖片</label>
+                <input type="file" id="gymImportInput" accept="image/*" multiple hidden>
+                <span class="gym-import-status" id="gymImportStatus"></span>
+              </div>
+              <p class="gym-lib-hint">選取「日日-健身圖檔」裡的圖片（可一次多選），會依檔名自動對到動作、壓縮後存進你的私人資料庫；之後要換成自己拍的照片也一樣，檔名取成動作名稱即可（例如「啞鈴二頭彎舉.jpg」）。</p>
+              <div class="gym-filter" id="gymLibFilter"></div>
+              <div class="gym-lib-grid" id="gymLibGrid"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="gym-sheet" id="gymPickerSheet" hidden>
+          <div class="gym-sheet-inner">
+            <div class="gym-sheet-head">
+              <button class="btn btn-icon btn-ghost" id="gymPickClose" type="button" aria-label="返回"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+              <h3>選擇動作</h3>
+            </div>
+            <div class="gym-filter" id="gymPickFilter"></div>
+            <div class="gym-lib-grid" id="gymPickGrid"></div>
+            <div class="gym-sheet-foot"><button class="link-btn" id="gymPickManual" type="button">找不到？手動輸入其他動作 →</button></div>
+          </div>
+        </div>
+
+        <div class="gym-lightbox" id="gymLightbox" hidden>
+          <div class="gym-lb-card">
+            <button class="btn btn-icon btn-ghost gym-lb-close" id="gymLbClose" type="button" aria-label="關閉"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            <img id="gymLbImg" alt="">
+            <div class="gym-lb-text" id="gymLbText"></div>
           </div>
         </div>
       </section>
@@ -1750,6 +1899,13 @@
     gymDate: null,
     gymRows: [],
     gymEditId: null,
+    gymLib: [],
+    gymThumbs: {},
+    gymPickId: null,
+    gymManual: false,
+    gymCalMonth: null,
+    gymLibFilter: null,
+    gymPickFilter: null,
     bookDetailId: null,
     bookDetailOriginal: null,
     bookDetailEditing: false,
@@ -3640,8 +3796,10 @@
   var GYM_EQUIPMENT_PRESETS = ["啞鈴", "槓鈴", "壺鈴", "彈力帶", "器械", "纜繩", "史密斯機", "徒手"];
   function gymTags(r){
     var t = "";
+    if (r.body_part) t += '<span class="gym-tag part">' + escapeHtml(r.body_part) + "</span>";
     if (r.location) t += '<span class="gym-tag loc-' + r.location + '">' + GYM_LOC_LABEL[r.location] + "</span>";
-    if (r.equipment) t += '<span class="gym-tag">' + escapeHtml(r.equipment) + "</span>";
+    var libDn = (typeof gymLibFor === "function" && (gymLibFor(r.exercise, r.equipment) || {}).display_name) || "";
+    if (r.equipment && libDn.indexOf(r.equipment) !== 0) t += '<span class="gym-tag">' + escapeHtml(r.equipment) + "</span>";
     return t;
   }
   function gymEqKey(r){ return (r.equipment || "").trim(); }
@@ -3685,7 +3843,8 @@
     } else {
       list.innerHTML = day.map(function(r){
         return '<div class="gym-row' + (state.gymEditId === r.id ? " editing" : "") + '">' +
-          '<div class="gym-row-main"><div class="gym-ex">' + escapeHtml(r.exercise) + gymTags(r) + '</div>' +
+          gymThumbHtml(gymLibFor(r.exercise, r.equipment)) +
+          '<div class="gym-row-main"><div class="gym-ex">' + escapeHtml(((gymLibFor(r.exercise, r.equipment) || {}).display_name) || r.exercise) + gymTags(r) + '</div>' +
           '<div class="gym-detail">' + gymDetail(r) + '</div>' +
           (r.note ? '<div class="gym-note">' + escapeHtml(r.note) + '</div>' : "") + '</div>' +
           '<button class="btn btn-icon btn-ghost" type="button" data-gym-edit="' + r.id + '" aria-label="編輯">' + ICONS.edit + '</button>' +
@@ -3723,6 +3882,7 @@
     }).join("") : '<div class="empty">還沒有任何訓練紀錄。</div>';
 
     updateGymLastHint();
+    renderGymCalendar();
   }
   function renderGymProgress(){
     var name = document.getElementById("gymProgressSelect").value;
@@ -3779,6 +3939,8 @@
     setGymLoc(keepLoc || defaultGymLoc());
     document.getElementById("gymSubmit").textContent = "新增動作";
     document.getElementById("gymCancelEdit").hidden = true;
+    state.gymPickId = null; state.gymManual = false;
+    renderGymPicked();
   }
   function switchGymDate(d){
     state.gymDate = d;
@@ -3788,7 +3950,7 @@
   }
   async function saveGymForm(){
     var ex = document.getElementById("gymExercise").value.trim();
-    if (!ex) return;
+    if (!ex){ openGymPicker(); return; }
     var w = document.getElementById("gymWeight").value;
     var reps = document.getElementById("gymReps").value;
     var sets = parseInt(document.getElementById("gymSets").value, 10) || 1;
@@ -3799,7 +3961,8 @@
       sets: sets,
       note: document.getElementById("gymNote").value.trim(),
       location: getGymLoc(),
-      equipment: document.getElementById("gymEquipment").value.trim()
+      equipment: document.getElementById("gymEquipment").value.trim(),
+      body_part: document.getElementById("gymBodyPart").value || null
     };
     var res;
     if (state.gymEditId){
@@ -3812,7 +3975,6 @@
     }
     if (res.error){ alert("儲存失敗：" + res.error.message); return; }
     resetGymForm();
-    document.getElementById("gymExercise").focus();
     refreshGym();
   }
   function startGymEdit(id){
@@ -3825,6 +3987,11 @@
     document.getElementById("gymSets").value = r.sets;
     document.getElementById("gymNote").value = r.note || "";
     document.getElementById("gymEquipment").value = r.equipment || "";
+    document.getElementById("gymBodyPart").value = r.body_part || "";
+    var lib = gymLibFor(r.exercise, r.equipment);
+    state.gymPickId = lib ? lib.id : null;
+    state.gymManual = !lib;
+    renderGymPicked();
     setGymLoc(r.location || defaultGymLoc());
     document.getElementById("gymSubmit").textContent = "更新";
     document.getElementById("gymCancelEdit").hidden = false;
@@ -3854,7 +4021,9 @@
       try { localStorage.setItem("gymLoc", b.dataset.loc); } catch(_){}
     });
     setGymLoc(defaultGymLoc());
+    wireGymLibrary();
     document.getElementById("gymDayList").addEventListener("click", function(e){
+      var th = e.target.closest("[data-gym-zoom]"); if (th){ openGymLightbox(th.dataset.gymZoom); return; }
       var ed = e.target.closest("[data-gym-edit]"); if (ed){ startGymEdit(ed.dataset.gymEdit); return; }
       var del = e.target.closest("[data-gym-del]"); if (del){ deleteGymRow(del.dataset.gymDel); }
     });
@@ -3874,6 +4043,273 @@
     renderGym();
   }
 
+  /* ================= gym library ================= */
+  // gym_exercises = the exercise library (name + equipment + body part + benefit);
+  // gym_exercise_images = compressed pictures as data URLs, owner-only via RLS.
+  // Thumbnails load with the list; the big picture loads only when tapped.
+  var GYM_PARTS = ["胸", "肩", "背", "手臂", "腿", "臀", "核心"];
+  var GYM_PLACEHOLDER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M3.5 9v6M17.5 6.5v11M20.5 9v6M6.5 12h11"/></svg>';
+  function gymLibFor(name, equipment){
+    name = (name || "").trim(); equipment = (equipment || "").trim();
+    var lib = state.gymLib || [];
+    for (var i = 0; i < lib.length; i++){ if (lib[i].name === name && lib[i].equipment === equipment) return lib[i]; }
+    return null;
+  }
+  function gymLibById(id){ return (state.gymLib || []).find(function(x){ return x.id === id; }) || null; }
+  function gymThumbHtml(lib){
+    var src = lib && (state.gymThumbs || {})[lib.id];
+    if (src) return '<img class="gym-thumb" src="' + src + '" alt="" data-gym-zoom="' + lib.id + '">';
+    return '<span class="gym-thumb empty">' + GYM_PLACEHOLDER + "</span>";
+  }
+  async function refreshGymLib(){
+    var res = await sb.from("gym_exercises").select("*").order("sort_order", { ascending:true });
+    if (res.error){ console.warn("gym_exercises", res.error.message); return; }
+    state.gymLib = res.data || [];
+    var th = await sb.from("gym_exercise_images").select("exercise_id, thumb");
+    state.gymThumbs = {};
+    (th.data || []).forEach(function(r){ state.gymThumbs[r.exercise_id] = r.thumb; });
+    renderGymLibrary();
+    renderGymPicked();
+    renderGym();
+  }
+  function gymFilterHtml(f){
+    var parts = ['<button type="button" data-f-part=""' + (!f.part ? ' class="on"' : "") + ">全部</button>"]
+      .concat(GYM_PARTS.map(function(pt){ return '<button type="button" data-f-part="' + pt + '"' + (f.part === pt ? ' class="on"' : "") + ">" + pt + "</button>"; }));
+    var eqs = ["啞鈴", "器械", "徒手"].map(function(e){ return '<button type="button" data-f-eq="' + e + '"' + (f.eq === e ? ' class="on"' : "") + ">" + e + "</button>"; });
+    return parts.join("") + '<span class="sep"></span>' + eqs.join("");
+  }
+  function gymLibCardsHtml(f, currentId){
+    var list = (state.gymLib || []).filter(function(x){
+      return (!f.part || x.body_part === f.part) && (!f.eq || x.equipment === f.eq);
+    });
+    if (!list.length) return '<div class="empty">沒有符合的動作。</div>';
+    return list.map(function(x){
+      var src = (state.gymThumbs || {})[x.id];
+      return '<button type="button" class="gym-lib-card' + (x.id === currentId ? " current" : "") + '" data-lib-id="' + x.id + '">' +
+        (src ? '<img class="gym-lib-img" src="' + src + '" alt="">' : '<span class="gym-lib-img">尚無圖片</span>') +
+        '<span class="gym-lib-name">' + escapeHtml(x.display_name || x.name) + "</span>" +
+        '<span class="gym-lib-meta">' + (x.body_part ? '<span class="gym-tag part">' + x.body_part + "</span>" : "") +
+        '<span class="gym-tag">' + escapeHtml(x.equipment || "") + "</span></span></button>";
+    }).join("");
+  }
+  function renderGymLibrary(){
+    var f = state.gymLibFilter || (state.gymLibFilter = { part:"", eq:"" });
+    document.getElementById("gymLibFilter").innerHTML = gymFilterHtml(f);
+    document.getElementById("gymLibGrid").innerHTML = gymLibCardsHtml(f, null);
+    var lib = state.gymLib || [], withImg = lib.filter(function(x){ return state.gymThumbs[x.id]; }).length;
+    document.getElementById("gymLibCount").textContent = "（" + lib.length + " 個動作・" + withImg + " 張圖）";
+    if (!document.getElementById("gymPickerSheet").hidden) renderGymPicker();
+  }
+  function renderGymPicker(){
+    var f = state.gymPickFilter || (state.gymPickFilter = { part:"", eq:"" });
+    document.getElementById("gymPickFilter").innerHTML = gymFilterHtml(f);
+    document.getElementById("gymPickGrid").innerHTML = gymLibCardsHtml(f, state.gymPickId);
+  }
+  function renderGymPicked(){
+    var box = document.getElementById("gymPicked");
+    var manual = document.getElementById("gymManual");
+    var lib = state.gymPickId ? gymLibById(state.gymPickId) : null;
+    if (lib){
+      manual.hidden = true;
+      box.innerHTML = '<div class="gym-picked-card">' + gymThumbHtml(lib) +
+        '<div class="gym-picked-info"><div class="gym-picked-name">' + escapeHtml(lib.display_name || lib.name) +
+        (lib.body_part ? '<span class="gym-tag part">' + lib.body_part + "</span>" : "") + "</div>" +
+        (lib.benefit ? '<div class="gym-picked-benefit">' + escapeHtml(lib.benefit) + "</div>" : "") +
+        (lib.setup_note ? '<div class="gym-picked-benefit">設定：' + escapeHtml(lib.setup_note) + "</div>" : "") +
+        '</div><button type="button" class="btn" id="gymPickChange">更換</button></div>';
+    } else if (state.gymManual){
+      manual.hidden = false;
+      box.innerHTML = "";
+      if (!document.getElementById("gymManualLinks")){
+        manual.insertAdjacentHTML("afterend", '<div class="gym-manual-links" id="gymManualLinks"><button type="button" class="link-btn" data-gym-open-picker>改從動作庫選 →</button></div>');
+      }
+    } else {
+      manual.hidden = true;
+      box.innerHTML = '<button type="button" class="gym-pick-btn" data-gym-open-picker>＋ 從動作庫選擇動作</button>';
+    }
+    var links = document.getElementById("gymManualLinks");
+    if (links) links.hidden = !state.gymManual || !!lib;
+  }
+  function selectGymLib(id){
+    var lib = gymLibById(id); if (!lib) return;
+    state.gymPickId = id; state.gymManual = false;
+    document.getElementById("gymExercise").value = lib.name;
+    document.getElementById("gymEquipment").value = lib.equipment;
+    document.getElementById("gymBodyPart").value = lib.body_part || "";
+    // 器械 lives at the gym; 啞鈴 / 徒手 keep whatever location is chosen
+    if (lib.equipment === "器械") setGymLoc("gym");
+    renderGymPicked();
+    updateGymLastHint();
+    closeGymPicker();
+  }
+  function openGymPicker(){
+    var sh = document.getElementById("gymPickerSheet");
+    // default the equipment filter from the location: 居家 -> 啞鈴, 健身房 -> all
+    if (!state.gymPickFilter) state.gymPickFilter = { part:"", eq: getGymLoc() === "home" ? "啞鈴" : "" };
+    renderGymPicker();
+    sh.hidden = false; sh.scrollTop = 0;
+    document.body.classList.add("sheet-open");
+    try { if (!(history.state && history.state.sheet === "gympick")) history.pushState({ sheet:"gympick" }, ""); } catch(_){}
+  }
+  function hideGymPicker(){
+    document.getElementById("gymPickerSheet").hidden = true;
+    document.body.classList.remove("sheet-open");
+  }
+  function closeGymPicker(){
+    if (history.state && history.state.sheet === "gympick"){ history.back(); return; }
+    hideGymPicker();
+  }
+  window.addEventListener("popstate", function(){
+    if (!document.getElementById("gymPickerSheet").hidden) hideGymPicker();
+  });
+  async function openGymLightbox(id){
+    var lib = gymLibById(id); if (!lib) return;
+    var lb = document.getElementById("gymLightbox"), img = document.getElementById("gymLbImg");
+    img.src = (state.gymThumbs || {})[id] || "";
+    document.getElementById("gymLbText").innerHTML = "<b>" + escapeHtml(lib.display_name || lib.name) + "</b>" +
+      (lib.body_part ? '<span class="gym-tag part">' + lib.body_part + "</span>" : "") +
+      (lib.benefit ? "<div>" + escapeHtml(lib.benefit) + "</div>" : "") +
+      (lib.setup_note ? "<div>設定：" + escapeHtml(lib.setup_note) + "</div>" : "");
+    lb.hidden = false;
+    var res = await sb.from("gym_exercise_images").select("full_image").eq("exercise_id", id).maybeSingle();
+    if (!lb.hidden && res.data && res.data.full_image) img.src = res.data.full_image;
+  }
+  // ---- image import: match file names to library entries, compress, save ----
+  function gymNormName(s){
+    return (s || "").replace(/\.[^.]+$/, "").trim().replace(/機械/g, "器械").replace(/稱/g, "撐").replace(/\s+/g, "");
+  }
+  function gymCompress(file, maxSide, quality){
+    return new Promise(function(resolve, reject){
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onload = function(){
+        var sc = Math.min(1, maxSide / Math.max(im.naturalWidth, im.naturalHeight));
+        var c = document.createElement("canvas");
+        c.width = Math.round(im.naturalWidth * sc); c.height = Math.round(im.naturalHeight * sc);
+        var ctx = c.getContext("2d");
+        ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(im, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL("image/jpeg", quality));
+      };
+      im.onerror = function(){ URL.revokeObjectURL(url); reject(new Error("無法讀取圖片")); };
+      im.src = url;
+    });
+  }
+  async function importGymImages(files){
+    var status = document.getElementById("gymImportStatus");
+    var byName = {};
+    (state.gymLib || []).forEach(function(x){ byName[gymNormName(x.display_name || (x.equipment + x.name))] = x; });
+    var ok = 0, miss = [];
+    for (var i = 0; i < files.length; i++){
+      var f = files[i], key = gymNormName(f.name), lib = byName[key];
+      if (!lib){
+        // fallback: a file named just "二頭彎舉" matches when it is unambiguous
+        var cands = (state.gymLib || []).filter(function(x){ return gymNormName(x.name) === key; });
+        if (cands.length === 1) lib = cands[0];
+      }
+      if (!lib){ miss.push(f.name); continue; }
+      status.textContent = "處理中 " + (i + 1) + " / " + files.length + "：" + f.name;
+      try {
+        var thumb = await gymCompress(f, 240, 0.8);
+        var full = await gymCompress(f, 900, 0.82);
+        var res = await sb.from("gym_exercise_images").upsert({
+          exercise_id: lib.id, thumb: thumb, full_image: full, source_name: f.name, updated_at: new Date().toISOString()
+        }, { onConflict:"exercise_id" });
+        if (res.error) throw new Error(res.error.message);
+        ok++;
+      } catch(err){ miss.push(f.name + "（" + err.message + "）"); }
+    }
+    status.textContent = "完成：" + ok + " 張已對應" + (miss.length ? "；未對應 " + miss.length + " 張：" + miss.join("、") : "");
+    refreshGymLib();
+  }
+  // ---- calendar: body parts + 家/健 per day ----
+  function renderGymCalendar(){
+    if (!state.gymCalMonth) state.gymCalMonth = (state.gymDate || todayStr()).slice(0, 7);
+    var mk = state.gymCalMonth, p = mk.split("-").map(Number);
+    document.getElementById("gymCalLabel").textContent = monthLabel(mk);
+    var byDate = {};
+    (state.gymRows || []).forEach(function(r){
+      if (r.workout_date.slice(0, 7) !== mk) return;
+      var d = byDate[r.workout_date] || (byDate[r.workout_date] = { parts:{}, locs:{} });
+      var part = r.body_part || ((gymLibFor(r.exercise, r.equipment) || {}).body_part);
+      if (part) d.parts[part] = 1;
+      if (r.location) d.locs[r.location] = 1;
+    });
+    var first = new Date(p[0], p[1] - 1, 1).getDay();
+    var days = new Date(p[0], p[1], 0).getDate();
+    var today = todayStr(), html = "";
+    for (var b = 0; b < first; b++) html += '<div class="gym-cal-cell blank"></div>';
+    for (var day = 1; day <= days; day++){
+      var ds = mk + "-" + pad(day), info = byDate[ds];
+      var cls = "gym-cal-cell" + (info ? " has" : "") + (ds === today ? " today" : "") + (ds === state.gymDate ? " selected" : "");
+      var locs = "", parts = "";
+      if (info){
+        if (info.locs.home) locs += '<span class="gym-loc-dot home">家</span>';
+        if (info.locs.gym) locs += '<span class="gym-loc-dot gym">健</span>';
+        parts = GYM_PARTS.filter(function(pt){ return info.parts[pt]; }).map(function(pt){ return '<span class="gym-part-chip">' + pt + "</span>"; }).join("");
+      }
+      html += '<button type="button" class="' + cls + '" data-gym-cal="' + ds + '"><span class="gym-cal-num">' + day + "</span>" +
+        (locs ? '<span class="gym-cal-locs">' + locs + "</span>" : "") +
+        (parts ? '<span class="gym-cal-parts">' + parts + "</span>" : "") + "</button>";
+    }
+    document.getElementById("gymCalGrid").innerHTML = html;
+  }
+  function wireGymLibrary(){
+    function bindFilter(elId, key, rerender){
+      document.getElementById(elId).addEventListener("click", function(e){
+        var b = e.target.closest("button"); if (!b) return;
+        var f = state[key];
+        if (b.hasAttribute("data-f-part")) f.part = b.dataset.fPart;
+        if (b.hasAttribute("data-f-eq")) f.eq = (f.eq === b.dataset.fEq) ? "" : b.dataset.fEq;
+        rerender();
+      });
+    }
+    state.gymLibFilter = { part:"", eq:"" };
+    bindFilter("gymLibFilter", "gymLibFilter", renderGymLibrary);
+    bindFilter("gymPickFilter", "gymPickFilter", renderGymPicker);
+    document.getElementById("gymPickGrid").addEventListener("click", function(e){
+      var c = e.target.closest("[data-lib-id]"); if (c) selectGymLib(c.dataset.libId);
+    });
+    document.getElementById("gymLibGrid").addEventListener("click", function(e){
+      var c = e.target.closest("[data-lib-id]"); if (c) openGymLightbox(c.dataset.libId);
+    });
+    document.getElementById("page-gym").addEventListener("click", function(e){
+      if (e.target.closest("[data-gym-open-picker]") || e.target.closest("#gymPickChange")) openGymPicker();
+      var z = e.target.closest("#gymPicked [data-gym-zoom]"); if (z) openGymLightbox(z.dataset.gymZoom);
+    });
+    document.getElementById("gymPickClose").addEventListener("click", closeGymPicker);
+    document.getElementById("gymPickManual").addEventListener("click", function(){
+      state.gymPickId = null; state.gymManual = true;
+      document.getElementById("gymExercise").value = "";
+      document.getElementById("gymEquipment").value = "";
+      document.getElementById("gymBodyPart").value = "";
+      renderGymPicked(); closeGymPicker();
+      setTimeout(function(){ document.getElementById("gymExercise").focus(); }, 50);
+    });
+    document.getElementById("gymLbClose").addEventListener("click", function(){ document.getElementById("gymLightbox").hidden = true; });
+    document.getElementById("gymLightbox").addEventListener("click", function(e){ if (e.target === this) this.hidden = true; });
+    document.getElementById("gymImportInput").addEventListener("change", function(){
+      if (this.files && this.files.length) importGymImages(Array.prototype.slice.call(this.files));
+      this.value = "";
+    });
+    document.getElementById("gymLibToggle").addEventListener("click", function(){
+      var body = document.getElementById("gymLibBody");
+      body.hidden = !body.hidden; this.classList.toggle("open", !body.hidden);
+    });
+    document.getElementById("gymCalToggle").addEventListener("click", function(){
+      var body = document.getElementById("gymCalBody");
+      body.hidden = !body.hidden; this.classList.toggle("open", !body.hidden);
+    });
+    document.getElementById("gymCalPrev").addEventListener("click", function(){ state.gymCalMonth = addMonths(state.gymCalMonth, -1); renderGymCalendar(); });
+    document.getElementById("gymCalNext").addEventListener("click", function(){ state.gymCalMonth = addMonths(state.gymCalMonth, 1); renderGymCalendar(); });
+    document.getElementById("gymCalGrid").addEventListener("click", function(e){
+      var c = e.target.closest("[data-gym-cal]"); if (!c) return;
+      switchGymDate(c.dataset.gymCal);
+      document.querySelector("#page-gym .date-switch").scrollIntoView({ behavior:"smooth", block:"start" });
+    });
+    renderGymPicked();
+  }
+
   /* ================= realtime ================= */
   function setupRealtime(){
     if (realtimeChannel) return;
@@ -3885,6 +4321,7 @@
       .on("postgres_changes", { event:"*", schema:"public", table:"diary_entries" }, function(){ refreshDiaryEditor(); refreshDiaryRecent(); refreshDiaryTags(); refreshDiaryCalendar(); refreshHomeDiaryStatus(); refreshHomeMemoryPoints(); })
       .on("postgres_changes", { event:"*", schema:"public", table:"books" }, function(){ refreshBookPage(); })
       .on("postgres_changes", { event:"*", schema:"public", table:"workout_sets" }, function(){ refreshGym(); })
+      .on("postgres_changes", { event:"*", schema:"public", table:"gym_exercises" }, function(){ refreshGymLib(); })
       .on("postgres_changes", { event:"*", schema:"public", table:"book_categories" }, function(){ refreshBookCategoriesUI(); refreshBookPage(); })
       .subscribe();
   }
@@ -4188,6 +4625,7 @@
     refreshDiaryTags();
     refreshDiaryCalendar();
     refreshGym();
+    refreshGymLib();
     setupRealtime();
   }
 
