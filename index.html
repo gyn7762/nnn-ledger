@@ -1437,7 +1437,7 @@
               </button>
             </div>
             <div class="calendar-weekdays">
-              <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+              <span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span>
             </div>
             <div class="calendar-grid" id="calendarGrid"></div>
           </div>
@@ -1554,7 +1554,7 @@
               <div class="label" id="gymCalLabel"></div>
               <button class="btn btn-icon" id="gymCalNext" type="button" aria-label="下個月"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
             </div>
-            <div class="gym-cal-week"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
+            <div class="gym-cal-week"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
             <div class="gym-cal-grid" id="gymCalGrid"></div>
             <div class="gym-cal-legend"><span class="gym-loc-dot home">家</span>居家　<span class="gym-loc-dot gym">健</span>自主訓練　<span class="gym-loc-dot coach">健</span>教練課　<span class="gym-part-chip">胸</span>練的部位</div>
           </div>
@@ -3252,7 +3252,8 @@
     state.calendarMarked = markedDates;
     document.getElementById("calMonthLabel").textContent = monthLabel(state.calendarMonth);
     var p = state.calendarMonth.split("-").map(Number);
-    var firstDow = new Date(p[0], p[1]-1, 1).getDay();
+    // weeks start on Monday: Mon=0 … Sun=6
+    var firstDow = (new Date(p[0], p[1]-1, 1).getDay() + 6) % 7;
     var daysInMonth = new Date(p[0], p[1], 0).getDate();
     var today = todayStr();
     var cells = [];
@@ -4291,7 +4292,7 @@
       if (part) d.parts[part] = 1;
       if (gymPlaceKey(r)) d.locs[gymPlaceKey(r)] = 1;
     });
-    var first = new Date(p[0], p[1] - 1, 1).getDay();
+    var first = (new Date(p[0], p[1] - 1, 1).getDay() + 6) % 7;   // Monday-first
     var days = new Date(p[0], p[1], 0).getDate();
     var today = todayStr(), html = "";
     for (var b = 0; b < first; b++) html += '<div class="gym-cal-cell blank"></div>';
