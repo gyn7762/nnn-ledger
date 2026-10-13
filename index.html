@@ -325,23 +325,29 @@
   .gym-cal-cell.has{ background:color-mix(in srgb, var(--c-gym) 7%, var(--paper)); }
   .gym-cal-cell.today .gym-cal-num{ color:var(--stamp); font-weight:800; }
   .gym-cal-cell.selected{ border-color:var(--stamp); }
-  .gym-cal-num{ font-size:calc(var(--font-scale) * 12px); font-weight:600; line-height:1.2; }
+  .gym-cal-num{ font-size:calc(var(--font-scale) * 13px); font-weight:600; line-height:1.2; }
   .gym-cal-locs{ display:flex; gap:2px; }
   .gym-loc-dot{
-    display:inline-flex; align-items:center; justify-content:center; width:1.45em; height:1.45em; border-radius:50%;
-    font-size:calc(var(--font-scale) * 9.5px); font-weight:700; line-height:1;
+    display:inline-flex; align-items:center; justify-content:center; width:1.5em; height:1.5em; border-radius:50%;
+    font-size:calc(var(--font-scale) * 11px); font-weight:700; line-height:1;
   }
   .gym-loc-dot.home{ background:color-mix(in srgb, var(--c-ledger) 18%, transparent); color:var(--c-ledger); }
   .gym-loc-dot.gym{ background:color-mix(in srgb, var(--c-gym) 18%, transparent); color:var(--c-gym); }
-  .gym-cal-parts{ display:flex; flex-wrap:wrap; justify-content:center; gap:2px; }
+  .gym-loc-dot.coach{ background:color-mix(in srgb, var(--c-books) 20%, transparent); color:var(--c-books); }
+  .gym-cal-parts{ display:flex; flex-wrap:wrap; justify-content:center; gap:3px; }
   .gym-part-chip{
-    display:inline-block; padding:0 4px; border-radius:4px; line-height:1.5;
-    font-size:calc(var(--font-scale) * 9.5px); font-weight:700;
+    display:inline-block; padding:1px 4px; border-radius:5px; line-height:1.4; white-space:nowrap;
+    font-size:calc(var(--font-scale) * 12px); font-weight:700;
     background:color-mix(in srgb, var(--c-diary) 14%, transparent); color:var(--c-diary);
   }
   .gym-cal-legend{ margin-top:10px; font-size:calc(var(--font-scale) * 11.5px); color:var(--ink-faint); display:flex; align-items:center; flex-wrap:wrap; gap:4px; }
   .gym-loc-seg button{ white-space:nowrap; padding:9px 14px; }
   .gym-loc-seg button.on{ background:var(--stamp-tint); color:var(--stamp); }
+  .gym-type-seg{ margin-top:6px; }
+  .gym-type-seg button{ white-space:nowrap; padding:7px 12px; font-size:calc(var(--font-scale) * 12.5px); }
+  .gym-type-seg button.on[data-type="self"]{ background:color-mix(in srgb, var(--c-gym) 16%, transparent); color:var(--c-gym); }
+  .gym-type-seg button.on[data-type="coach"]{ background:color-mix(in srgb, var(--c-books) 16%, transparent); color:var(--c-books); }
+  .gym-tag.loc-coach{ background:color-mix(in srgb, var(--c-books) 14%, transparent); color:var(--c-books); }
   .gym-tag{
     display:inline-block; margin-left:6px; padding:1px 8px; border-radius:999px; vertical-align:2px;
     font-size:calc(var(--font-scale) * 11px); font-weight:600; background:var(--paper-sunk); color:var(--ink-soft);
@@ -1550,7 +1556,7 @@
             </div>
             <div class="gym-cal-week"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>
             <div class="gym-cal-grid" id="gymCalGrid"></div>
-            <div class="gym-cal-legend"><span class="gym-loc-dot home">家</span>居家　<span class="gym-loc-dot gym">健</span>健身房　<span class="gym-part-chip">胸</span>當天練的部位</div>
+            <div class="gym-cal-legend"><span class="gym-loc-dot home">家</span>居家　<span class="gym-loc-dot gym">健</span>自主訓練　<span class="gym-loc-dot coach">健</span>教練課　<span class="gym-part-chip">胸</span>練的部位</div>
           </div>
         </div>
 
@@ -1570,6 +1576,10 @@
                   <div class="seg gym-loc-seg" id="gymLocSeg" role="radiogroup" aria-label="地點">
                     <button type="button" data-loc="home" role="radio">居家</button>
                     <button type="button" data-loc="gym" role="radio">健身房</button>
+                  </div>
+                  <div class="seg gym-type-seg" id="gymTypeSeg" role="radiogroup" aria-label="訓練形式" hidden>
+                    <button type="button" data-type="self" role="radio">自主訓練</button>
+                    <button type="button" data-type="coach" role="radio">教練課</button>
                   </div>
                 </div>
                 <div class="field gym-f-pick">
@@ -3790,6 +3800,12 @@
       .order("created_at", { ascending:true });
     if (res.error){ console.warn("workout_sets", res.error.message); return; }
     state.gymRows = res.data || [];
+    // first load: pick location / session type from what this day already has
+    if (!state.gymDefaultsSet && !state.gymEditId){
+      state.gymDefaultsSet = true;
+      setGymType(defaultGymType());
+      setGymLoc(defaultGymLoc());
+    }
     renderGym();
   }
   var GYM_LOC_LABEL = { home:"居家", gym:"健身房" };
@@ -3797,7 +3813,8 @@
   function gymTags(r){
     var t = "";
     if (r.body_part) t += '<span class="gym-tag part">' + escapeHtml(r.body_part) + "</span>";
-    if (r.location) t += '<span class="gym-tag loc-' + r.location + '">' + GYM_LOC_LABEL[r.location] + "</span>";
+    var pk = gymPlaceKey(r);
+    if (pk) t += '<span class="gym-tag loc-' + pk + '">' + (pk === "home" ? "居家" : pk === "coach" ? "健身房・教練課" : "健身房") + "</span>";
     var libDn = (typeof gymLibFor === "function" && (gymLibFor(r.exercise, r.equipment) || {}).display_name) || "";
     if (r.equipment && libDn.indexOf(r.equipment) !== 0) t += '<span class="gym-tag">' + escapeHtml(r.equipment) + "</span>";
     return t;
@@ -3812,6 +3829,36 @@
       var hit = b.dataset.loc === loc;
       b.classList.toggle("on", hit); b.setAttribute("aria-checked", hit ? "true" : "false");
     });
+    // 健身房 asks one more thing: 自主訓練 or 教練課
+    var typeSeg = document.getElementById("gymTypeSeg");
+    if (typeSeg){
+      typeSeg.hidden = loc !== "gym";
+      if (loc === "gym" && !getGymType()) setGymType(defaultGymType());
+    }
+  }
+  function getGymType(){
+    var on = document.querySelector("#gymTypeSeg button.on");
+    return on ? on.dataset.type : null;
+  }
+  function setGymType(t){
+    document.querySelectorAll("#gymTypeSeg button").forEach(function(b){
+      var hit = b.dataset.type === t;
+      b.classList.toggle("on", hit); b.setAttribute("aria-checked", hit ? "true" : "false");
+    });
+  }
+  // same idea as the location default: this day's gym session type, else the
+  // last one picked on this device, else 自主訓練
+  function defaultGymType(){
+    var day = (state.gymRows || []).filter(function(r){ return r.workout_date === state.gymDate && r.session_type; });
+    if (day.length) return day[day.length-1].session_type;
+    try { var v = localStorage.getItem("gymType"); if (v === "self" || v === "coach") return v; } catch(_){}
+    return "self";
+  }
+  // calendar / list key for where+how: home, gym (自主), coach (教練課)
+  function gymPlaceKey(r){
+    if (r.location === "home") return "home";
+    if (r.location === "gym") return r.session_type === "coach" ? "coach" : "gym";
+    return null;
   }
   // default location for a new entry: what this day already uses, else the
   // last one picked on this device, else 健身房
@@ -3872,11 +3919,11 @@
     var byDate = {}, dates = [];
     rows.forEach(function(r){
       if (!byDate[r.workout_date]){ byDate[r.workout_date] = []; byDate[r.workout_date].locs = {}; dates.push(r.workout_date); }
-      if (r.location) byDate[r.workout_date].locs[r.location] = 1;
+      if (gymPlaceKey(r)) byDate[r.workout_date].locs[gymPlaceKey(r)] = 1;
       if (byDate[r.workout_date].indexOf(r.exercise) === -1) byDate[r.workout_date].push(r.exercise);
     });
     document.getElementById("gymRecentList").innerHTML = dates.length ? dates.slice(0, 10).map(function(d){
-      var locTags = Object.keys(byDate[d].locs).map(function(l){ return '<span class="gym-tag loc-' + l + '" style="margin:0 6px 0 0;">' + GYM_LOC_LABEL[l] + "</span>"; }).join("");
+      var locTags = Object.keys(byDate[d].locs).map(function(l){ return '<span class="gym-tag loc-' + l + '" style="margin:0 6px 0 0;">' + ({ home:"居家", gym:"自主", coach:"教練課" })[l] + "</span>"; }).join("");
       return '<button type="button" class="gym-recent-row" data-gym-date="' + d + '"><span class="gym-recent-date">' + escapeHtml(dateLabel(d)) + '</span>' + locTags +
         '<span class="gym-recent-ex">' + byDate[d].map(escapeHtml).join("、") + "</span></button>";
     }).join("") : '<div class="empty">還沒有任何訓練紀錄。</div>';
@@ -3933,8 +3980,9 @@
   }
   function resetGymForm(){
     state.gymEditId = null;
-    var keepLoc = getGymLoc();
+    var keepLoc = getGymLoc(), keepType = getGymType();
     document.getElementById("gymForm").reset();
+    if (keepType) setGymType(keepType);
     document.getElementById("gymSets").value = 3;
     setGymLoc(keepLoc || defaultGymLoc());
     document.getElementById("gymSubmit").textContent = "新增動作";
@@ -3945,6 +3993,7 @@
   function switchGymDate(d){
     state.gymDate = d;
     if (state.gymEditId) resetGymForm();
+    setGymType(defaultGymType());
     setGymLoc(defaultGymLoc());
     renderGym();
   }
@@ -3961,6 +4010,7 @@
       sets: sets,
       note: document.getElementById("gymNote").value.trim(),
       location: getGymLoc(),
+      session_type: getGymLoc() === "gym" ? (getGymType() || "self") : null,
       equipment: document.getElementById("gymEquipment").value.trim(),
       body_part: document.getElementById("gymBodyPart").value || null
     };
@@ -3992,6 +4042,7 @@
     state.gymPickId = lib ? lib.id : null;
     state.gymManual = !lib;
     renderGymPicked();
+    if (r.session_type) setGymType(r.session_type);
     setGymLoc(r.location || defaultGymLoc());
     document.getElementById("gymSubmit").textContent = "更新";
     document.getElementById("gymCancelEdit").hidden = false;
@@ -4019,6 +4070,11 @@
       var b = e.target.closest("[data-loc]"); if (!b) return;
       setGymLoc(b.dataset.loc);
       try { localStorage.setItem("gymLoc", b.dataset.loc); } catch(_){}
+    });
+    document.getElementById("gymTypeSeg").addEventListener("click", function(e){
+      var b = e.target.closest("[data-type]"); if (!b) return;
+      setGymType(b.dataset.type);
+      try { localStorage.setItem("gymType", b.dataset.type); } catch(_){}
     });
     setGymLoc(defaultGymLoc());
     wireGymLibrary();
@@ -4233,7 +4289,7 @@
       var d = byDate[r.workout_date] || (byDate[r.workout_date] = { parts:{}, locs:{} });
       var part = r.body_part || ((gymLibFor(r.exercise, r.equipment) || {}).body_part);
       if (part) d.parts[part] = 1;
-      if (r.location) d.locs[r.location] = 1;
+      if (gymPlaceKey(r)) d.locs[gymPlaceKey(r)] = 1;
     });
     var first = new Date(p[0], p[1] - 1, 1).getDay();
     var days = new Date(p[0], p[1], 0).getDate();
@@ -4245,7 +4301,8 @@
       var locs = "", parts = "";
       if (info){
         if (info.locs.home) locs += '<span class="gym-loc-dot home">家</span>';
-        if (info.locs.gym) locs += '<span class="gym-loc-dot gym">健</span>';
+        if (info.locs.gym) locs += '<span class="gym-loc-dot gym" title="自主訓練">健</span>';
+        if (info.locs.coach) locs += '<span class="gym-loc-dot coach" title="教練課">健</span>';
         parts = GYM_PARTS.filter(function(pt){ return info.parts[pt]; }).map(function(pt){ return '<span class="gym-part-chip">' + pt + "</span>"; }).join("");
       }
       html += '<button type="button" class="' + cls + '" data-gym-cal="' + ds + '"><span class="gym-cal-num">' + day + "</span>" +
