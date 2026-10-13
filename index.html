@@ -360,6 +360,26 @@
   .gym-loc-seg button{ white-space:nowrap; padding:9px 14px; }
   .gym-loc-seg button.on{ background:var(--stamp-tint); color:var(--stamp); }
   .gym-type-seg{ margin-top:6px; }
+  .gym-sets{ grid-column:1 / -1; }
+  .gym-set-grid{ display:grid; grid-template-columns:repeat(3, minmax(0,1fr)) 34px; gap:8px 12px; align-items:center; }
+  .gym-sets-head label{ margin-bottom:0; }
+  .gym-set-row{ margin-top:6px; }
+  .gym-set-row input{ width:100%; box-sizing:border-box; }
+  .gym-set-del{ width:34px; height:34px; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+  .gym-set-del svg{ width:16px; height:16px; }
+  .gym-add-set{
+    margin-top:8px; width:100%; padding:9px; border-radius:10px; border:1.5px dashed var(--rule); background:transparent;
+    color:var(--stamp); font-weight:700; font-family:inherit; font-size:calc(var(--font-scale) * 13.5px); cursor:pointer;
+  }
+  .gym-add-set:hover{ background:var(--stamp-tint); border-color:var(--stamp-tint); }
+  .gym-group{ display:flex; gap:10px; padding:11px 2px; border-bottom:1px solid var(--rule); }
+  .gym-group:last-child{ border-bottom:none; }
+  .gym-group-main{ flex:1; min-width:0; }
+  .gym-line{ display:flex; align-items:center; gap:4px; }
+  .gym-line .gym-detail{ flex:1; min-width:0; }
+  .gym-line.editing{ background:var(--stamp-tint); border-radius:8px; }
+  .gym-line .btn-icon svg{ width:15px; height:15px; }
+  .gym-line-no{ flex:0 0 auto; min-width:1.6em; font-size:calc(var(--font-scale) * 11.5px); color:var(--ink-faint); }
   .gym-type-seg button{ white-space:nowrap; padding:7px 12px; font-size:calc(var(--font-scale) * 12.5px); }
   .gym-type-seg button.on[data-type="self"]{ background:color-mix(in srgb, var(--c-gym) 16%, transparent); color:var(--c-gym); }
   .gym-type-seg button.on[data-type="coach"]{ background:color-mix(in srgb, var(--c-books) 16%, transparent); color:var(--c-books); }
@@ -1616,17 +1636,18 @@
                   </div>
                 </div>
               </div>
-              <div class="field">
-                <label for="gymWeight">重量（kg）</label>
-                <input type="number" id="gymWeight" min="0" step="0.5" inputmode="decimal" placeholder="選填">
-              </div>
-              <div class="field">
-                <label for="gymReps">次數</label>
-                <input type="number" id="gymReps" min="1" step="1" inputmode="numeric" placeholder="幾下">
-              </div>
-              <div class="field">
-                <label for="gymSets">組數</label>
-                <input type="number" id="gymSets" min="1" step="1" inputmode="numeric" value="3" required>
+              <div class="gym-sets">
+                <div class="gym-set-grid gym-sets-head">
+                  <label for="gymWeight">重量（kg）</label><label for="gymReps">次數</label><label for="gymSets">組數</label><span></span>
+                </div>
+                <div class="gym-set-grid gym-set-row">
+                  <input type="number" id="gymWeight" min="0" step="0.5" inputmode="decimal" placeholder="選填">
+                  <input type="number" id="gymReps" min="1" step="1" inputmode="numeric" placeholder="幾下">
+                  <input type="number" id="gymSets" min="1" step="1" inputmode="numeric" value="3" required>
+                  <span></span>
+                </div>
+                <div id="gymExtraSets"></div>
+                <button type="button" class="gym-add-set" id="gymAddSet">＋ 再加一列（帶入上一列的數字）</button>
               </div>
               <div class="field gym-f-note">
                 <label for="gymNote">備註（選填）</label>
@@ -3918,18 +3939,29 @@
       list.innerHTML = '<div class="empty">這天還沒有訓練紀錄，從上面新增第一個動作。</div>';
       document.getElementById("gymDaySummary").textContent = "";
     } else {
-      list.innerHTML = day.map(function(r){
-        return '<div class="gym-row' + (state.gymEditId === r.id ? " editing" : "") + '">' +
-          gymThumbHtml(gymLibFor(r.exercise, r.equipment)) +
-          '<div class="gym-row-main"><div class="gym-ex">' + escapeHtml(((gymLibFor(r.exercise, r.equipment) || {}).display_name) || r.exercise) + gymTags(r) + '</div>' +
-          '<div class="gym-detail">' + gymDetail(r) + '</div>' +
-          (r.note ? '<div class="gym-note">' + escapeHtml(r.note) + '</div>' : "") + '</div>' +
-          '<button class="btn btn-icon btn-ghost" type="button" data-gym-edit="' + r.id + '" aria-label="編輯">' + ICONS.edit + '</button>' +
-          '<button class="btn btn-icon btn-ghost" type="button" data-gym-del="' + r.id + '" aria-label="刪除">' + ICONS.trash + '</button>' +
-          '</div>';
+      // consecutive rows of the same exercise (e.g. 12kg×12, then 15kg×10)
+      // are shown under one heading, each line still editable on its own
+      var groups = [];
+      day.forEach(function(r){
+        var g = groups[groups.length - 1];
+        if (g && g.exercise === r.exercise && (g.equipment || "") === (r.equipment || "")) g.rows.push(r);
+        else groups.push({ exercise:r.exercise, equipment:r.equipment || "", rows:[r] });
+      });
+      list.innerHTML = groups.map(function(g){
+        var r0 = g.rows[0], lib = gymLibFor(g.exercise, g.equipment);
+        var multi = g.rows.length > 1;
+        return '<div class="gym-group">' + gymThumbHtml(lib) +
+          '<div class="gym-group-main"><div class="gym-ex">' + escapeHtml((lib && lib.display_name) || g.exercise) + gymTags(r0) + "</div>" +
+          g.rows.map(function(r, i){
+            return '<div class="gym-line' + (state.gymEditId === r.id ? " editing" : "") + '">' +
+              (multi ? '<span class="gym-line-no">' + (i + 1) + ".</span>" : "") +
+              '<div class="gym-detail">' + gymDetail(r) + (r.note ? '<div class="gym-note">' + escapeHtml(r.note) + "</div>" : "") + "</div>" +
+              '<button class="btn btn-icon btn-ghost" type="button" data-gym-edit="' + r.id + '" aria-label="編輯">' + ICONS.edit + "</button>" +
+              '<button class="btn btn-icon btn-ghost" type="button" data-gym-del="' + r.id + '" aria-label="刪除">' + ICONS.trash + "</button></div>";
+          }).join("") + "</div></div>";
       }).join("");
       var sets = day.reduce(function(s, r){ return s + r.sets; }, 0);
-      document.getElementById("gymDaySummary").textContent = day.length + " 個動作 · " + sets + " 組";
+      document.getElementById("gymDaySummary").textContent = groups.length + " 個動作 · " + sets + " 組";
     }
 
     // exercise suggestions + progress selector
@@ -3985,7 +4017,11 @@
     name = (name || "").trim();
     equipment = (equipment || "").trim();
     if (!name) return null;
-    var rows = state.gymRows || [], anyEq = null;
+    // newest date first regardless of how the rows happen to be ordered
+    var rows = (state.gymRows || []).slice().sort(function(a, b){
+      return a.workout_date < b.workout_date ? 1 : a.workout_date > b.workout_date ? -1 : (a.sort_order || 0) - (b.sort_order || 0);
+    });
+    var anyEq = null;
     for (var i = 0; i < rows.length; i++){
       var r = rows[i];
       if (r.exercise.trim() !== name || r.id === state.gymEditId || r.workout_date === state.gymDate) continue;
@@ -3994,17 +4030,47 @@
     }
     return anyEq;
   }
+  // ---- extra weight/reps/sets lines ("＋ 再加一列") ----
+  function gymSetRowsData(){
+    var rows = [{ w:document.getElementById("gymWeight").value, r:document.getElementById("gymReps").value, s:document.getElementById("gymSets").value }];
+    document.querySelectorAll("#gymExtraSets .gym-set-row").forEach(function(el){
+      rows.push({ w:el.querySelector(".gw").value, r:el.querySelector(".gr").value, s:el.querySelector(".gs").value });
+    });
+    return rows;
+  }
+  function addGymSetRow(vals, focus){
+    var box = document.getElementById("gymExtraSets");
+    var row = document.createElement("div");
+    row.className = "gym-set-grid gym-set-row";
+    row.innerHTML = '<input type="number" class="gw" min="0" step="0.5" inputmode="decimal" placeholder="選填" aria-label="重量">' +
+      '<input type="number" class="gr" min="1" step="1" inputmode="numeric" placeholder="幾下" aria-label="次數">' +
+      '<input type="number" class="gs" min="1" step="1" inputmode="numeric" aria-label="組數">' +
+      '<button type="button" class="btn btn-ghost gym-set-del" aria-label="移除這一列">' + ICONS.close + "</button>";
+    row.querySelector(".gw").value = vals.w; row.querySelector(".gr").value = vals.r; row.querySelector(".gs").value = vals.s || 1;
+    box.appendChild(row);
+    if (focus) row.querySelector(".gw").focus();
+  }
+  function clearGymSetRows(){ document.getElementById("gymExtraSets").innerHTML = ""; }
   function updateGymLastHint(){
     var hint = document.getElementById("gymLastHint");
     var last = state.gymEditId ? null : gymLastFor(document.getElementById("gymExercise").value, document.getElementById("gymEquipment").value);
     if (!last){ hint.hidden = true; hint.innerHTML = ""; return; }
     hint.hidden = false;
-    hint.innerHTML = '<span>上次（' + gymShortDate(last.workout_date) + (last.equipment ? "・" + escapeHtml(last.equipment) : "") + '）：' + gymDetail(last) + '</span>' +
+    // every line of that exercise on that day, in order (12kg×12, 15kg×10 …)
+    var session = (state.gymRows || []).filter(function(r){
+      return r.workout_date === last.workout_date && r.exercise === last.exercise && (r.equipment || "") === (last.equipment || "");
+    }).sort(function(a, b){ return (a.sort_order || 0) - (b.sort_order || 0); });
+    hint.innerHTML = '<span>上次（' + gymShortDate(last.workout_date) + (last.equipment ? "・" + escapeHtml(last.equipment) : "") + '）：' +
+      session.map(gymDetail).join("、") + '</span>' +
       '<button type="button" class="link-btn" id="gymApplyLast">套用</button>';
     document.getElementById("gymApplyLast").addEventListener("click", function(){
-      document.getElementById("gymWeight").value = last.weight !== null ? Number(last.weight) : "";
-      document.getElementById("gymReps").value = last.reps || "";
-      document.getElementById("gymSets").value = last.sets || 3;
+      var v = function(r){ return { w: r.weight !== null && r.weight !== undefined ? Number(r.weight) : "", r: r.reps || "", s: r.sets || 3 }; };
+      var first = v(session[0]);
+      document.getElementById("gymWeight").value = first.w;
+      document.getElementById("gymReps").value = first.r;
+      document.getElementById("gymSets").value = first.s;
+      clearGymSetRows();
+      session.slice(1).forEach(function(r){ addGymSetRow(v(r), false); });
       if (!document.getElementById("gymEquipment").value && last.equipment) document.getElementById("gymEquipment").value = last.equipment;
     });
   }
@@ -4012,6 +4078,8 @@
     state.gymEditId = null;
     var keepLoc = getGymLoc(), keepType = getGymType();
     document.getElementById("gymForm").reset();
+    clearGymSetRows();
+    document.getElementById("gymAddSet").hidden = false;
     if (keepType) setGymType(keepType);
     document.getElementById("gymSets").value = 3;
     setGymLoc(keepLoc || defaultGymLoc());
@@ -4048,10 +4116,22 @@
     if (state.gymEditId){
       res = await sb.from("workout_sets").update(rec).eq("id", state.gymEditId);
     } else {
+      // one record per line, consecutive sort_order so they stay grouped;
+      // the note goes on the first line only
       var day = (state.gymRows || []).filter(function(r){ return r.workout_date === state.gymDate; });
-      rec.workout_date = state.gymDate;
-      rec.sort_order = day.reduce(function(m, r){ return Math.max(m, r.sort_order || 0); }, -1) + 1;
-      res = await sb.from("workout_sets").insert(rec);
+      var nextOrder = day.reduce(function(m, r){ return Math.max(m, r.sort_order || 0); }, -1) + 1;
+      var lines = gymSetRowsData().filter(function(l, i){ return i === 0 || l.w !== "" || l.r !== ""; });
+      var recs = lines.map(function(l, i){
+        return Object.assign({}, rec, {
+          weight: l.w === "" ? null : Number(l.w),
+          reps: l.r === "" ? null : parseInt(l.r, 10),
+          sets: parseInt(l.s, 10) || 1,
+          note: i === 0 ? rec.note : "",
+          workout_date: state.gymDate,
+          sort_order: nextOrder + i
+        });
+      });
+      res = await sb.from("workout_sets").insert(recs);
     }
     if (res.error){ alert("儲存失敗：" + res.error.message); return; }
     resetGymForm();
@@ -4075,6 +4155,8 @@
     if (r.session_type) setGymType(r.session_type);
     setGymLoc(r.location || defaultGymLoc());
     document.getElementById("gymSubmit").textContent = "更新";
+    clearGymSetRows();
+    document.getElementById("gymAddSet").hidden = true;   // editing changes one line
     document.getElementById("gymCancelEdit").hidden = false;
     renderGym();
     document.getElementById("gymForm").scrollIntoView({ block:"center", behavior:"smooth" });
@@ -4100,6 +4182,13 @@
       var b = e.target.closest("[data-loc]"); if (!b) return;
       setGymLoc(b.dataset.loc);
       try { localStorage.setItem("gymLoc", b.dataset.loc); } catch(_){}
+    });
+    document.getElementById("gymAddSet").addEventListener("click", function(){
+      var rows = gymSetRowsData(), last = rows[rows.length - 1];
+      addGymSetRow({ w:last.w, r:last.r, s:last.s || 1 }, true);
+    });
+    document.getElementById("gymExtraSets").addEventListener("click", function(e){
+      var del = e.target.closest(".gym-set-del"); if (del) del.closest(".gym-set-row").remove();
     });
     document.getElementById("gymTypeSeg").addEventListener("click", function(e){
       var b = e.target.closest("[data-type]"); if (!b) return;
