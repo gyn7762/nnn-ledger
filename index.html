@@ -297,6 +297,22 @@
   .gym-import-status{ font-size:calc(var(--font-scale) * 12.5px); color:var(--ink-soft); }
   .gym-lib-hint{ margin:0; font-size:calc(var(--font-scale) * 12px); color:var(--ink-faint); line-height:1.6; }
   @media (max-width:480px){ .gym-lib-grid{ grid-template-columns:1fr 1fr; } }
+  .gym-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+  .gym-search-btn{ flex:0 0 auto; margin-top:6px; }
+  .gym-search-btn svg, .gym-search-wrap svg{ width:17px; height:17px; }
+  .gym-search-wrap{ position:relative; margin:4px 0 10px; }
+  .gym-search-wrap svg{ position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--ink-faint); pointer-events:none; }
+  .gym-search-wrap input{ width:100%; box-sizing:border-box; padding:11px 12px 11px 38px; font-size:calc(var(--font-scale) * 14.5px); border-radius:10px; }
+  .gym-lib-note{
+    font-size:calc(var(--font-scale) * 12px); color:var(--ink); line-height:1.45;
+    background:color-mix(in srgb, var(--c-gym) 10%, transparent); border-radius:6px; padding:4px 7px;
+  }
+  .gym-lib-note::before{ content:"設定："; font-weight:700; color:var(--c-gym); }
+  .gym-lib-card mark{ background:color-mix(in srgb, var(--stamp) 22%, transparent); color:inherit; border-radius:3px; padding:0 1px; }
+  .gym-lb-note{ padding:8px 4px 4px; border-top:1px dashed var(--rule); margin-top:8px; }
+  .gym-lb-note textarea{ width:100%; box-sizing:border-box; resize:vertical; font-size:calc(var(--font-scale) * 14px); line-height:1.55; }
+  .gym-lb-note-actions{ display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:8px; }
+  .gym-lb-note-actions .gym-import-status{ margin-right:auto; }
   /* full-screen picker sheet */
   .gym-sheet{ position:fixed; inset:0; z-index:95; background:var(--paper); overflow-y:auto; overscroll-behavior:contain; }
   .gym-sheet-inner{ max-width:900px; margin:0 auto; padding:0 16px calc(24px + env(safe-area-inset-bottom)); }
@@ -1538,9 +1554,12 @@
       </section>
 
       <section class="page" data-page="gym" id="page-gym" hidden>
-        <div class="page-head">
-          <h1>健身</h1>
-          <p>記錄每次重訓的動作、重量與組數</p>
+        <div class="page-head gym-head">
+          <div>
+            <h1>健身</h1>
+            <p>記錄每次重訓的動作、重量與組數</p>
+          </div>
+          <button class="btn gym-search-btn" id="gymSearchBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>搜尋器材</button>
         </div>
 
         <div class="card gym-cal-card">
@@ -1662,6 +1681,7 @@
                 <span class="gym-import-status" id="gymImportStatus"></span>
               </div>
               <p class="gym-lib-hint">選取「日日-健身圖檔」裡的圖片（可一次多選），會依檔名自動對到動作、壓縮後存進你的私人資料庫；之後要換成自己拍的照片也一樣，檔名取成動作名稱即可（例如「啞鈴二頭彎舉.jpg」）。</p>
+              <div class="gym-search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="search" id="gymLibSearch" placeholder="搜尋動作、部位、功效或設定備註…" autocomplete="off"></div>
               <div class="gym-filter" id="gymLibFilter"></div>
               <div class="gym-lib-grid" id="gymLibGrid"></div>
             </div>
@@ -1672,8 +1692,9 @@
           <div class="gym-sheet-inner">
             <div class="gym-sheet-head">
               <button class="btn btn-icon btn-ghost" id="gymPickClose" type="button" aria-label="返回"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
-              <h3>選擇動作</h3>
+              <h3 id="gymSheetTitle">選擇動作</h3>
             </div>
+            <div class="gym-search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="search" id="gymPickSearch" placeholder="搜尋動作、部位、功效或設定備註…" autocomplete="off" enterkeyhint="search"></div>
             <div class="gym-filter" id="gymPickFilter"></div>
             <div class="gym-lib-grid" id="gymPickGrid"></div>
             <div class="gym-sheet-foot"><button class="link-btn" id="gymPickManual" type="button">找不到？手動輸入其他動作 →</button></div>
@@ -1685,6 +1706,14 @@
             <button class="btn btn-icon btn-ghost gym-lb-close" id="gymLbClose" type="button" aria-label="關閉"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
             <img id="gymLbImg" alt="">
             <div class="gym-lb-text" id="gymLbText"></div>
+            <div class="gym-lb-note">
+              <label for="gymLbNote">器材設定備註</label>
+              <textarea id="gymLbNote" rows="3" placeholder="例如：座椅第 4 格、握把中間、腳踏板往前 2 格、背墊第 3 格…"></textarea>
+              <div class="gym-lb-note-actions">
+                <span class="gym-import-status" id="gymLbNoteStatus"></span>
+                <button type="button" class="btn btn-primary" id="gymLbNoteSave">儲存備註</button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -4135,24 +4164,42 @@
     var eqs = ["啞鈴", "器械", "徒手"].map(function(e){ return '<button type="button" data-f-eq="' + e + '"' + (f.eq === e ? ' class="on"' : "") + ">" + e + "</button>"; });
     return parts.join("") + '<span class="sep"></span>' + eqs.join("");
   }
-  function gymLibCardsHtml(f, currentId){
-    var list = (state.gymLib || []).filter(function(x){
-      return (!f.part || x.body_part === f.part) && (!f.eq || x.equipment === f.eq);
+  // free-text search over name / body part / equipment / benefit / setup note;
+  // several words (space separated) must all match
+  function gymLibMatches(x, q){
+    if (!q) return true;
+    var hay = [x.display_name, x.name, x.body_part, x.body_part_raw, x.equipment, x.benefit, x.setup_note].join(" ").toLowerCase();
+    return q.toLowerCase().split(/\s+/).filter(Boolean).every(function(w){ return hay.indexOf(w) !== -1; });
+  }
+  function gymHighlight(text, q){
+    var html = escapeHtml(text || "");
+    (q || "").split(/\s+/).filter(Boolean).forEach(function(w){
+      var esc = escapeHtml(w).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      html = html.replace(new RegExp(esc, "gi"), function(m){ return "<mark>" + m + "</mark>"; });
     });
-    if (!list.length) return '<div class="empty">沒有符合的動作。</div>';
+    return html;
+  }
+  function gymLibCardsHtml(f, currentId, q){
+    q = (q || "").trim();
+    var list = (state.gymLib || []).filter(function(x){
+      return (!f.part || x.body_part === f.part) && (!f.eq || x.equipment === f.eq) && gymLibMatches(x, q);
+    });
+    if (!list.length) return '<div class="empty">' + (q ? "找不到「" + escapeHtml(q) + "」。可以換個關鍵字，或把上面的部位、器具篩選改回「全部」。" : "沒有符合的動作。") + "</div>";
     return list.map(function(x){
       var src = (state.gymThumbs || {})[x.id];
       return '<button type="button" class="gym-lib-card' + (x.id === currentId ? " current" : "") + '" data-lib-id="' + x.id + '">' +
         (src ? '<img class="gym-lib-img" src="' + src + '" alt="">' : '<span class="gym-lib-img">尚無圖片</span>') +
-        '<span class="gym-lib-name">' + escapeHtml(x.display_name || x.name) + "</span>" +
+        '<span class="gym-lib-name">' + gymHighlight(x.display_name || x.name, q) + "</span>" +
         '<span class="gym-lib-meta">' + (x.body_part ? '<span class="gym-tag part">' + x.body_part + "</span>" : "") +
-        '<span class="gym-tag">' + escapeHtml(x.equipment || "") + "</span></span></button>";
+        '<span class="gym-tag">' + escapeHtml(x.equipment || "") + "</span></span>" +
+        (x.setup_note ? '<span class="gym-lib-note">' + gymHighlight(x.setup_note, q) + "</span>" : "") +
+        "</button>";
     }).join("");
   }
   function renderGymLibrary(){
     var f = state.gymLibFilter || (state.gymLibFilter = { part:"", eq:"" });
     document.getElementById("gymLibFilter").innerHTML = gymFilterHtml(f);
-    document.getElementById("gymLibGrid").innerHTML = gymLibCardsHtml(f, null);
+    document.getElementById("gymLibGrid").innerHTML = gymLibCardsHtml(f, null, document.getElementById("gymLibSearch").value);
     var lib = state.gymLib || [], withImg = lib.filter(function(x){ return state.gymThumbs[x.id]; }).length;
     document.getElementById("gymLibCount").textContent = "（" + lib.length + " 個動作・" + withImg + " 張圖）";
     if (!document.getElementById("gymPickerSheet").hidden) renderGymPicker();
@@ -4160,7 +4207,7 @@
   function renderGymPicker(){
     var f = state.gymPickFilter || (state.gymPickFilter = { part:"", eq:"" });
     document.getElementById("gymPickFilter").innerHTML = gymFilterHtml(f);
-    document.getElementById("gymPickGrid").innerHTML = gymLibCardsHtml(f, state.gymPickId);
+    document.getElementById("gymPickGrid").innerHTML = gymLibCardsHtml(f, state.gymSheetMode === "pick" ? state.gymPickId : null, document.getElementById("gymPickSearch").value);
   }
   function renderGymPicked(){
     var box = document.getElementById("gymPicked");
@@ -4199,14 +4246,28 @@
     updateGymLastHint();
     closeGymPicker();
   }
-  function openGymPicker(){
+  // mode "pick": choose an exercise for the form; mode "browse": search the
+  // library (e.g. at the gym, to look up how a machine should be adjusted)
+  function openGymPicker(mode){
+    mode = mode === "browse" ? "browse" : "pick";
+    state.gymSheetMode = mode;
     var sh = document.getElementById("gymPickerSheet");
-    // default the equipment filter from the location: 居家 -> 啞鈴, 健身房 -> all
-    if (!state.gymPickFilter) state.gymPickFilter = { part:"", eq: getGymLoc() === "home" ? "啞鈴" : "" };
+    document.getElementById("gymSheetTitle").textContent = mode === "browse" ? "搜尋器材與動作" : "選擇動作";
+    document.getElementById("gymPickManual").parentNode.hidden = mode === "browse";
+    var search = document.getElementById("gymPickSearch");
+    search.value = "";
+    if (mode === "browse"){
+      state.gymPickFilter = { part:"", eq:"" };   // search everything
+    } else if (!state.gymPickFilter || state.gymPickFilterFromBrowse){
+      // default the equipment filter from the location: 居家 -> 啞鈴, 健身房 -> all
+      state.gymPickFilter = { part:"", eq: getGymLoc() === "home" ? "啞鈴" : "" };
+    }
+    state.gymPickFilterFromBrowse = mode === "browse";
     renderGymPicker();
     sh.hidden = false; sh.scrollTop = 0;
     document.body.classList.add("sheet-open");
     try { if (!(history.state && history.state.sheet === "gympick")) history.pushState({ sheet:"gympick" }, ""); } catch(_){}
+    if (mode === "browse") setTimeout(function(){ search.focus(); }, 60);
   }
   function hideGymPicker(){
     document.getElementById("gymPickerSheet").hidden = true;
@@ -4226,10 +4287,25 @@
     document.getElementById("gymLbText").innerHTML = "<b>" + escapeHtml(lib.display_name || lib.name) + "</b>" +
       (lib.body_part ? '<span class="gym-tag part">' + lib.body_part + "</span>" : "") +
       (lib.benefit ? "<div>" + escapeHtml(lib.benefit) + "</div>" : "") +
-      (lib.setup_note ? "<div>設定：" + escapeHtml(lib.setup_note) + "</div>" : "");
+      "";
+    state.gymLbId = id;
+    document.getElementById("gymLbNote").value = lib.setup_note || "";
+    document.getElementById("gymLbNoteStatus").textContent = "";
     lb.hidden = false;
     var res = await sb.from("gym_exercise_images").select("full_image").eq("exercise_id", id).maybeSingle();
     if (!lb.hidden && res.data && res.data.full_image) img.src = res.data.full_image;
+  }
+  async function saveGymSetupNote(){
+    var id = state.gymLbId, lib = gymLibById(id); if (!lib) return;
+    var note = document.getElementById("gymLbNote").value.trim();
+    var st = document.getElementById("gymLbNoteStatus");
+    st.textContent = "儲存中…";
+    var res = await sb.from("gym_exercises").update({ setup_note: note }).eq("id", id);
+    if (res.error){ st.textContent = "儲存失敗：" + res.error.message; return; }
+    lib.setup_note = note;
+    st.textContent = "已儲存 ✓";
+    renderGymLibrary(); renderGymPicked();
+    if (!document.getElementById("gymPickerSheet").hidden) renderGymPicker();
   }
   // ---- image import: match file names to library entries, compress, save ----
   function gymNormName(s){
@@ -4326,8 +4402,14 @@
     bindFilter("gymLibFilter", "gymLibFilter", renderGymLibrary);
     bindFilter("gymPickFilter", "gymPickFilter", renderGymPicker);
     document.getElementById("gymPickGrid").addEventListener("click", function(e){
-      var c = e.target.closest("[data-lib-id]"); if (c) selectGymLib(c.dataset.libId);
+      var c = e.target.closest("[data-lib-id]"); if (!c) return;
+      if (state.gymSheetMode === "browse") openGymLightbox(c.dataset.libId);
+      else selectGymLib(c.dataset.libId);
     });
+    document.getElementById("gymSearchBtn").addEventListener("click", function(){ openGymPicker("browse"); });
+    document.getElementById("gymPickSearch").addEventListener("input", renderGymPicker);
+    document.getElementById("gymLibSearch").addEventListener("input", renderGymLibrary);
+    document.getElementById("gymLbNoteSave").addEventListener("click", saveGymSetupNote);
     document.getElementById("gymLibGrid").addEventListener("click", function(e){
       var c = e.target.closest("[data-lib-id]"); if (c) openGymLightbox(c.dataset.libId);
     });
