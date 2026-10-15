@@ -310,6 +310,19 @@
   .gym-lib-note::before{ content:"設定："; font-weight:700; color:var(--c-gym); }
   .gym-lib-card mark{ background:color-mix(in srgb, var(--stamp) 22%, transparent); color:inherit; border-radius:3px; padding:0 1px; }
   .gym-lb-note{ padding:8px 4px 4px; border-top:1px dashed var(--rule); margin-top:8px; }
+  .gym-lb-photo{ display:flex; align-items:center; gap:10px; padding:4px 4px 6px; flex-wrap:wrap; }
+  .gym-newex{ display:flex; flex-direction:column; gap:12px; padding:18px; }
+  .gym-newex h3{ font-size:calc(var(--font-scale) * 17px); padding-right:36px; }
+  .gym-newex input, .gym-newex select{ width:100%; box-sizing:border-box; }
+  .gym-newex-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .gym-newex-drop{
+    display:flex; align-items:center; justify-content:center; width:100%; aspect-ratio:4/3; max-height:240px; border-radius:12px;
+    border:1.5px dashed var(--rule); background:var(--paper-sunk); color:var(--stamp); font-weight:700; cursor:pointer;
+    background-size:contain; background-position:center; background-repeat:no-repeat; margin:0;
+  }
+  .gym-newex-drop.has span{ display:none; }
+  .gym-link-soft{ color:var(--ink-soft); font-weight:500; margin-top:10px; }
+  .gym-add-lib{ font-size:calc(var(--font-scale) * 12px); margin-left:6px; }
   .gym-lb-note textarea{ width:100%; box-sizing:border-box; resize:vertical; font-size:calc(var(--font-scale) * 14px); line-height:1.55; }
   .gym-lb-note-actions{ display:flex; align-items:center; justify-content:flex-end; gap:10px; margin-top:8px; }
   .gym-lb-note-actions .gym-import-status{ margin-right:auto; }
@@ -1697,6 +1710,7 @@
             </button>
             <div class="mood-body" id="gymLibBody" hidden>
               <div class="gym-lib-tools">
+                <button type="button" class="btn btn-primary" id="gymNewExBtn">＋ 新增動作</button>
                 <label class="btn" for="gymImportInput">匯入圖片</label>
                 <input type="file" id="gymImportInput" accept="image/*" multiple hidden>
                 <span class="gym-import-status" id="gymImportStatus"></span>
@@ -1718,8 +1732,48 @@
             <div class="gym-search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg><input type="search" id="gymPickSearch" placeholder="搜尋動作、部位、功效或設定備註…" autocomplete="off" enterkeyhint="search"></div>
             <div class="gym-filter" id="gymPickFilter"></div>
             <div class="gym-lib-grid" id="gymPickGrid"></div>
-            <div class="gym-sheet-foot"><button class="link-btn" id="gymPickManual" type="button">找不到？手動輸入其他動作 →</button></div>
+            <div class="gym-sheet-foot"><button class="link-btn" id="gymPickNew" type="button">找不到？新增到動作庫（可加照片）→</button><br><button class="link-btn gym-link-soft" id="gymPickManual" type="button">只記這一次，手動輸入 →</button></div>
           </div>
+        </div>
+
+        <div class="gym-lightbox" id="gymNewEx" hidden>
+          <form class="gym-lb-card gym-newex" id="gymNewExForm" autocomplete="off">
+            <button class="btn btn-icon btn-ghost gym-lb-close" id="gymNewExClose" type="button" aria-label="關閉"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            <h3>新增動作到動作庫</h3>
+            <div class="gym-newex-photo">
+              <label for="gymNewExPhoto" class="gym-newex-drop" id="gymNewExDrop"><span>＋ 選擇照片／拍照</span></label>
+              <input type="file" id="gymNewExPhoto" accept="image/*" hidden>
+            </div>
+            <div class="field">
+              <label for="gymNewExName">動作名稱</label>
+              <input type="text" id="gymNewExName" maxlength="40" placeholder="例如：繩索三頭下壓" required>
+            </div>
+            <div class="gym-newex-row">
+              <div class="field">
+                <label for="gymNewExEq">器具</label>
+                <input type="text" id="gymNewExEq" list="gymEquipmentList" maxlength="20" placeholder="啞鈴、器械、徒手…">
+              </div>
+              <div class="field">
+                <label for="gymNewExPart">部位</label>
+                <select id="gymNewExPart" required>
+                  <option value="">請選擇</option>
+                  <option>胸</option><option>肩</option><option>背</option><option>手臂</option><option>腿</option><option>臀</option><option>核心</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="gymNewExBenefit">功效（選填）</label>
+              <input type="text" id="gymNewExBenefit" maxlength="80" placeholder="例如：強化肱三頭肌、改善掰掰肉">
+            </div>
+            <div class="field">
+              <label for="gymNewExNote">器材設定備註（選填）</label>
+              <input type="text" id="gymNewExNote" maxlength="120" placeholder="例如：繩索高度第 12 格">
+            </div>
+            <div class="gym-lb-note-actions">
+              <span class="gym-import-status" id="gymNewExStatus"></span>
+              <button type="submit" class="btn btn-primary" id="gymNewExSave">加入動作庫</button>
+            </div>
+          </form>
         </div>
 
         <div class="gym-lightbox" id="gymLightbox" hidden>
@@ -1727,6 +1781,11 @@
             <button class="btn btn-icon btn-ghost gym-lb-close" id="gymLbClose" type="button" aria-label="關閉"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
             <img id="gymLbImg" alt="">
             <div class="gym-lb-text" id="gymLbText"></div>
+            <div class="gym-lb-photo">
+              <label class="btn" for="gymLbPhoto">更換圖片</label>
+              <input type="file" id="gymLbPhoto" accept="image/*" hidden>
+              <span class="gym-import-status" id="gymLbPhotoStatus"></span>
+            </div>
             <div class="gym-lb-note">
               <label for="gymLbNote">器材設定備註</label>
               <textarea id="gymLbNote" rows="3" placeholder="例如：座椅第 4 格、握把中間、腳踏板往前 2 格、背墊第 3 格…"></textarea>
@@ -3951,7 +4010,8 @@
         var r0 = g.rows[0], lib = gymLibFor(g.exercise, g.equipment);
         var multi = g.rows.length > 1;
         return '<div class="gym-group">' + gymThumbHtml(lib) +
-          '<div class="gym-group-main"><div class="gym-ex">' + escapeHtml((lib && lib.display_name) || g.exercise) + gymTags(r0) + "</div>" +
+          '<div class="gym-group-main"><div class="gym-ex">' + escapeHtml((lib && lib.display_name) || g.exercise) + gymTags(r0) +
+          (lib ? "" : '<button type="button" class="link-btn gym-add-lib" data-gym-add-lib="' + r0.id + '">＋ 加入動作庫</button>') + "</div>" +
           g.rows.map(function(r, i){
             return '<div class="gym-line' + (state.gymEditId === r.id ? " editing" : "") + '">' +
               (multi ? '<span class="gym-line-no">' + (i + 1) + ".</span>" : "") +
@@ -4314,7 +4374,7 @@
       manual.hidden = false;
       box.innerHTML = "";
       if (!document.getElementById("gymManualLinks")){
-        manual.insertAdjacentHTML("afterend", '<div class="gym-manual-links" id="gymManualLinks"><button type="button" class="link-btn" data-gym-open-picker>改從動作庫選 →</button></div>');
+        manual.insertAdjacentHTML("afterend", '<div class="gym-manual-links" id="gymManualLinks"><button type="button" class="link-btn" data-gym-open-picker>改從動作庫選 →</button><button type="button" class="link-btn" data-gym-new-from-form>＋ 把這個動作加入動作庫</button></div>');
       }
     } else {
       manual.hidden = true;
@@ -4395,6 +4455,71 @@
     st.textContent = "已儲存 ✓";
     renderGymLibrary(); renderGymPicked();
     if (!document.getElementById("gymPickerSheet").hidden) renderGymPicker();
+  }
+
+  // ---- add a new exercise to the library (name, equipment, part, photo) ----
+  function openGymNewEx(prefill){
+    prefill = prefill || {};
+    var f = document.getElementById("gymNewExForm");
+    f.reset();
+    state.gymNewExFile = null;
+    var drop = document.getElementById("gymNewExDrop");
+    drop.style.backgroundImage = ""; drop.classList.remove("has");
+    document.getElementById("gymNewExName").value = prefill.name || "";
+    document.getElementById("gymNewExEq").value = prefill.equipment || "";
+    document.getElementById("gymNewExPart").value = prefill.body_part || "";
+    document.getElementById("gymNewExStatus").textContent = "";
+    state.gymNewExFromRow = prefill.fromRow || null;
+    document.getElementById("gymNewEx").hidden = false;
+    setTimeout(function(){ document.getElementById(prefill.name ? "gymNewExPart" : "gymNewExName").focus(); }, 50);
+  }
+  async function saveGymNewEx(){
+    var st = document.getElementById("gymNewExStatus");
+    var name = document.getElementById("gymNewExName").value.trim();
+    var eq = document.getElementById("gymNewExEq").value.trim();
+    var part = document.getElementById("gymNewExPart").value;
+    if (!name){ st.textContent = "請填動作名稱"; return; }
+    if (!part){ st.textContent = "請選部位"; return; }
+    // the library keys on (name, equipment); a name typed as 「器械腿後勾」 is
+    // split so it matches how the imported exercises are stored
+    ["啞鈴", "器械", "槓鈴", "壺鈴"].forEach(function(p){
+      if (!eq && name.indexOf(p) === 0 && name.length > p.length){ eq = p; name = name.slice(p.length); }
+    });
+    if (gymLibFor(name, eq)){ st.textContent = "動作庫裡已經有「" + (eq ? eq : "") + name + "」了"; return; }
+    st.textContent = "儲存中…";
+    var order = (state.gymLib || []).reduce(function(m, x){ return Math.max(m, x.sort_order || 0); }, 0) + 1;
+    var rec = {
+      name: name, equipment: eq, body_part: part,
+      benefit: document.getElementById("gymNewExBenefit").value.trim(),
+      setup_note: document.getElementById("gymNewExNote").value.trim(),
+      display_name: (eq && eq !== "徒手" ? eq : "") + name,
+      sort_order: order
+    };
+    var res = await sb.from("gym_exercises").insert(rec).select().single();
+    if (res.error){ st.textContent = "儲存失敗：" + res.error.message; return; }
+    var lib = res.data;
+    if (state.gymNewExFile){
+      st.textContent = "上傳照片中…";
+      var err = await saveGymImage(lib.id, state.gymNewExFile);
+      if (err){ st.textContent = "動作已加入，但照片上傳失敗：" + err; }
+    }
+    // records already typed with this name pick up the part automatically
+    await sb.from("workout_sets").update({ body_part: part }).eq("exercise", name).eq("equipment", eq).is("body_part", null);
+    document.getElementById("gymNewEx").hidden = true;
+    await refreshGymLib();
+    refreshGym();
+    // if we came from the form (manual entry / picker), select it right away
+    if (state.gymNewExFromForm){ state.gymNewExFromForm = false; selectGymLib(lib.id); }
+  }
+  async function saveGymImage(exerciseId, file){
+    try {
+      var thumb = await gymCompress(file, 240, 0.8);
+      var full = await gymCompress(file, 900, 0.82);
+      var res = await sb.from("gym_exercise_images").upsert({
+        exercise_id: exerciseId, thumb: thumb, full_image: full, source_name: file.name || "photo.jpg", updated_at: new Date().toISOString()
+      }, { onConflict:"exercise_id" });
+      return res.error ? res.error.message : null;
+    } catch(e){ return e.message; }
   }
   // ---- image import: match file names to library entries, compress, save ----
   function gymNormName(s){
@@ -4499,12 +4624,50 @@
     document.getElementById("gymPickSearch").addEventListener("input", renderGymPicker);
     document.getElementById("gymLibSearch").addEventListener("input", renderGymLibrary);
     document.getElementById("gymLbNoteSave").addEventListener("click", saveGymSetupNote);
+    document.getElementById("gymLbPhoto").addEventListener("change", async function(){
+      var f = this.files && this.files[0]; this.value = "";
+      if (!f || !state.gymLbId) return;
+      var st = document.getElementById("gymLbPhotoStatus");
+      st.textContent = "上傳中…";
+      var err = await saveGymImage(state.gymLbId, f);
+      if (err){ st.textContent = "上傳失敗：" + err; return; }
+      st.textContent = "已更換 ✓";
+      var id = state.gymLbId;
+      await refreshGymLib();
+      openGymLightbox(id);
+    });
+    document.getElementById("gymNewExBtn").addEventListener("click", function(){ state.gymNewExFromForm = false; openGymNewEx({}); });
+    document.getElementById("gymNewExClose").addEventListener("click", function(){ document.getElementById("gymNewEx").hidden = true; });
+    document.getElementById("gymNewEx").addEventListener("click", function(e){ if (e.target === this) this.hidden = true; });
+    document.getElementById("gymNewExForm").addEventListener("submit", function(e){ e.preventDefault(); saveGymNewEx(); });
+    document.getElementById("gymNewExPhoto").addEventListener("change", function(){
+      var f = this.files && this.files[0]; if (!f) return;
+      state.gymNewExFile = f;
+      var drop = document.getElementById("gymNewExDrop");
+      drop.style.backgroundImage = "url(" + URL.createObjectURL(f) + ")"; drop.classList.add("has");
+    });
+    document.getElementById("gymPickNew").addEventListener("click", function(){
+      var q = document.getElementById("gymPickSearch").value.trim();
+      var fromForm = state.gymSheetMode === "pick";
+      closeGymPicker();
+      state.gymNewExFromForm = fromForm;
+      openGymNewEx({ name:q, body_part:(state.gymPickFilter || {}).part || "", equipment:(state.gymPickFilter || {}).eq || "" });
+    });
     document.getElementById("gymLibGrid").addEventListener("click", function(e){
       var c = e.target.closest("[data-lib-id]"); if (c) openGymLightbox(c.dataset.libId);
     });
     document.getElementById("page-gym").addEventListener("click", function(e){
       if (e.target.closest("[data-gym-open-picker]") || e.target.closest("#gymPickChange")) openGymPicker();
       var z = e.target.closest("#gymPicked [data-gym-zoom]"); if (z) openGymLightbox(z.dataset.gymZoom);
+      if (e.target.closest("[data-gym-new-from-form]")){
+        state.gymNewExFromForm = true;
+        openGymNewEx({ name:document.getElementById("gymExercise").value.trim(), equipment:document.getElementById("gymEquipment").value.trim(), body_part:document.getElementById("gymBodyPart").value });
+      }
+      var al = e.target.closest("[data-gym-add-lib]");
+      if (al){
+        var r = (state.gymRows || []).find(function(x){ return x.id === al.dataset.gymAddLib; });
+        if (r){ state.gymNewExFromForm = false; openGymNewEx({ name:r.exercise, equipment:r.equipment, body_part:r.body_part }); }
+      }
     });
     document.getElementById("gymPickClose").addEventListener("click", closeGymPicker);
     document.getElementById("gymPickManual").addEventListener("click", function(){
